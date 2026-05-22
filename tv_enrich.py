@@ -1824,6 +1824,17 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None):
             '</div>'
         )
 
+        _detail_watch_btn = (
+            '<button id="wbtn-detail-{t}"'
+            ' onclick="toggleWatch(\'{t}\',{p},{e},{s},{t1},\'{strat}\',\'{sec}\')"'
+            ' style="background:none;border:1px solid #475569;border-radius:6px;'
+            'color:#64748b;cursor:pointer;font-size:18px;padding:2px 8px;'
+            'transition:all .2s;line-height:1" title="Add to watchlist">&#9734;</button>'
+        ).format(
+            t=ticker, p=price_val, e=entry_val, s=stop_val, t1=t1_val,
+            strat=strategy, sec=r.get('sector','').replace("'",'')
+        )
+
         cards_html += (
             '<div id="detail-%s" class="detail-card" style="display:none">'
 
@@ -1831,6 +1842,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None):
             '<span style="font-size:22px;font-weight:600;color:#e2e8f0">%s</span>'
             '<span style="background:#1e3a5f;color:#60a5fa;padding:3px 10px;border-radius:9px;font-size:12px">%s</span>'
             '%s'
+            + _detail_watch_btn +
             '<span style="margin-left:auto;color:#94a3b8;font-size:13px">%s</span>'
             '</div>'
 
@@ -1915,12 +1927,15 @@ function toggleWatch(ticker,price,entry,stop,t1,strategy,sector){
   saveWL(wl);renderWatchlist();updateWatchBtn(ticker);
 }
 function updateWatchBtn(ticker){
-  var btn=document.getElementById('wbtn-'+ticker);
-  if(!btn)return;
-  var w=isWatched(ticker);
-  btn.innerHTML=w?'&#9733;':'&#9734;';
-  btn.style.color=w?'#f59e0b':'#64748b';
-  btn.style.borderColor=w?'#f59e0b':'#475569';
+  var ids=['wbtn-'+ticker,'wbtn-detail-'+ticker];
+  ids.forEach(function(id){
+    var btn=document.getElementById(id);
+    if(!btn)return;
+    var w=isWatched(ticker);
+    btn.innerHTML=w?'&#9733;':'&#9734;';
+    btn.style.color=w?'#f59e0b':'#64748b';
+    btn.style.borderColor=w?'#f59e0b':'#475569';
+  });
 }
 function alertStatus(item){
   var p=parseFloat(item.price)||0,e=parseFloat(item.entry)||0,s=parseFloat(item.stop)||0;
@@ -2017,7 +2032,7 @@ function exportTV(){
 function showDetail(ticker){
   document.querySelectorAll('.detail-card').forEach(function(el){el.style.display='none';});
   var card=document.getElementById('detail-'+ticker),panel=document.getElementById('detail-panel');
-  if(card){panel.innerHTML='';card.style.display='block';panel.appendChild(card);panel.scrollIntoView({behavior:'smooth'});}
+  if(card){panel.innerHTML='';card.style.display='block';panel.appendChild(card);panel.scrollIntoView({behavior:'smooth'});updateWatchBtn(ticker);}
 }
 function copyJournal(ticker){
   var el=document.getElementById('journal-'+ticker);
