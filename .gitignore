@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Generated HTML dashboards (large, regenerated on each run)
+dashboard.html
+dashboard_new.html
+*_live.html
+*_test.html
+*_scan_*.html
+setup.html
+scan_live.html
+phase*.html
+watchlist_*.html
+multisector_*.html
+software_*.html
+healthcare_*.html
+
+# Temporary / OS files
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Secrets (never commit)
+*.env
+.env*
+secrets.py
+config_local.py
