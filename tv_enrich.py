@@ -321,30 +321,57 @@ def detect_chart_patterns(df):
 
 
 def fetch_market_context():
-    """Fetch SPY/QQQ/IWM/VIX + sector ETFs via yfinance."""
+    """Fetch SPY/QQQ/IWM/VIX + sector ETFs via yfinance using batch download."""
     import yfinance as yf
     ctx_tickers = MARKET_TICKERS + ["^VIX"] + list(SECTOR_ETFS.keys()) + list(COMMODITY_TICKERS.keys())
     result = {}
     try:
-        yf.download(ctx_tickers, period="2d", interval="1d",
-                    progress=False, auto_adjust=True, threads=True)
+        # Batch download 60 days to calculate 50-day SMA and % changes
+        raw = yf.download(
+            ctx_tickers, period="60d", interval="1d",
+            progress=False, auto_adjust=True, threads=True, group_by="ticker"
+        )
         for sym in ctx_tickers:
             key = sym.replace("^", "")
             try:
-                t = yf.Ticker(sym)
-                info = t.fast_info
-                price  = getattr(info, "last_price", None)
-                prev   = getattr(info, "previous_close", None)
-                change = ((price - prev) / prev * 100) if price and prev else 0.0
+                # Extract per-ticker close series
+                if len(ctx_tickers) == 1:
+                    closes = raw["Close"].dropna()
+                else:
+                    try:
+                        closes = raw["Close"][sym].dropna()
+                    except Exception:
+                        closes = raw[sym]["Close"].dropna() if sym in raw else None
+                if closes is None or len(closes) < 2:
+                    raise ValueError("no data")
+                price   = float(closes.iloc[-1])
+                prev    = float(closes.iloc[-2])
+                change  = (price - prev) / prev * 100 if prev else 0.0
+                sma50   = float(closes.tail(50).mean()) if len(closes) >= 50 else None
+                above50 = (price > sma50) if sma50 else None
                 result[key] = {
-                    "price":      round(price, 2) if price else None,
+                    "price":      round(price, 2),
                     "change":     round(change, 2),
                     "perf_1m":    0.0,
-                    "above_50ma": None,
+                    "above_50ma": above50,
                     "label":      COMMODITY_TICKERS.get(sym, key),
                 }
             except Exception:
-                pass
+                # Fallback: fast_info for this ticker
+                try:
+                    info   = yf.Ticker(sym).fast_info
+                    price  = getattr(info, "last_price", None)
+                    prev   = getattr(info, "previous_close", None)
+                    change = ((price - prev) / prev * 100) if price and prev else 0.0
+                    result[key] = {
+                        "price":      round(price, 2) if price else None,
+                        "change":     round(change, 2),
+                        "perf_1m":    0.0,
+                        "above_50ma": None,
+                        "label":      COMMODITY_TICKERS.get(sym, key),
+                    }
+                except Exception:
+                    pass
     except Exception as e:
         print(f"⚠  Market context yfinance failed: {e}", file=sys.stderr)
     print(f"  → {len(result)} market/sector tickers loaded", file=sys.stderr)
