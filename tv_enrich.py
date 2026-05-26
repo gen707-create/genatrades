@@ -328,7 +328,7 @@ def fetch_market_context():
     try:
         # Batch download 60 days to calculate 50-day SMA and % changes
         raw = yf.download(
-            ctx_tickers, period="60d", interval="1d",
+            ctx_tickers, period="90d", interval="1d",
             progress=False, auto_adjust=True, threads=True, group_by="ticker"
         )
         for sym in ctx_tickers:
