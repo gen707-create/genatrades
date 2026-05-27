@@ -321,12 +321,14 @@ def detect_chart_patterns(df):
 
 
 def fetch_market_context():
-    """Fetch SPY/QQQ/IWM/VIX + sector ETFs via yfinance using batch download."""
+    """Fetch live prices via fast_info; SMA50 via batch download (90d)."""
     import yfinance as yf
     ctx_tickers = MARKET_TICKERS + ["^VIX"] + list(SECTOR_ETFS.keys()) + list(COMMODITY_TICKERS.keys())
     result = {}
+
+    # Step 1: batch download 90 days for SMA50 only
+    sma50_map = {}
     try:
-        # Batch download 60 days to calculate 50-day SMA and % changes
         raw = yf.download(
             ctx_tickers, period="90d", interval="1d",
             progress=False, auto_adjust=True, threads=True, group_by="ticker"
@@ -334,65 +336,36 @@ def fetch_market_context():
         for sym in ctx_tickers:
             key = sym.replace("^", "")
             try:
-                # Extract per-ticker close series
-                if len(ctx_tickers) == 1:
-                    closes = raw["Close"].dropna()
-                else:
-                    try:
-                        closes = raw["Close"][sym].dropna()
-                    except Exception:
-                        closes = raw[sym]["Close"].dropna() if sym in raw else None
-                if closes is None or len(closes) < 2:
-                    raise ValueError("no data")
-                price   = float(closes.iloc[-1])
-                prev    = float(closes.iloc[-2])
-                change  = (price - prev) / prev * 100 if prev else 0.0
-                sma50   = float(closes.tail(50).mean()) if len(closes) >= 50 else None
-                above50 = (price > sma50) if sma50 else None
-                result[key] = {
-                    "price":      round(price, 2),
-                    "change":     round(change, 2),
-                    "perf_1m":    0.0,
-                    "above_50ma": above50,
-                    "label":      COMMODITY_TICKERS.get(sym, key),
-                }
+                closes = raw["Close"][sym].dropna() if len(ctx_tickers) > 1 else raw["Close"].dropna()
+                if len(closes) >= 50:
+                    sma50_map[key] = float(closes.tail(50).mean())
             except Exception:
-                # Fallback: fast_info for this ticker
-                try:
-                    info   = yf.Ticker(sym).fast_info
-                    price  = getattr(info, "last_price", None)
-                    prev   = getattr(info, "previous_close", None)
-                    change = ((price - prev) / prev * 100) if price and prev else 0.0
-                    result[key] = {
-                        "price":      round(price, 2) if price else None,
-                        "change":     round(change, 2),
-                        "perf_1m":    0.0,
-                        "above_50ma": None,
-                        "label":      COMMODITY_TICKERS.get(sym, key),
-                    }
-                except Exception:
-                    pass
+                pass
     except Exception as e:
-        print(f"⚠  Market context yfinance failed: {e}", file=sys.stderr)
+        print(f"  SMA50 batch failed: {e}", file=sys.stderr)
+
+    # Step 2: fast_info for LIVE price + today change
+    for sym in ctx_tickers:
+        key = sym.replace("^", "")
+        try:
+            info   = yf.Ticker(sym).fast_info
+            price  = getattr(info, "last_price", None)
+            prev   = getattr(info, "previous_close", None)
+            change = ((price - prev) / prev * 100) if price and prev else 0.0
+            sma50  = sma50_map.get(key)
+            result[key] = {
+                "price":      round(price, 2) if price else None,
+                "change":     round(change, 2),
+                "perf_1m":    0.0,
+                "above_50ma": (price > sma50) if (price and sma50) else None,
+                "label":      COMMODITY_TICKERS.get(sym, key),
+            }
+        except Exception:
+            pass
+
     print(f"  → {len(result)} market/sector tickers loaded", file=sys.stderr)
     return result
 
-
-_SENT_POS = {
-    "beat","beats","surge","surges","rally","rallies","gain","gains","upgrade","upgraded",
-    "record","profit","profits","growth","strong","rises","raised","raises","bullish",
-    "outperform","buy","positive","expansion","deal","partnership","wins","win","higher",
-    "exceed","exceeds","exceeded","top","tops","boost","boosts","soar","soars","jumps",
-    "jump","strong","strength","opportunity","breakthrough","approved","approval"
-}
-_SENT_NEG = {
-    "miss","misses","missed","fall","falls","drop","drops","decline","declines",
-    "downgrade","downgraded","loss","losses","weak","weakness","cut","cuts","below",
-    "concern","warning","risk","lawsuit","investigation","fraud","bearish","sell",
-    "underperform","negative","layoffs","debt","plunge","plunges","slump","slumps",
-    "disappoints","disappointing","disappoints","lower","warn","warns","halt","halts",
-    "probe","charges","fine","fined","default","bankrupt","bankruptcy","recall"
-}
 
 def _news_sentiment(title):
     """Return 1 (positive) / -1 (negative) / 0 (neutral) based on keywords."""
