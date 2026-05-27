@@ -377,23 +377,32 @@ def _news_sentiment(title):
     return 0
 
 def _fetch_news_rss(sym):
-    """Fetch up to 3 latest headlines from Yahoo Finance RSS. Returns list of {t, u, d, s}."""
+    """Fetch up to 3 latest headlines via yfinance.Ticker.news. Returns list of {t, u, d, s}."""
     try:
-        import urllib.request
-        import xml.etree.ElementTree as ET
-        url = ("https://feeds.finance.yahoo.com/rss/2.0/headline"
-               "?s=%s&region=US&lang=en-US" % sym)
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            root = ET.fromstring(resp.read())
+        import yfinance as yf
+        from datetime import datetime
+        t = yf.Ticker(sym)
+        raw_news = t.news or []
         items = []
-        for node in root.findall(".//item")[:3]:
-            title = (node.findtext("title") or "").strip()
-            link  = (node.findtext("link")  or "").strip()
-            date  = (node.findtext("pubDate") or "")[:16]
+        for n in raw_news[:5]:
+            # yfinance >= 0.2.x: news in n["content"] sub-dict
+            content = n.get("content") or n
+            title = (content.get("title") or n.get("title") or "").strip()
+            link  = (content.get("canonicalUrl", {}) or {}).get("url", "") or                     (content.get("clickThroughUrl", {}) or {}).get("url", "") or                     n.get("link") or "#"
+            # pubDate: epoch int or ISO string
+            pub = content.get("pubDate") or n.get("providerPublishTime") or ""
+            if isinstance(pub, (int, float)) and pub > 0:
+                try:
+                    date = datetime.utcfromtimestamp(pub).strftime("%a, %d %b %Y")
+                except Exception:
+                    date = ""
+            else:
+                date = str(pub)[:16]
             if title:
                 items.append({"t": title, "u": link, "d": date,
                               "s": _news_sentiment(title)})
+            if len(items) >= 3:
+                break
         return items
     except Exception:
         return []
