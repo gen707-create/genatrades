@@ -1569,7 +1569,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None):
             for _ni in news_list[:3]:
                 _nt = (_ni.get("t") or "")[:80]
                 _nu = _ni.get("u") or "#"
-                _nd = (_ni.get("d") or "")[:10]
+                _nd = (_ni.get("d") or "")[:16]
                 _ns = _ni.get("s", 0)
                 _sdot = ('&#9679;', '#10b981') if _ns > 0 else                         ('&#9679;', '#ef4444') if _ns < 0 else                         ('&#9675;', '#475569')
                 _news_rows += (
@@ -1806,7 +1806,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None):
             + _analyst_html +
             '</div>'
             '<div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px">'
-            '<div style="font-size:11px;color:#64748b;margin-bottom:6px">LATEST NEWS</div>'
+            ''
             + _news_html +
             '</div>'
             '</div>'
