@@ -377,11 +377,43 @@ def _news_sentiment(title):
     return 0
 
 def _fetch_news_rss(sym):
-    """Fetch up to 3 headlines. Tries yfinance first, then Google News RSS."""
+    """Fetch up to 3 headlines. 3 methods: YF v1 JSON API, yfinance.Ticker.news, Google RSS."""
+    import sys
     from datetime import datetime
     import urllib.request, xml.etree.ElementTree as ET
 
-    # Method 1: yfinance.Ticker.news
+    # Method 1: Yahoo Finance v1 search JSON (same host yfinance uses for market data)
+    try:
+        import json
+        url = ("https://query1.finance.yahoo.com/v1/finance/search"
+               "?q=%s&quotesCount=0&newsCount=5&enableFuzzyQuery=false" % sym)
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "application/json",
+        })
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read())
+        raw = data.get("news") or []
+        items = []
+        for n in raw[:5]:
+            title = (n.get("title") or "").strip()
+            link  = n.get("link") or "#"
+            pub   = n.get("providerPublishTime") or 0
+            if isinstance(pub, (int, float)) and pub > 0:
+                try: date = datetime.utcfromtimestamp(pub).strftime("%a, %d %b %Y")
+                except Exception: date = ""
+            else: date = ""
+            if title:
+                items.append({"t": title, "u": link, "d": date, "s": _news_sentiment(title)})
+            if len(items) >= 3: break
+        if items:
+            print(f"  news {sym}: {len(items)} via YF-v1", file=sys.stderr)
+            return items
+        print(f"  news {sym}: YF-v1 empty ({len(raw)} raw)", file=sys.stderr)
+    except Exception as e:
+        print(f"  news {sym}: YF-v1 failed: {e}", file=sys.stderr)
+
+    # Method 2: yfinance.Ticker.news
     try:
         import yfinance as yf
         raw = yf.Ticker(sym).news or []
@@ -400,10 +432,14 @@ def _fetch_news_rss(sym):
             if title:
                 items.append({"t": title, "u": link, "d": date, "s": _news_sentiment(title)})
             if len(items) >= 3: break
-        if items: return items
-    except Exception: pass
+        if items:
+            print(f"  news {sym}: {len(items)} via yfinance", file=sys.stderr)
+            return items
+        print(f"  news {sym}: yfinance empty ({len(raw)} raw)", file=sys.stderr)
+    except Exception as e:
+        print(f"  news {sym}: yfinance failed: {e}", file=sys.stderr)
 
-    # Method 2: Google News RSS
+    # Method 3: Google News RSS
     try:
         url = "https://news.google.com/rss/search?q=%s+stock&hl=en-US&gl=US&ceid=US:en" % sym
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -415,9 +451,14 @@ def _fetch_news_rss(sym):
             link  = (node.findtext("link") or "#").strip()
             date  = (node.findtext("pubDate") or "")[:16]
             if title: items.append({"t": title, "u": link, "d": date, "s": _news_sentiment(title)})
-        return items
-    except Exception: pass
+        if items:
+            print(f"  news {sym}: {len(items)} via Google RSS", file=sys.stderr)
+            return items
+        print(f"  news {sym}: Google RSS empty", file=sys.stderr)
+    except Exception as e:
+        print(f"  news {sym}: Google RSS failed: {e}", file=sys.stderr)
 
+    print(f"  news {sym}: all methods failed", file=sys.stderr)
     return []
 
 def fetch_yahoo_data(tickers):
