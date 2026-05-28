@@ -367,6 +367,21 @@ def fetch_market_context():
     return result
 
 
+_SENT_POS = {
+    "beat","beats","surge","surges","surged","rally","rallies","rallied","upgrade","upgraded",
+    "outperform","buy","strong","record","profit","profits","growth","grew","rise","rises","rose",
+    "gain","gains","gains","positive","bullish","boost","boosts","boosted","higher","upside",
+    "exceed","exceeds","exceeded","raise","raises","raised","guidance","dividend","buyback",
+    "breakout","momentum","accelerate","accelerates","accelerated","recovery","recovers","recovered",
+}
+_SENT_NEG = {
+    "miss","misses","missed","drop","drops","dropped","fall","falls","fell","decline","declines",
+    "declined","downgrade","downgraded","underperform","sell","weak","loss","losses","lower","downside",
+    "cut","cuts","cutting","reduce","reduces","reduced","concern","concerns","risk","risks",
+    "warn","warns","warned","warning","bearish","disappoint","disappoints","disappointed","negative",
+    "layoff","layoffs","lawsuit","investigation","recall","fraud","crash","crashes","crashed",
+}
+
 def _news_sentiment(title):
     """Return 1 (positive) / -1 (negative) / 0 (neutral) based on keywords."""
     words = set(title.lower().replace(",","").replace(".","").replace("!","").split())
