@@ -377,36 +377,48 @@ def _news_sentiment(title):
     return 0
 
 def _fetch_news_rss(sym):
-    """Fetch up to 3 latest headlines via yfinance.Ticker.news. Returns list of {t, u, d, s}."""
+    """Fetch up to 3 headlines. Tries yfinance first, then Google News RSS."""
+    from datetime import datetime
+    import urllib.request, xml.etree.ElementTree as ET
+
+    # Method 1: yfinance.Ticker.news
     try:
         import yfinance as yf
-        from datetime import datetime
-        t = yf.Ticker(sym)
-        raw_news = t.news or []
+        raw = yf.Ticker(sym).news or []
         items = []
-        for n in raw_news[:5]:
-            # yfinance >= 0.2.x: news in n["content"] sub-dict
-            content = n.get("content") or n
-            title = (content.get("title") or n.get("title") or "").strip()
-            link  = (content.get("canonicalUrl", {}) or {}).get("url", "") or                     (content.get("clickThroughUrl", {}) or {}).get("url", "") or                     n.get("link") or "#"
-            # pubDate: epoch int or ISO string
-            pub = content.get("pubDate") or n.get("providerPublishTime") or ""
+        for n in raw[:5]:
+            c = n.get("content") or n
+            title = (c.get("title") or n.get("title") or "").strip()
+            link  = ((c.get("canonicalUrl") or {}).get("url") or
+                     (c.get("clickThroughUrl") or {}).get("url") or
+                     n.get("link") or "#")
+            pub = c.get("pubDate") or n.get("providerPublishTime") or ""
             if isinstance(pub, (int, float)) and pub > 0:
-                try:
-                    date = datetime.utcfromtimestamp(pub).strftime("%a, %d %b %Y")
-                except Exception:
-                    date = ""
-            else:
-                date = str(pub)[:16]
+                try: date = datetime.utcfromtimestamp(pub).strftime("%a, %d %b %Y")
+                except Exception: date = ""
+            else: date = str(pub)[:16]
             if title:
-                items.append({"t": title, "u": link, "d": date,
-                              "s": _news_sentiment(title)})
-            if len(items) >= 3:
-                break
-        return items
-    except Exception:
-        return []
+                items.append({"t": title, "u": link, "d": date, "s": _news_sentiment(title)})
+            if len(items) >= 3: break
+        if items: return items
+    except Exception: pass
 
+    # Method 2: Google News RSS
+    try:
+        url = "https://news.google.com/rss/search?q=%s+stock&hl=en-US&gl=US&ceid=US:en" % sym
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            root = ET.fromstring(resp.read())
+        items = []
+        for node in root.findall(".//item")[:3]:
+            title = (node.findtext("title") or "").strip()
+            link  = (node.findtext("link") or "#").strip()
+            date  = (node.findtext("pubDate") or "")[:16]
+            if title: items.append({"t": title, "u": link, "d": date, "s": _news_sentiment(title)})
+        return items
+    except Exception: pass
+
+    return []
 
 def fetch_yahoo_data(tickers):
     """Fetch pre/post-market %, earnings, RS Line (3M vs SPY), analyst ratings, news."""
