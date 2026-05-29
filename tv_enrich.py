@@ -331,7 +331,7 @@ def fetch_market_context():
     try:
         raw = yf.download(
             ctx_tickers, period="90d", interval="1d",
-            progress=False, auto_adjust=True, threads=True, group_by="ticker"
+            progress=False, auto_adjust=True, threads=True, group_by="column"
         )
         for sym in ctx_tickers:
             key = sym.replace("^", "")
@@ -1421,7 +1421,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None):
             '<tr id="row-%(t)s" style="background:%(bg)s;cursor:pointer"'
             ' data-ticker="%(t)s" data-price="%(p)s" data-entry="%(e)s"'
             ' data-stop="%(s)s" data-t1="%(t1)s" data-strategy="%(strat)s"'
-            ' data-sector="%(sec)s"'
+            ' data-sector="%(sec)s" data-chg="%(chg_raw)s"'
             ' onclick="showDetail(\'%(t)s\')">'
             '<td style="padding:8px 12px;font-weight:600;color:#e2e8f0">%(t)s%(sdot)s</td>'
             '<td style="padding:8px 12px;color:#94a3b8;font-size:12px">%(sec)s</td>'
@@ -1446,7 +1446,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None):
         ) % {
             "t": ticker, "bg": row_bg,
             "p": price_val, "e": entry_val, "s": stop_val, "t1": t1_val,
-            "strat": strategy, "sec": sector_val,
+            "strat": strategy, "sec": sector_val, "chg_raw": chg_pct,
             "cc": chg_col, "cpct": ("%+.1f%%" % chg_pct),
             "pre": pp_cell(pre_chg, "Pre"),
             "post": pp_cell(post_chg, "Post"),
@@ -1993,6 +1993,40 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None):
     # ── Full HTML page ────────────────────────────────────────────────────────
     # JavaScript — watchlist, alerts, export (built as plain string, no format() issues)
     js = """
+/* ── Table sorting ─────────────────────────────────────────────── */
+var _sortCol=null,_sortAsc=true;
+function sortTable(col,type){
+  var tbl=document.getElementById('scanner-table');
+  if(!tbl)return;
+  var tbody=tbl.tBodies[0];
+  var rows=Array.from(tbody.rows);
+  if(_sortCol===col){_sortAsc=!_sortAsc;}else{_sortCol=col;_sortAsc=true;}
+  rows.sort(function(a,b){
+    var av,bv;
+    if(col==='chg'){
+      av=parseFloat(a.getAttribute('data-chg')||0);
+      bv=parseFloat(b.getAttribute('data-chg')||0);
+    }else{
+      var ac=a.cells[col],bc=b.cells[col];
+      if(!ac||!bc)return 0;
+      av=ac.textContent.trim().replace(/[$%+,]/g,'');
+      bv=bc.textContent.trim().replace(/[$%+,]/g,'');
+      if(type==='num'){av=parseFloat(av)||0;bv=parseFloat(bv)||0;}
+    }
+    if(av<bv)return _sortAsc?-1:1;
+    if(av>bv)return _sortAsc?1:-1;
+    return 0;
+  });
+  rows.forEach(function(r){tbody.appendChild(r);});
+  tbl.querySelectorAll('th .sh').forEach(function(sp){sp.textContent='';});
+  tbl.querySelectorAll('th[onclick]').forEach(function(th){
+    var m=(th.getAttribute('onclick')||'').match(/sortTable\(([^,)]+)/);
+    if(!m)return;
+    var c=m[1].replace(/['"]/g,'');
+    var match=isNaN(c)?c===String(_sortCol):parseInt(c)===_sortCol;
+    if(match){var sp=th.querySelector('.sh');if(sp)sp.textContent=_sortAsc?' \u25b2':' \u25bc';}
+  });
+}
 var WL_KEY='swingtrader_watchlist';
 function getWL(){try{return JSON.parse(localStorage.getItem(WL_KEY)||'[]');}catch(e){return[];}}
 function saveWL(wl){localStorage.setItem(WL_KEY,JSON.stringify(wl));}
@@ -2137,6 +2171,9 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         'table { width:100%; border-collapse:collapse; }\n'
         'tr:hover { background:#1e293b !important; }\n'
         'th { color:#64748b; font-size:11px; font-weight:500; text-align:left; padding:8px 12px; border-bottom:1px solid #334155; }\n'
+        'th[onclick] { cursor:pointer; user-select:none; }\n'
+        'th[onclick]:hover { color:#cbd5e1 !important; }\n'
+        '.sh { font-size:10px; color:#94a3b8; }\n'
         'details summary { padding:6px 0; cursor:pointer; }\n'
         '.detail-card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:20px; margin-top:16px; }\n'
         '</style>\n</head>\n<body>\n'
@@ -2161,11 +2198,16 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         '<div id="watchlist-panel"></div>\n\n'
 
         '<div style="background:#1e293b;border:1px solid #334155;border-radius:12px;overflow-x:auto;margin-bottom:20px">\n'
-        '<table>\n<thead>\n<tr>\n'
-        '<th>Ticker</th><th>Sector</th><th>Price</th><th>Day%</th>\n'
+        '<table id="scanner-table">\n<thead>\n<tr>\n'
+        '<th onclick="sortTable(0,\'str\')">Ticker <span class="sh"></span></th>'
+        '<th onclick="sortTable(1,\'str\')">Sector <span class="sh"></span></th>'
+        '<th onclick="sortTable(2,\'num\')">Price <span class="sh"></span></th>'
+        '<th onclick="sortTable(\'chg\',\'num\')">Day% <span class="sh"></span></th>\n'
         '<th style="color:#a78bfa">Pre</th><th style="color:#818cf8">Post</th>\n'
         '<th style="color:#fb923c">Earnings</th>\n'
-        '<th>Entry</th><th>Stop</th><th>T1</th><th>R/R</th><th>Conv.</th><th>&#10003;</th>\n'
+        '<th>Entry</th><th>Stop</th><th>T1</th>'
+        '<th onclick="sortTable(10,\'num\')">R/R <span class="sh"></span></th>'
+        '<th>Conv.</th><th>&#10003;</th>\n'
         '<th title="Chart pattern (VCP/Cup/Flat)" style="color:#34d399">Pattern</th>\n'
         '<th title="Insider activity (30d)" style="color:#a78bfa">Insider</th>\n'
         '<th title="Top institutional holder" style="color:#818cf8">Inst. Top</th>\n'
