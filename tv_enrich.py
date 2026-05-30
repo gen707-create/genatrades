@@ -2089,7 +2089,7 @@ function renderWatchlist(){
   if(!wl.length){panel.innerHTML='';return;}
   var rows=wl.map(function(item){
     var st=alertStatus(item),bar=distBar(item);
-    return '<tr style="background:'+st.bg+'">'
+    return '<tr style="background:'+st.bg+';cursor:pointer" onclick="showDetail(this.cells[0].textContent.trim())">'
       +'<td style="padding:8px 12px;font-weight:600;color:#e2e8f0">'+item.ticker+'</td>'
       +'<td style="padding:8px 12px;color:#94a3b8;font-size:11px">'+(item.sector||'')+'</td>'
       +'<td style="padding:8px 12px;color:#e2e8f0">$'+(item.price||'--')+'</td>'
