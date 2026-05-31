@@ -26,12 +26,21 @@ jobs:
         run: |
           pip install tradingview-screener yfinance requests pandas
 
-      - name: Run scanner + generate dashboard
+      - name: Run all 3 scanners + generate tabbed dashboard
         env:
           FINVIZ_TOKEN: ${{ secrets.FINVIZ_TOKEN }}
         run: |
-          python finviz_scan.py --strategy minervini \
-            | python tv_enrich.py --strategy minervini --html --output index.html
+          python finviz_scan.py --strategy minervini  > /tmp/scan_min.json \
+            || echo '{"strategy":"minervini","tickers":[]}' > /tmp/scan_min.json
+          python finviz_scan.py --strategy canslim    > /tmp/scan_can.json \
+            || echo '{"strategy":"canslim","tickers":[]}' > /tmp/scan_can.json
+          python finviz_scan.py --strategy reversion  > /tmp/scan_rev.json \
+            || echo '{"strategy":"reversion","tickers":[]}' > /tmp/scan_rev.json
+          python tv_enrich.py --tabs \
+            --scan /tmp/scan_min.json \
+            --scan /tmp/scan_can.json \
+            --scan /tmp/scan_rev.json \
+            --html --output index.html
 
       - name: Commit updated dashboard
         run: |

@@ -1119,13 +1119,14 @@ def enrich_tickers(tickers, strategy, global_markets=False):
             "setup":       setup,
             "conviction":  conviction,
             "valid_setup": score["core_pass"] and setup.get("rr_ok", False),
+            "strategy":   strategy,
         })
 
     results.sort(key=lambda x: (not x["valid_setup"], -x["score"]["score_pct"]))
     return results
 
 
-def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None):
+def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mode=False):
     """Generate self-contained HTML dashboard."""
     market_ctx = market_ctx or {}
     yahoo      = yahoo or {}
@@ -1276,11 +1277,17 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None):
     rows_html  = ""
     cards_html = ""
 
+    _strat_labels = {
+        "minervini": "Minervini SEPA",
+        "canslim":   "O'Neil CANSLIM",
+        "reversion": "Mean Reversion",
+    }
     for r in results:
         ticker = r["ticker"]
         setup  = r.get("setup", {})
         score  = r.get("score", {})
         valid  = r["valid_setup"]
+        row_strat_label = _strat_labels.get(r.get("strategy", strategy), strategy_label)
 
         row_bg = "#0f2a1a" if valid else "#1e1e1e"
 
@@ -1446,7 +1453,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None):
         ) % {
             "t": ticker, "bg": row_bg,
             "p": price_val, "e": entry_val, "s": stop_val, "t1": t1_val,
-            "strat": strategy, "sec": sector_val, "chg_raw": chg_pct,
+            "strat": r.get("strategy", strategy), "sec": sector_val, "chg_raw": chg_pct,
             "cc": chg_col, "cpct": ("%+.1f%%" % chg_pct),
             "pre": pp_cell(pre_chg, "Pre"),
             "post": pp_cell(post_chg, "Post"),
@@ -1530,7 +1537,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None):
         ) % (
             datetime.now().strftime("%Y-%m-%d"),
             ticker,
-            strategy_label,
+            row_strat_label,
             setup.get("entry", "?"), setup.get("stop", "?"),
             setup.get("t1", "?"), setup.get("t2", "?"),
             setup.get("rr", "?"), r.get("conviction", "?"),
@@ -1909,7 +1916,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None):
             'transition:all .2s;line-height:1" title="Add to watchlist">&#9734;</button>'
         ).format(
             t=ticker, p=price_val, e=entry_val, s=stop_val, t1=t1_val,
-            strat=strategy, sec=r.get('sector','').replace("'",'')
+            strat=r.get("strategy", strategy), sec=r.get('sector','').replace("'",'')
         )
 
         cards_html += (
@@ -1976,7 +1983,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None):
             '</div>'
         ) % (
             ticker,
-            ticker, strategy_label,
+            ticker, row_strat_label,
             conv_badge(r.get("conviction", "Low")),
             r.get("sector", ""),
             setup.get("entry", "—"),
@@ -2028,6 +2035,18 @@ function sortTable(col,type){
   });
 }
 var WL_KEY='swingtrader_watchlist';
+function filterStrategy(s){
+  document.querySelectorAll('#scanner-table tbody tr').forEach(function(r){
+    r.style.display=(s==='all'||r.getAttribute('data-strategy')===s)?'':'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach(function(b){
+    b.classList.toggle('act',b.getAttribute('data-s')===s);
+  });
+  var tot=document.querySelectorAll('#scanner-table tbody tr').length;
+  var hid=document.querySelectorAll('#scanner-table tbody tr[style*="none"]').length;
+  var lbl=document.getElementById('scan-count');
+  if(lbl)lbl.textContent=tot-hid;
+}
 function getWL(){try{return JSON.parse(localStorage.getItem(WL_KEY)||'[]');}catch(e){return[];}}
 function saveWL(wl){localStorage.setItem(WL_KEY,JSON.stringify(wl));}
 function isWatched(t){return getWL().some(function(x){return x.ticker===t;});}
@@ -2152,6 +2171,27 @@ function copyJournal(ticker){
 document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
 """
 
+    # ── Tabs bar HTML ─────────────────────────────────────────────────────
+    if tabs_mode:
+        _sc = {}
+        for _r in results:
+            _s = _r.get('strategy', strategy)
+            _sc[_s] = _sc.get(_s, 0) + 1
+        _tl = [('minervini','&#9889; Minervini'),('canslim','&#128200; CANSLIM'),
+               ('reversion','&#8635; Reversion')]
+        _tabs_html = '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
+        _tabs_html += ('<button class="tab-btn act" data-s="all"'
+                       ' onclick="filterStrategy(&quot;all&quot;)">All (%d)</button>' % len(results))
+        for _ts, _tlabel in _tl:
+            _cnt = _sc.get(_ts, 0)
+            if _cnt:
+                _tabs_html += ('<button class="tab-btn" data-s="%s"'
+                               ' onclick="filterStrategy(&quot;%s&quot;)">%s (%d)</button>'
+                               % (_ts, _ts, _tlabel, _cnt))
+        _tabs_html += '</div>'
+    else:
+        _tabs_html = ''
+
     # ── Assemble final HTML ───────────────────────────────────────────────────
     header_btns = (
         '<button onclick="exportCSV()" style="background:#1e3a5f;color:#60a5fa;border:none;'
@@ -2174,6 +2214,9 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         'th[onclick] { cursor:pointer; user-select:none; }\n'
         'th[onclick]:hover { color:#cbd5e1 !important; }\n'
         '.sh { font-size:10px; color:#94a3b8; }\n'
+        '.tab-btn{background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:8px;padding:5px 16px;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;white-space:nowrap}\n'
+        '.tab-btn.act{background:#1e3a5f;color:#60a5fa;border-color:#3b82f6}\n'
+        '.tab-btn:hover{border-color:#475569;color:#e2e8f0}\n'
         'details summary { padding:6px 0; cursor:pointer; }\n'
         '.detail-card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:20px; margin-top:16px; }\n'
         '</style>\n</head>\n<body>\n'
@@ -2182,7 +2225,7 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">\n'
         '  <div>\n'
         '    <h1 style="font-size:20px;font-weight:600;color:#e2e8f0">&#9889; Swing Trader Dashboard</h1>\n'
-        '    <div style="color:#64748b;font-size:13px;margin-top:2px">' + now + ' &middot; ' + strategy_label + '</div>\n'
+        '    <div style="color:#64748b;font-size:13px;margin-top:2px">' + now + ' &middot; ' + ('All Strategies' if tabs_mode else strategy_label) + '</div>\n'
         '  </div>\n'
         '  <div style="display:flex;gap:10px;align-items:center">\n'
         '    ' + header_btns + '\n'
@@ -2196,8 +2239,8 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         + sector_html + '\n\n'
 
         '<div id="watchlist-panel"></div>\n\n'
-
-        '<div style="background:#1e293b;border:1px solid #334155;border-radius:12px;overflow-x:auto;margin-bottom:20px">\n'
+        + (_tabs_html + '\n' if _tabs_html else '')
+        + '<div style="background:#1e293b;border:1px solid #334155;border-radius:12px;overflow-x:auto;margin-bottom:20px">\n'
         '<table id="scanner-table">\n<thead>\n<tr>\n'
         '<th onclick="sortTable(0,\'str\')">Ticker <span class="sh"></span></th>'
         '<th onclick="sortTable(1,\'str\')">Sector <span class="sh"></span></th>'
@@ -2235,6 +2278,10 @@ def main():
     parser.add_argument("--file",    help="Text file with tickers (one per line)")
     parser.add_argument("--strategy", choices=["minervini", "canslim", "reversion"],
                         default="minervini")
+    parser.add_argument("--scan", action="append", metavar="FILE",
+                        help="JSON scan file (repeat for --tabs mode)")
+    parser.add_argument("--tabs", action="store_true",
+                        help="Multi-strategy tabbed dashboard")
     parser.add_argument("--global", dest="global_markets", action="store_true",
                         help="Search global exchanges (slower)")
     parser.add_argument("--html",   action="store_true", help="Output HTML dashboard")
@@ -2253,6 +2300,33 @@ def main():
         if not args.strategy and data.get("strategy"):
             args.strategy = data["strategy"]
         print(f"✅ Received {len(tickers)} tickers from pipe (strategy: {args.strategy})", file=sys.stderr)
+
+    # ── Multi-strategy tabs mode ─────────────────────────────────────────
+    if getattr(args, "tabs", False) and args.scan:
+        if not args.html:
+            print("❌ --tabs requires --html", file=sys.stderr); sys.exit(1)
+        all_results = []
+        for _sf in args.scan:
+            with open(_sf, encoding="utf-8") as _f:
+                _sd = json.load(_f)
+            _strat = _sd.get("strategy", "minervini")
+            _tickers = [t["ticker"] if isinstance(t, dict) else str(t)
+                        for t in _sd.get("tickers", [])]
+            if not _tickers:
+                print(f"⚠️  No tickers in {_sf}", file=sys.stderr); continue
+            print(f"📊 Enriching {len(_tickers)} [{_strat}]...", file=sys.stderr)
+            _enriched = enrich_tickers(_tickers, _strat, args.global_markets)
+            all_results.extend(_enriched)
+        print("📊 Fetching market context...", file=sys.stderr)
+        _mctx = fetch_market_context()
+        _ytk = [r["ticker"] for r in all_results[:150]]
+        print(f"🌙 Pre/post + earnings for {len(_ytk)} tickers...", file=sys.stderr)
+        _yahoo = fetch_yahoo_data(_ytk)
+        html = build_html_dashboard(all_results, "all", _mctx, _yahoo, tabs_mode=True)
+        out_path = args.output or ("watchlist_tabs_%s.html" % datetime.now().strftime("%Y-%m-%d"))
+        Path(out_path).write_text(html, encoding="utf-8")
+        print(f"✅ Tabs dashboard saved: {out_path}", file=sys.stderr)
+        return
 
     if not tickers:
         print("❌ No tickers provided. Use --tickers or pipe from finviz_scan.py", file=sys.stderr)
