@@ -2035,17 +2035,31 @@ function sortTable(col,type){
   });
 }
 var WL_KEY='swingtrader_watchlist';
-function filterStrategy(s){
+var _curStrat='all';
+var _curSect='all';
+function _applyFilters(){
+  var s=_curStrat,sec=_curSect,shown=0;
   document.querySelectorAll('#scanner-table tbody tr').forEach(function(r){
-    r.style.display=(s==='all'||r.getAttribute('data-strategy')===s)?'':'none';
+    var ok=(s==='all'||r.getAttribute('data-strategy')===s)&&(sec==='all'||r.getAttribute('data-sector')===sec);
+    r.style.display=ok?'':'none';
+    if(ok)shown++;
   });
+  var lbl=document.getElementById('scan-count');
+  if(lbl)lbl.textContent=shown;
+}
+function filterStrategy(s){
+  _curStrat=s;
+  _applyFilters();
   document.querySelectorAll('.tab-btn').forEach(function(b){
     b.classList.toggle('act',b.getAttribute('data-s')===s);
   });
-  var tot=document.querySelectorAll('#scanner-table tbody tr').length;
-  var hid=document.querySelectorAll('#scanner-table tbody tr[style*="none"]').length;
-  var lbl=document.getElementById('scan-count');
-  if(lbl)lbl.textContent=tot-hid;
+}
+function filterSector(sec){
+  _curSect=sec;
+  _applyFilters();
+  document.querySelectorAll('.sec-btn').forEach(function(b){
+    b.classList.toggle('act',b.getAttribute('data-sec')===sec);
+  });
 }
 function getWL(){try{return JSON.parse(localStorage.getItem(WL_KEY)||'[]');}catch(e){return[];}}
 function saveWL(wl){localStorage.setItem(WL_KEY,JSON.stringify(wl));}
@@ -2192,6 +2206,27 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
     else:
         _tabs_html = ''
 
+    # ── Sector filter bar ─────────────────────────────────────────────────────
+    _sec_counts = {}
+    for _r in results:
+        _sn = (_r.get('sector') or '').strip() or 'Other'
+        _sec_counts[_sn] = _sec_counts.get(_sn, 0) + 1
+    _sec_sorted = sorted(_sec_counts.items(), key=lambda x: -x[1])
+    if len(_sec_sorted) > 1:
+        _sectors_html = ('<div style="display:flex;gap:6px;margin-bottom:14px;'
+                         'flex-wrap:wrap;align-items:center">'
+                         '<span style="color:#64748b;font-size:12px;margin-right:4px">'
+                         'Sector:</span>'
+                         '<button class="sec-btn act" data-sec="all"'
+                         ' onclick="filterSector(this.getAttribute(\"data-sec\"))">All</button>')
+        for _sn, _sc in _sec_sorted[:10]:
+            _sectors_html += ('<button class="sec-btn" data-sec="%s"'
+                              ' onclick="filterSector(this.getAttribute(\"data-sec\"))">'
+                              '%s&nbsp;(%d)</button>' % (_sn, _sn, _sc))
+        _sectors_html += '</div>'
+    else:
+        _sectors_html = ''
+
     # ── Assemble final HTML ───────────────────────────────────────────────────
     header_btns = (
         '<button onclick="exportCSV()" style="background:#1e3a5f;color:#60a5fa;border:none;'
@@ -2217,6 +2252,9 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         '.tab-btn{background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:8px;padding:5px 16px;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;white-space:nowrap}\n'
         '.tab-btn.act{background:#1e3a5f;color:#60a5fa;border-color:#3b82f6}\n'
         '.tab-btn:hover{border-color:#475569;color:#e2e8f0}\n'
+        '.sec-btn{background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px;transition:all .15s;white-space:nowrap}\n'
+        '.sec-btn.act{background:#162416;color:#4ade80;border-color:#22c55e}\n'
+        '.sec-btn:hover{border-color:#475569;color:#e2e8f0}\n'
         'details summary { padding:6px 0; cursor:pointer; }\n'
         '.detail-card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:20px; margin-top:16px; }\n'
         '</style>\n</head>\n<body>\n'
@@ -2240,6 +2278,7 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
 
         '<div id="watchlist-panel"></div>\n\n'
         + (_tabs_html + '\n' if _tabs_html else '')
+        + (_sectors_html + '\n' if _sectors_html else '')
         + '<div style="background:#1e293b;border:1px solid #334155;border-radius:12px;overflow-x:auto;margin-bottom:20px">\n'
         '<table id="scanner-table">\n<thead>\n<tr>\n'
         '<th onclick="sortTable(0,\'str\')">Ticker <span class="sh"></span></th>'
