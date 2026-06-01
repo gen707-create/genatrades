@@ -2294,6 +2294,8 @@ def main():
         tickers = [t.strip().upper() for t in args.tickers.split(",")]
     elif args.file:
         tickers = [l.strip().upper() for l in Path(args.file).read_text().splitlines() if l.strip()]
+    elif getattr(args, "tabs", False) and args.scan:
+        pass  # tabs mode uses --scan files, not stdin
     elif not sys.stdin.isatty():
         data = json.load(sys.stdin)
         tickers = [t["ticker"] for t in data.get("tickers", [])]
@@ -2308,7 +2310,11 @@ def main():
         all_results = []
         for _sf in args.scan:
             with open(_sf, encoding="utf-8") as _f:
-                _sd = json.load(_f)
+                try:
+                    _sd = json.load(_f)
+                except (json.JSONDecodeError, ValueError) as _e:
+                    print(f"⚠️  Invalid JSON in {_sf}: {_e}", file=sys.stderr)
+                    _sd = {"strategy": "minervini", "tickers": []}
             _strat = _sd.get("strategy", "minervini")
             _tickers = [t["ticker"] if isinstance(t, dict) else str(t)
                         for t in _sd.get("tickers", [])]

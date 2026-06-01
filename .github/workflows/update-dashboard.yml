@@ -29,10 +29,22 @@ jobs:
         env:
           FINVIZ_TOKEN: ${{ secrets.FINVIZ_TOKEN }}
         run: |
+          echo "=== Step 1: Minervini scan ==="
           python finviz_scan.py --strategy minervini > /tmp/scan_min.json || echo '{"strategy":"minervini","tickers":[]}' > /tmp/scan_min.json
+          echo "scan_min.json: $(wc -c < /tmp/scan_min.json) bytes"
+          head -c 200 /tmp/scan_min.json
+
+          echo "=== Step 2: CANSLIM scan ==="
           python finviz_scan.py --strategy canslim > /tmp/scan_can.json || echo '{"strategy":"canslim","tickers":[]}' > /tmp/scan_can.json
+          echo "scan_can.json: $(wc -c < /tmp/scan_can.json) bytes"
+
+          echo "=== Step 3: Reversion scan ==="
           python finviz_scan.py --strategy reversion > /tmp/scan_rev.json || echo '{"strategy":"reversion","tickers":[]}' > /tmp/scan_rev.json
+          echo "scan_rev.json: $(wc -c < /tmp/scan_rev.json) bytes"
+
+          echo "=== Step 4: Build dashboard ==="
           python tv_enrich.py --tabs --scan /tmp/scan_min.json --scan /tmp/scan_can.json --scan /tmp/scan_rev.json --html --output index.html
+          echo "index.html: $(wc -c < index.html 2>/dev/null || echo MISSING) bytes"
 
       - name: Commit updated dashboard
         run: |
