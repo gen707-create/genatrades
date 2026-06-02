@@ -2180,7 +2180,31 @@ function showDetail(ticker){
   });}
   document.querySelectorAll('.detail-card').forEach(function(el){el.style.display='none';});
   var card=document.getElementById('detail-'+ticker);
-  if(card&&panel){panel.innerHTML='';card.style.display='block';panel.appendChild(card);panel.scrollIntoView({behavior:'smooth'});updateWatchBtn(ticker);}
+  if(card&&panel){
+    panel.innerHTML='';card.style.display='block';panel.appendChild(card);
+    panel.scrollIntoView({behavior:'smooth'});updateWatchBtn(ticker);
+  } else if(panel){
+    var wl=getWL(),item=wl.find(function(x){return x.ticker===ticker;});
+    if(!item)return;
+    var rr=(item.t1&&item.entry&&item.stop&&(item.entry-item.stop)!==0)?((item.t1-item.entry)/(item.entry-item.stop)).toFixed(1):'--';
+    panel.innerHTML='<div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;max-width:700px">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
+      +'<span style="font-size:20px;font-weight:700;color:#e2e8f0">'+item.ticker+'</span>'
+      +'<span style="color:#94a3b8;font-size:12px">'+(item.sector||'')+'</span>'
+      +'<span style="color:#a78bfa;font-size:11px;background:#1e1b4b;padding:2px 8px;border-radius:4px;text-transform:uppercase">'+(item.strategy||'')+'</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">'
+      +'<div style="background:#0f172a;border-radius:8px;padding:10px;text-align:center"><div style="color:#64748b;font-size:10px;margin-bottom:4px">PRICE</div><div style="color:#e2e8f0;font-size:15px;font-weight:700">$'+(item.price||'--')+'</div></div>'
+      +'<div style="background:#0f172a;border-radius:8px;padding:10px;text-align:center"><div style="color:#64748b;font-size:10px;margin-bottom:4px">ENTRY</div><div style="color:#4ade80;font-size:15px;font-weight:700">$'+(item.entry||'--')+'</div></div>'
+      +'<div style="background:#0f172a;border-radius:8px;padding:10px;text-align:center"><div style="color:#64748b;font-size:10px;margin-bottom:4px">STOP</div><div style="color:#f87171;font-size:15px;font-weight:700">$'+(item.stop||'--')+'</div></div>'
+      +'<div style="background:#0f172a;border-radius:8px;padding:10px;text-align:center"><div style="color:#64748b;font-size:10px;margin-bottom:4px">TARGET</div><div style="color:#38bdf8;font-size:15px;font-weight:700">$'+(item.t1||'--')+'</div></div>'
+      +'</div>'
+      +'<div style="color:#94a3b8;font-size:12px">R/R: <b>'+rr+'</b> &nbsp;|&nbsp; Added: '+(item.added||'--')+'</div>'
+      +'<div style="margin-top:8px;color:#475569;font-size:11px">&#9432; Not in current scan - showing saved data</div>'
+      +'</div>';
+    panel.scrollIntoView({behavior:'smooth'});
+    updateWatchBtn(ticker);
+  }
 }
 function copyJournal(ticker){
   var el=document.getElementById('journal-'+ticker);
