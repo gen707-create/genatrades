@@ -2174,9 +2174,13 @@ function exportTV(){
   });
 }
 function showDetail(ticker){
+  var panel=document.getElementById('detail-panel');
+  if(panel){Array.from(panel.querySelectorAll('.detail-card')).forEach(function(el){
+    el.style.display='none';panel.parentNode.insertBefore(el,panel.nextSibling);
+  });}
   document.querySelectorAll('.detail-card').forEach(function(el){el.style.display='none';});
-  var card=document.getElementById('detail-'+ticker),panel=document.getElementById('detail-panel');
-  if(card){panel.innerHTML='';card.style.display='block';panel.appendChild(card);panel.scrollIntoView({behavior:'smooth'});updateWatchBtn(ticker);}
+  var card=document.getElementById('detail-'+ticker);
+  if(card&&panel){panel.innerHTML='';card.style.display='block';panel.appendChild(card);panel.scrollIntoView({behavior:'smooth'});updateWatchBtn(ticker);}
 }
 function copyJournal(ticker){
   var el=document.getElementById('journal-'+ticker);
