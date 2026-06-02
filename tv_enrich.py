@@ -793,6 +793,16 @@ def fetch_yahoo_data(tickers):
     return result
 
 
+def _pct(s):
+    """Parse Finviz percent string like '38.50%' or '-5.2%' → float, or None."""
+    if not s or s in ("-", "N/A", ""):
+        return None
+    try:
+        return float(str(s).replace("%", "").replace(",", "").strip())
+    except (ValueError, TypeError):
+        return None
+
+
 def safe(val, default=None):
     """Return None for NaN/None values."""
     if val is None:
@@ -885,19 +895,54 @@ def score_minervini(row):
 
 
 def score_canslim(row):
-    """Score stock against CANSLIM technical requirements."""
-    price   = safe(row.get("close"), 0)
-    sma50   = safe(row.get("SMA50"), 0)
-    sma200  = safe(row.get("SMA200"), 0)
-    high52  = safe(row.get("High.All"), 0)
-    rsi     = safe(row.get("RSI"), 50)
-    rel_vol = safe(row.get("relative_volume_10d_calc"), 1)
-    perf_3m = safe(row.get("Perf.3M"), 0)
-    perf_6m = safe(row.get("Perf.6M"), 0)
+    """Score stock against CANSLIM technical + fundamental requirements."""
+    price    = safe(row.get("close"), 0)
+    sma50    = safe(row.get("SMA50"), 0)
+    sma200   = safe(row.get("SMA200"), 0)
+    high52   = safe(row.get("High.All"), 0)
+    rsi      = safe(row.get("RSI"), 50)
+    rel_vol  = safe(row.get("relative_volume_10d_calc"), 1)
+    perf_3m  = safe(row.get("Perf.3M"), 0)
+    perf_6m  = safe(row.get("Perf.6M"), 0)
+    # Finviz fundamental fields (passed via fv_meta)
+    fv       = row.get("fv_meta") or {}
+    eps_qoq  = _pct(fv.get("eps_qoq", ""))
+    sales_qoq= _pct(fv.get("sales_qoq", ""))
+    roe      = _pct(fv.get("roe", ""))
+    eps_yoy  = _pct(fv.get("eps_this_y", ""))
 
     pct_from_high = ((high52 - price) / high52 * 100) if high52 and price else None
 
     criteria = {}
+    # ── Fundamental criteria (C = Current earnings, A = Annual) ──────────────
+    if eps_qoq is not None:
+        criteria["EPS Q/Q (C=Current Earnings)"] = {
+            "value":    "%.1f%%" % eps_qoq,
+            "required": "≥ 25%",
+            "pass":     eps_qoq >= 25,
+            "warn":     15 <= eps_qoq < 25,
+        }
+    if sales_qoq is not None:
+        criteria["Sales Q/Q (C=Current Sales)"] = {
+            "value":    "%.1f%%" % sales_qoq,
+            "required": "≥ 20%",
+            "pass":     sales_qoq >= 20,
+            "warn":     10 <= sales_qoq < 20,
+        }
+    if eps_yoy is not None:
+        criteria["EPS Y/Y (A=Annual Growth)"] = {
+            "value":    "%.1f%%" % eps_yoy,
+            "required": "≥ 25%",
+            "pass":     eps_yoy >= 25,
+            "warn":     15 <= eps_yoy < 25,
+        }
+    if roe is not None:
+        criteria["ROE (M=Management Quality)"] = {
+            "value":    "%.1f%%" % roe,
+            "required": "≥ 15%",
+            "pass":     roe >= 15,
+            "warn":     10 <= roe < 15,
+        }
     criteria["Price > 200 MA (L=Leader)"] = {
         "value":    ("$%.2f vs $%.2f" % (price, sma200)) if price and sma200 else "N/A",
         "required": "Above",
@@ -1077,8 +1122,8 @@ def conviction_level(score_pct, core_pass, rr):
     return "Low"
 
 
-def enrich_tickers(tickers, strategy, global_markets=False):
-    """Fetch TV data and score each ticker."""
+def enrich_tickers(tickers, strategy, global_markets=False, fv_meta=None):
+    """Fetch TV data and score each ticker. fv_meta: dict of ticker→Finviz row."""
     df = fetch_global_tv_data(tickers) if global_markets else fetch_tv_data(tickers)
 
     if df.empty:
@@ -1090,6 +1135,9 @@ def enrich_tickers(tickers, strategy, global_markets=False):
         row = tv_row.to_dict()
         raw    = row.get("ticker") or row.get("name") or ""
         ticker = str(raw).split(":")[-1].strip().upper()
+        # Inject Finviz fundamentals if available
+        if fv_meta and ticker in fv_meta:
+            row["fv_meta"] = fv_meta[ticker]
 
         if strategy == "minervini":
             score = score_minervini(row)
@@ -2246,12 +2294,11 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
                          '<span style="color:#64748b;font-size:12px;margin-right:4px">'
                          'Sector:</span>'
                          '<button class="sec-btn act" data-sec="all"'
-                         " onclick=\"filterSector('all')\">All</button>")
+                         ' onclick="filterSector(this.getAttribute(\"data-sec\"))">All</button>')
         for _sn, _sc in _sec_sorted[:10]:
-            _safe = _sn.replace("'", "\\'")
             _sectors_html += ('<button class="sec-btn" data-sec="%s"'
-                              " onclick=\"filterSector('%s')\">" % (_sn, _safe)
-                              + '%s&nbsp;(%d)</button>' % (_sn, _sc))
+                              ' onclick="filterSector(this.getAttribute(\"data-sec\"))">'
+                              '%s&nbsp;(%d)</button>' % (_sn, _sn, _sc))
         _sectors_html += '</div>'
     else:
         _sectors_html = ''
@@ -2384,6 +2431,55 @@ def main():
                     print(f"⚠️  Invalid JSON in {_sf}: {_e}", file=sys.stderr)
                     _sd = {"strategy": "minervini", "tickers": []}
             _strat = _sd.get("strategy", "minervini")
-            _tickers = [t["ticker"] if isinstance(t, dict) else str(t)
-                        for t in _sd.get("tickers", [])]
-       
+            _ticker_meta = {
+                (t["ticker"] if isinstance(t, dict) else str(t)): t
+                for t in _sd.get("tickers", []) if isinstance(t, dict)
+            }
+            _tickers = list(_ticker_meta.keys())
+            if not _tickers:
+                print(f"⚠️  No tickers in {_sf}", file=sys.stderr); continue
+            print(f"📊 Enriching {len(_tickers)} [{_strat}]...", file=sys.stderr)
+            _enriched = enrich_tickers(_tickers, _strat, args.global_markets, fv_meta=_ticker_meta)
+            all_results.extend(_enriched)
+        print("📊 Fetching market context...", file=sys.stderr)
+        _mctx = fetch_market_context()
+        _ytk = [r["ticker"] for r in all_results[:150]]
+        print(f"🌙 Pre/post + earnings for {len(_ytk)} tickers...", file=sys.stderr)
+        _yahoo = fetch_yahoo_data(_ytk)
+        html = build_html_dashboard(all_results, "all", _mctx, _yahoo, tabs_mode=True)
+        out_path = args.output or ("watchlist_tabs_%s.html" % datetime.now().strftime("%Y-%m-%d"))
+        Path(out_path).write_text(html, encoding="utf-8")
+        print(f"✅ Tabs dashboard saved: {out_path}", file=sys.stderr)
+        return
+
+    if not tickers:
+        print("❌ No tickers provided. Use --tickers or pipe from finviz_scan.py", file=sys.stderr)
+        sys.exit(1)
+
+    results = enrich_tickers(tickers, args.strategy, args.global_markets)
+
+    if args.html:
+        print("📊 Fetching market context (SPY/QQQ/sectors)...", file=sys.stderr)
+        market_ctx = fetch_market_context()
+        yahoo_tickers = [r["ticker"] for r in results[:100]]
+        print(f"🌙 Fetching pre/post market + earnings for top {len(yahoo_tickers)} tickers...", file=sys.stderr)
+        yahoo = fetch_yahoo_data(yahoo_tickers)
+        print(f"  → {len(yahoo)} tickers enriched from Yahoo", file=sys.stderr)
+        html = build_html_dashboard(results, args.strategy, market_ctx, yahoo)
+        out_path = args.output or ("watchlist_%s.html" % datetime.now().strftime("%Y-%m-%d"))
+        Path(out_path).write_text(html, encoding="utf-8")
+        print(f"✅ HTML dashboard saved to: {out_path}", file=sys.stderr)
+    else:
+        output = {
+            "scan_time":    datetime.now().isoformat(),
+            "strategy":     args.strategy,
+            "count":        len(results),
+            "valid_setups": sum(1 for r in results if r["valid_setup"]),
+            "results":      results,
+        }
+        indent = 2 if args.pretty else None
+        print(json.dumps(output, indent=indent, ensure_ascii=False, default=str))
+
+
+if __name__ == "__main__":
+    main()
