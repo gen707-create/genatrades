@@ -1487,13 +1487,22 @@ var _curStrat='all';
 var _curSect='all';
 function _applyFilters(){
   var s=_curStrat,sec=_curSect,shown=0;
-  document.querySelectorAll('#scanner-table tbody tr').forEach(function(r){
+  var rows=document.querySelectorAll('#scanner-table tbody tr');
+  rows.forEach(function(r){
     var ok=(s==='all'||r.getAttribute('data-strategy')===s)&&(sec==='all'||r.getAttribute('data-sector')===sec);
     r.style.display=ok?'':'none';
     if(ok)shown++;
   });
   var lbl=document.getElementById('scan-count');
   if(lbl)lbl.textContent=shown;
+  // Update tab button counts dynamically
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    var bs=btn.getAttribute('data-s'),cnt=0;
+    rows.forEach(function(r){
+      if((bs==='all'||r.getAttribute('data-strategy')===bs)&&(sec==='all'||r.getAttribute('data-sector')===sec))cnt++;
+    });
+    btn.innerHTML=btn.innerHTML.replace(/\(\d+\)/,'('+cnt+')');
+  });
 }
 function filterStrategy(s){
   _curStrat=s;
