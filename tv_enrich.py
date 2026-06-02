@@ -904,12 +904,11 @@ def score_canslim(row):
     rel_vol  = safe(row.get("relative_volume_10d_calc"), 1)
     perf_3m  = safe(row.get("Perf.3M"), 0)
     perf_6m  = safe(row.get("Perf.6M"), 0)
-    # Finviz fundamental fields (passed via fv_meta)
-    fv       = row.get("fv_meta") or {}
-    eps_qoq  = _pct(fv.get("eps_qoq", ""))
-    sales_qoq= _pct(fv.get("sales_qoq", ""))
-    roe      = _pct(fv.get("roe", ""))
-    eps_yoy  = _pct(fv.get("eps_this_y", ""))
+    # Finviz fundamental fields (passed via fv_meta, from v=152 Financial view)
+    fv        = row.get("fv_meta") or {}
+    eps_qoq   = _pct(fv.get("eps_qoq", ""))
+    sales_qoq = _pct(fv.get("sales_qoq", ""))
+    eps_yoy   = _pct(fv.get("eps_this_y", ""))
 
     pct_from_high = ((high52 - price) / high52 * 100) if high52 and price else None
 
@@ -935,13 +934,6 @@ def score_canslim(row):
             "required": "≥ 25%",
             "pass":     eps_yoy >= 25,
             "warn":     15 <= eps_yoy < 25,
-        }
-    if roe is not None:
-        criteria["ROE (M=Management Quality)"] = {
-            "value":    "%.1f%%" % roe,
-            "required": "≥ 15%",
-            "pass":     roe >= 15,
-            "warn":     10 <= roe < 15,
         }
     criteria["Price > 200 MA (L=Leader)"] = {
         "value":    ("$%.2f vs $%.2f" % (price, sma200)) if price and sma200 else "N/A",

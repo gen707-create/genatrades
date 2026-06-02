@@ -156,10 +156,9 @@ def format_output(raw: list, strategy: str) -> dict:
             "market_cap": row.get("Market Cap", "").strip(),
             "pe": row.get("P/E", "").strip(),
             "eps_ttm": row.get("EPS (ttm)", "").strip(),
-            "eps_this_y": row.get("EPS this Y", "").strip(),
-            "eps_qoq": row.get("EPS Q/Q", "").strip(),       # EPS growth QoQ %
-            "sales_qoq": row.get("Sales Q/Q", "").strip(),   # Sales growth QoQ %
-            "roe": row.get("ROE", "").strip(),                # Return on Equity %
+            "eps_this_y": row.get("EPS Growth This Year", "").strip(),
+            "eps_qoq": row.get("EPS Growth Quarter Over Quarter", "").strip(),
+            "sales_qoq": row.get("Sales Growth Quarter Over Quarter", "").strip(),
             "rsi": row.get("RSI (14)", "").strip(),
             "rel_volume": row.get("Rel Volume", "").strip(),
             "high_52w": row.get("52W High", "").strip(),
