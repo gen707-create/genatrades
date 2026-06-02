@@ -2286,10 +2286,10 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
                          '<span style="color:#64748b;font-size:12px;margin-right:4px">'
                          'Sector:</span>'
                          '<button class="sec-btn act" data-sec="all"'
-                         ' onclick="filterSector(this.getAttribute(\"data-sec\"))">All</button>')
+                         " onclick=\"filterSector(this.getAttribute('data-sec'))\">All</button>")
         for _sn, _sc in _sec_sorted[:10]:
             _sectors_html += ('<button class="sec-btn" data-sec="%s"'
-                              ' onclick="filterSector(this.getAttribute(\"data-sec\"))">'
+                              " onclick=\"filterSector(this.getAttribute('data-sec'))\">"
                               '%s&nbsp;(%d)</button>' % (_sn, _sn, _sc))
         _sectors_html += '</div>'
     else:
