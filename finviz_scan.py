@@ -81,9 +81,12 @@ def get_session(auth: str) -> requests.Session:
 
 def parse_csv(text: str) -> list:
     """Parse Finviz CSV correctly (handles quoted fields with commas)."""
-    import csv, io
+    import csv, io, sys
     reader = csv.DictReader(io.StringIO(text))
-    return [row for row in reader]
+    rows = [row for row in reader]
+    if rows:
+        print(f"[finviz] CSV columns: {list(rows[0].keys())}", file=sys.stderr)
+    return rows
 
 
 def run_screen(session: requests.Session, filter_str: str, max_results: int = 200) -> list:
@@ -91,6 +94,7 @@ def run_screen(session: requests.Session, filter_str: str, max_results: int = 20
     params = {
         "f": filter_str,
         "o": "-relativevolume",  # Sort: highest relative volume first
+        "v": "152",              # Financial view — includes EPS Q/Q, Sales Q/Q, ROE, etc.
     }
     try:
         resp = session.get(BASE_URL, params=params, timeout=30)
