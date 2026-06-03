@@ -1498,9 +1498,9 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             "pre": pp_cell(pre_chg, "Pre"),
             "post": pp_cell(post_chg, "Post"),
             "earn": earn_cell,
-            "ent": ("%.2f" % setup["entry"]) if isinstance(setup.get("entry"), (int, float)) else setup.get("entry", "N/A"),
-            "stp": ("%.2f" % setup["stop"])  if isinstance(setup.get("stop"),  (int, float)) else setup.get("stop",  "N/A"),
-            "t1d": ("%.2f" % setup["t1"])    if isinstance(setup.get("t1"),    (int, float)) else setup.get("t1",    "N/A"),
+            "ent": setup.get("entry", "N/A"),
+            "stp": setup.get("stop", "N/A"),
+            "t1d": setup.get("t1", "N/A"),
             "rrc": rr_col, "rr": setup.get("rr", "—"),
             "conv": conv_badge(r.get("conviction", "Low")),
             "vc": vld_col, "vs": vld_sym,
@@ -2294,10 +2294,10 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
                          '<span style="color:#64748b;font-size:12px;margin-right:4px">'
                          'Sector:</span>'
                          '<button class="sec-btn act" data-sec="all"'
-                         " onclick=\"filterSector(this.getAttribute('data-sec'))\">All</button>")
+                         ' onclick="filterSector(this.getAttribute(\'data-sec\'))">All</button>')
         for _sn, _sc in _sec_sorted[:10]:
             _sectors_html += ('<button class="sec-btn" data-sec="%s"'
-                              " onclick=\"filterSector(this.getAttribute('data-sec'))\">"
+                              ' onclick="filterSector(this.getAttribute(\'data-sec\'))">'
                               '%s&nbsp;(%d)</button>' % (_sn, _sn, _sc))
         _sectors_html += '</div>'
     else:
@@ -2430,4 +2430,56 @@ def main():
                 except (json.JSONDecodeError, ValueError) as _e:
                     print(f"⚠️  Invalid JSON in {_sf}: {_e}", file=sys.stderr)
                     _sd = {"strategy": "minervini", "tickers": []}
-        
+            _strat = _sd.get("strategy", "minervini")
+            _ticker_meta = {
+                (t["ticker"] if isinstance(t, dict) else str(t)): t
+                for t in _sd.get("tickers", []) if isinstance(t, dict)
+            }
+            _tickers = list(_ticker_meta.keys())
+            if not _tickers:
+                print(f"⚠️  No tickers in {_sf}", file=sys.stderr); continue
+            print(f"📊 Enriching {len(_tickers)} [{_strat}]...", file=sys.stderr)
+            _enriched = enrich_tickers(_tickers, _strat, args.global_markets, fv_meta=_ticker_meta)
+            all_results.extend(_enriched)
+        print("📊 Fetching market context...", file=sys.stderr)
+        _mctx = fetch_market_context()
+        _ytk = [r["ticker"] for r in all_results[:150]]
+        print(f"🌙 Pre/post + earnings for {len(_ytk)} tickers...", file=sys.stderr)
+        _yahoo = fetch_yahoo_data(_ytk)
+        html = build_html_dashboard(all_results, "all", _mctx, _yahoo, tabs_mode=True)
+        out_path = args.output or ("watchlist_tabs_%s.html" % datetime.now().strftime("%Y-%m-%d"))
+        Path(out_path).write_text(html, encoding="utf-8")
+        print(f"✅ Tabs dashboard saved: {out_path}", file=sys.stderr)
+        return
+
+    if not tickers:
+        print("❌ No tickers provided. Use --tickers or pipe from finviz_scan.py", file=sys.stderr)
+        sys.exit(1)
+
+    results = enrich_tickers(tickers, args.strategy, args.global_markets)
+
+    if args.html:
+        print("📊 Fetching market context (SPY/QQQ/sectors)...", file=sys.stderr)
+        market_ctx = fetch_market_context()
+        yahoo_tickers = [r["ticker"] for r in results[:100]]
+        print(f"🌙 Fetching pre/post market + earnings for top {len(yahoo_tickers)} tickers...", file=sys.stderr)
+        yahoo = fetch_yahoo_data(yahoo_tickers)
+        print(f"  → {len(yahoo)} tickers enriched from Yahoo", file=sys.stderr)
+        html = build_html_dashboard(results, args.strategy, market_ctx, yahoo)
+        out_path = args.output or ("watchlist_%s.html" % datetime.now().strftime("%Y-%m-%d"))
+        Path(out_path).write_text(html, encoding="utf-8")
+        print(f"✅ HTML dashboard saved to: {out_path}", file=sys.stderr)
+    else:
+        output = {
+            "scan_time":    datetime.now().isoformat(),
+            "strategy":     args.strategy,
+            "count":        len(results),
+            "valid_setups": sum(1 for r in results if r["valid_setup"]),
+            "results":      results,
+        }
+        indent = 2 if args.pretty else None
+        print(json.dumps(output, indent=indent, ensure_ascii=False, default=str))
+
+
+if __name__ == "__main__":
+    main()
