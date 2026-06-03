@@ -44,12 +44,16 @@ jobs:
 
           echo "=== Step 4: Build dashboard ==="
           python tv_enrich.py --tabs --scan /tmp/scan_min.json --scan /tmp/scan_can.json --scan /tmp/scan_rev.json --html --output index.html
-          echo "index.html: $(wc -c < index.html 2>/dev/null || echo MISSING) bytes"
-          echo "=== First 300 chars of generated index.html ==="
-          head -c 300 index.html
+          echo "index.html size: $(wc -c < index.html 2>/dev/null || echo MISSING) bytes"
+          echo "index.html first line: $(head -1 index.html | head -c 200)"
+          echo "date in html: $(grep -o 'June [0-9]\+, [0-9]\+' index.html | head -1)"
 
       - name: Commit updated dashboard
         run: |
-          git config user.name  "github-actions[bot]"
+          git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          echo "=== git status bef
+          git status
+          git add index.html
+          git diff --staged --stat
+          git commit -m "Dashboard update $(date -u '+%Y-%m-%d %H:%M UTC')" || true
+          git push
