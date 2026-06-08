@@ -1166,10 +1166,11 @@ def enrich_tickers(tickers, strategy, global_markets=False, fv_meta=None):
     return results
 
 
-def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mode=False):
+def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mode=False, new_tickers=None):
     """Generate self-contained HTML dashboard."""
     market_ctx = market_ctx or {}
     yahoo      = yahoo or {}
+    new_tickers = set(new_tickers or [])
     now        = datetime.now().strftime("%B %d, %Y %H:%M")
     valid_count    = sum(1 for r in results if r["valid_setup"])
     strategy_label = {
@@ -1470,7 +1471,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             ' data-stop="%(s)s" data-t1="%(t1)s" data-strategy="%(strat)s"'
             ' data-sector="%(sec)s" data-chg="%(chg_raw)s"'
             ' onclick="showDetail(\'%(t)s\')">'
-            '<td style="padding:8px 12px;font-weight:600;color:#e2e8f0">%(t)s%(sdot)s</td>'
+            '<td style="padding:8px 12px;font-weight:600;color:#e2e8f0">%(t)s%(new_badge)s%(sdot)s</td>'
             '<td style="padding:8px 12px;color:#94a3b8;font-size:12px">%(sec)s</td>'
             '<td style="padding:8px 12px;color:#e2e8f0">$%(p)s</td>'
             '<td style="padding:8px 12px;color:%(cc)s">%(cpct)s</td>'
@@ -1492,6 +1493,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             '</tr>'
         ) % {
             "t": ticker, "bg": row_bg,
+            "new_badge": ('<span style="background:#dc2626;color:#fff;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700;margin-left:4px;vertical-align:middle;letter-spacing:.5px">NEW</span>' if ticker in new_tickers else ""),
             "p": price_val, "e": entry_val, "s": stop_val, "t1": t1_val,
             "strat": r.get("strategy", strategy), "sec": sector_val, "chg_raw": chg_pct,
             "cc": chg_col, "cpct": ("%+.1f%%" % chg_pct),
@@ -2404,6 +2406,8 @@ def main():
     parser.add_argument("--html",   action="store_true", help="Output HTML dashboard")
     parser.add_argument("--output", help="Output file path (for --html)")
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON")
+    parser.add_argument("--new-tickers", dest="new_tickers_file", metavar="FILE",
+                        help="JSON file with list of new ticker symbols (for NEW badge)")
     args = parser.parse_args()
 
     tickers = []
@@ -2448,7 +2452,16 @@ def main():
         _ytk = [r["ticker"] for r in all_results[:150]]
         print(f"🌙 Pre/post + earnings for {len(_ytk)} tickers...", file=sys.stderr)
         _yahoo = fetch_yahoo_data(_ytk)
-        html = build_html_dashboard(all_results, "all", _mctx, _yahoo, tabs_mode=True)
+        _new_tickers_set = []
+        if getattr(args, "new_tickers_file", None):
+            try:
+                import json as _json
+                with open(args.new_tickers_file, encoding="utf-8") as _nf:
+                    _new_tickers_set = _json.load(_nf)
+                print(f"🆕 New tickers: {len(_new_tickers_set)}", file=sys.stderr)
+            except Exception as _ne:
+                print(f"⚠️  Could not load new tickers: {_ne}", file=sys.stderr)
+        html = build_html_dashboard(all_results, "all", _mctx, _yahoo, tabs_mode=True, new_tickers=_new_tickers_set)
         out_path = args.output or ("watchlist_tabs_%s.html" % datetime.now().strftime("%Y-%m-%d"))
         Path(out_path).write_text(html, encoding="utf-8")
         print(f"✅ Tabs dashboard saved: {out_path}", file=sys.stderr)
