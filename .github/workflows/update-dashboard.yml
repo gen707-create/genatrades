@@ -43,53 +43,7 @@ jobs:
           echo "scan_rev.json: $(wc -c < /tmp/scan_rev.json) bytes"
 
           echo "=== Step 3b: Track new tickers ==="
-          python - << 'EOF'
-import json, os, sys
-from datetime import date
-
-today = date.today().isoformat()
-prev_file = 'prev_tickers.json'
-
-# Load history {ticker: first_seen_date}
-history = {}
-if os.path.exists(prev_file):
-    with open(prev_file) as f:
-        history = json.load(f)
-
-# Collect all current tickers from all scans
-current = set()
-for fn in ['/tmp/scan_min.json', '/tmp/scan_can.json', '/tmp/scan_rev.json']:
-    try:
-        with open(fn) as f:
-            data = json.load(f)
-        for t in data.get('tickers', []):
-            ticker = t['ticker'] if isinstance(t, dict) else str(t)
-            if ticker:
-                current.add(ticker)
-    except Exception as e:
-        print(f"Warning reading {fn}: {e}", file=sys.stderr)
-
-# Update history — record first seen date for new tickers
-new_today = []
-for t in current:
-    if t not in history:
-        history[t] = today
-        new_today.append(t)
-    elif history[t] == today:
-        new_today.append(t)
-
-# Save updated history
-with open(prev_file, 'w') as f:
-    json.dump(history, f, indent=2, sort_keys=True)
-
-# Save new tickers list for tv_enrich.py
-with open('/tmp/new_tickers.json', 'w') as f:
-    json.dump(new_today, f)
-
-print(f"Total tickers: {len(current)}, New today: {len(new_today)}")
-if new_today:
-    print(f"NEW: {', '.join(sorted(new_today)[:30])}")
-EOF
+          python track_new_tickers.py /tmp/scan_min.json /tmp/scan_can.json /tmp/scan_rev.json
 
           echo "=== Step 4: Build dashboard ==="
           python tv_enrich.py --tabs --scan /tmp/scan_min.json --scan /tmp/scan_can.json --scan /tmp/scan_rev.json --new-tickers /tmp/new_tickers.json --html --output index.html
