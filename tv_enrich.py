@@ -1063,29 +1063,74 @@ def score_reversion(row):
 
 
 def calculate_trade_setup(row, strategy):
-    """Calculate entry, stop, T1, T2, and R/R for the trade."""
-    price  = safe(row.get("close"), 0)
-    sma50  = safe(row.get("SMA50"), 0)
-    sma200 = safe(row.get("SMA200"), 0)
+    """Calculate entry, stop, T1, T2, and R/R for the trade.
+
+    Entry logic:
+      Minervini  — breakout above 52w high (within 5%) or VCP base top
+      CANSLIM    — pivot breakout +1% above current price
+      Reversion  — buy the bounce +0.5% above close
+
+    Stop logic (ATR-based, clamped to strategy risk limits):
+      ATR estimated from daily high-low range × 1.5 (approximates True Range).
+      Minervini: entry − 2.0×ATR, clamped −3% to −8%
+      CANSLIM:   entry − 1.5×ATR, clamped −3% to −7%
+      Reversion: below day low OR entry − 1.5×ATR, clamped −2% to −5%
+
+    T1/T2 logic:
+      Minervini/CANSLIM: fixed R/R multiples (3:1 and 5:1 / 2.5:1 and 4:1)
+      Reversion: T1 = SMA50 (mean reversion target), T2 = SMA200
+    """
+    price    = safe(row.get("close"), 0)
+    sma50    = safe(row.get("SMA50"), 0)
+    sma200   = safe(row.get("SMA200"), 0)
+    high52   = safe(row.get("High.All"), 0)
+    day_high = safe(row.get("high"), 0)
+    day_low  = safe(row.get("low"), 0)
 
     if not price:
         return {}
 
+    # ── ATR estimate from daily range ────────────────────────────────────────
+    # True Range proxy: high-low of current session × 1.5 (accounts for gaps)
+    # Minimum fallback: 1.5% of price (avoids near-zero ATR on illiquid days)
+    daily_range = (day_high - day_low) if (day_high and day_low and day_high > day_low) else 0
+    atr = max(daily_range * 1.5, price * 0.015)
+
+    def clamp_stop(raw_stop, entry, min_pct, max_pct):
+        """Keep stop within [entry*(1-max_pct), entry*(1-min_pct)]."""
+        floor = entry * (1.0 - max_pct)   # furthest allowed stop
+        ceil_ = entry * (1.0 - min_pct)   # closest allowed stop
+        return round(max(floor, min(raw_stop, ceil_)), 2)
+
     if strategy == "minervini":
-        entry = round(price * 1.005, 2)
-        stop  = round(price * 0.92, 2)
-        t1    = round(price * 1.20, 2)
-        t2    = round(price * 1.30, 2)
+        # Breakout mode: price within 5% of 52w high → entry just above resistance
+        if high52 and price >= high52 * 0.95:
+            entry = round(high52 * 1.001, 2)
+        else:
+            # Consolidation/VCP base: entry slightly above current price
+            entry = round(price * 1.005, 2)
+        stop  = clamp_stop(entry - 2.0 * atr, entry, 0.03, 0.08)
+        risk  = entry - stop
+        t1    = round(entry + risk * 3.0, 2)   # 3:1 R/R
+        t2    = round(entry + risk * 5.0, 2)   # 5:1 R/R (trim point)
+
     elif strategy == "canslim":
         entry = round(price * 1.01, 2)
-        stop  = round(price * 0.93, 2)
-        t1    = round(price * 1.20, 2)
-        t2    = round(price * 1.25, 2)
+        stop  = clamp_stop(entry - 1.5 * atr, entry, 0.03, 0.07)
+        risk  = entry - stop
+        t1    = round(entry + risk * 2.5, 2)   # 2.5:1 R/R
+        t2    = round(entry + risk * 4.0, 2)   # 4:1 R/R
+
     else:  # reversion
-        entry = round(price * 1.01, 2)
-        stop  = round(price * 0.95, 2)
-        t1    = sma50 if sma50 and sma50 > entry else round(price * 1.08, 2)
-        t2    = round(price * 1.15, 2)
+        entry = round(price * 1.005, 2)
+        # Stop: just below the day low OR 1.5×ATR — whichever is tighter
+        stop_low = round(day_low * 0.99, 2) if (day_low and day_low < entry) else None
+        stop_atr = round(entry - 1.5 * atr, 2)
+        raw_stop = max(stop_low, stop_atr) if stop_low else stop_atr
+        stop = clamp_stop(raw_stop, entry, 0.02, 0.05)
+        # T1 = SMA50 (mean reversion to the mean), T2 = SMA200
+        t1   = round(sma50,  2) if (sma50  and sma50  > entry) else round(entry * 1.08, 2)
+        t2   = round(sma200, 2) if (sma200 and sma200 > t1)    else round(t1 * 1.05, 2)
 
     risk   = entry - stop
     reward = t1 - entry
