@@ -2211,7 +2211,12 @@ function renderWatchlist(){
   if(!panel)return;
   wl=wl.map(function(item){
     var row=document.querySelector('[data-ticker="'+item.ticker+'"]');
-    if(row){var lp=parseFloat(row.getAttribute('data-price'));if(lp)item.price=lp;}
+    if(row){
+      var lp=parseFloat(row.getAttribute('data-price')); if(lp) item.price=lp;
+      var le=parseFloat(row.getAttribute('data-entry')); if(le) item.entry=le;
+      var ls=parseFloat(row.getAttribute('data-stop'));  if(ls) item.stop=ls;
+      var lt=parseFloat(row.getAttribute('data-t1'));    if(lt) item.t1=lt;
+    }
     return item;
   });
   if(!wl.length){panel.innerHTML='';return;}
