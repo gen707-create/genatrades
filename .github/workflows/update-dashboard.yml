@@ -43,7 +43,7 @@ jobs:
           echo "scan_rev.json: $(wc -c < /tmp/scan_rev.json) bytes"
 
           echo "=== Step 3b: Track new tickers ==="
-          python track_new_tickers.py /tmp/scan_min.json /tmp/scan_can.json /tmp/scan_rev.json
+          python track_new_tickers.py /tmp/scan_min.json /tmp/scan_can.json /tmp/scan_rev.json || echo '[]' > /tmp/new_tickers.json
 
           echo "=== Step 4: Build dashboard ==="
           python tv_enrich.py --tabs --scan /tmp/scan_min.json --scan /tmp/scan_can.json --scan /tmp/scan_rev.json --new-tickers /tmp/new_tickers.json --html --output index.html
@@ -54,5 +54,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html prev_tickers.json
-          git commit -m "Dashboard update $(date -u '+%Y-%m-%d %H:%M UTC')" || true
-          git push
+          git diff --cached --quiet && echo "No changes — skipping commit" && exit 0
+          git commit -m "Dashboard update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git pull --rebase origin main || true
+          git push origin main
