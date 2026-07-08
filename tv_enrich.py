@@ -3568,9 +3568,6 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         '<div id="watchlist-panel"></div>\n'
         '</div>\n'
 
-        '<div id="watchlist-panel"></div>\n'
-        '</div>\n'
-
         # ── Page: Market Pulse (auto-expanded) ────────────────────────────────
         + ('<div class="swt-page" id="pg-pulse" style="display:none">\n'
            + pulse_page_html + '\n</div>\n'
