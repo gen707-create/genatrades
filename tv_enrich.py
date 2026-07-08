@@ -216,26 +216,146 @@ COUNTRY_ETFS = {
 # Fallback top-5 holdings for Country ETFs (used when yfinance data unavailable)
 # Weights are approximate; updated periodically
 COUNTRY_ETF_FALLBACK_HOLDINGS = {
-    "ACWI": [{"ticker":"AAPL","name":"Apple","pct":4.1},{"ticker":"MSFT","name":"Microsoft","pct":3.8},{"ticker":"NVDA","name":"NVIDIA","pct":3.2},{"ticker":"AMZN","name":"Amazon","pct":2.1},{"ticker":"META","name":"Meta","pct":1.5}],
-    "EEM":  [{"ticker":"005930","name":"Samsung Electronics","pct":4.5},{"ticker":"TSM","name":"TSMC","pct":4.1},{"ticker":"BABA","name":"Alibaba","pct":2.9},{"ticker":"9988","name":"Alibaba HK","pct":2.4},{"ticker":"3690","name":"Meituan","pct":2.1}],
-    "EFA":  [{"ticker":"NESN","name":"Nestlé","pct":2.4},{"ticker":"005930","name":"Samsung Elec","pct":2.3},{"ticker":"ASML","name":"ASML Holding","pct":2.1},{"ticker":"MC","name":"LVMH","pct":1.9},{"ticker":"7203","name":"Toyota Motor","pct":1.7}],
-    "FXI":  [{"ticker":"700","name":"Tencent Holdings","pct":10.2},{"ticker":"9988","name":"Alibaba Group","pct":8.8},{"ticker":"BIDU","name":"Baidu","pct":5.3},{"ticker":"3988","name":"Bank of China","pct":4.7},{"ticker":"939","name":"China Construction Bank","pct":4.5}],
-    "KWEB": [{"ticker":"700","name":"Tencent Holdings","pct":12.4},{"ticker":"9988","name":"Alibaba Group","pct":10.1},{"ticker":"3690","name":"Meituan","pct":8.7},{"ticker":"9618","name":"JD.com","pct":6.2},{"ticker":"BIDU","name":"Baidu","pct":5.4}],
-    "EWJ":  [{"ticker":"7203","name":"Toyota Motor","pct":5.8},{"ticker":"8306","name":"Mitsubishi UFJ","pct":4.2},{"ticker":"6758","name":"Sony Group","pct":3.9},{"ticker":"6861","name":"Keyence","pct":3.4},{"ticker":"8035","name":"Tokyo Electron","pct":2.8}],
-    "EWZ":  [{"ticker":"VALE","name":"Vale SA","pct":12.1},{"ticker":"PBR","name":"Petrobras","pct":10.4},{"ticker":"ITUB","name":"Itaú Unibanco","pct":9.7},{"ticker":"BBD","name":"Bradesco","pct":6.8},{"ticker":"SBS","name":"SABESP","pct":4.2}],
-    "EWG":  [{"ticker":"SAP","name":"SAP SE","pct":8.2},{"ticker":"SIE","name":"Siemens AG","pct":6.4},{"ticker":"ALV","name":"Allianz SE","pct":5.7},{"ticker":"DTE","name":"Deutsche Telekom","pct":5.1},{"ticker":"MRK","name":"Merck KGaA","pct":4.6}],
-    "EWY":  [{"ticker":"005930","name":"Samsung Electronics","pct":22.1},{"ticker":"000660","name":"SK Hynix","pct":6.4},{"ticker":"373220","name":"LG Energy Solution","pct":4.8},{"ticker":"005380","name":"Hyundai Motor","pct":4.2},{"ticker":"068270","name":"Celltrion","pct":2.9}],
-    "INDA": [{"ticker":"HDFCBANK","name":"HDFC Bank","pct":10.8},{"ticker":"RELIANCE","name":"Reliance Industries","pct":10.2},{"ticker":"INFY","name":"Infosys","pct":7.4},{"ticker":"ICICIBANK","name":"ICICI Bank","pct":7.1},{"ticker":"TCS","name":"Tata Consultancy","pct":6.8}],
-    "EWT":  [{"ticker":"TSM","name":"TSMC","pct":25.4},{"ticker":"2454","name":"MediaTek","pct":6.8},{"ticker":"2317","name":"Hon Hai Precision","pct":4.7},{"ticker":"2882","name":"Cathay Financial","pct":3.2},{"ticker":"3008","name":"Largan Precision","pct":2.9}],
-    "EWH":  [{"ticker":"1299","name":"AIA Group","pct":11.2},{"ticker":"5","name":"HSBC Holdings","pct":9.8},{"ticker":"3690","name":"Meituan","pct":7.4},{"ticker":"388","name":"HK Exchanges","pct":6.5},{"ticker":"669","name":"Techtronic Industries","pct":5.1}],
-    "EWU":  [{"ticker":"AZN","name":"AstraZeneca","pct":9.8},{"ticker":"SHEL","name":"Shell plc","pct":8.4},{"ticker":"HSBC","name":"HSBC Holdings","pct":7.2},{"ticker":"ULVR","name":"Unilever","pct":6.1},{"ticker":"RIO","name":"Rio Tinto","pct":5.3}],
-    "EWC":  [{"ticker":"RY","name":"Royal Bank of Canada","pct":10.2},{"ticker":"TD","name":"TD Bank","pct":8.7},{"ticker":"SHOP","name":"Shopify","pct":6.4},{"ticker":"BAM","name":"Brookfield Asset","pct":5.1},{"ticker":"BNS","name":"Bank of Nova Scotia","pct":4.8}],
-    "EWA":  [{"ticker":"BHP","name":"BHP Group","pct":10.4},{"ticker":"CBA","name":"Commonwealth Bank AU","pct":9.8},{"ticker":"CSL","name":"CSL Limited","pct":7.6},{"ticker":"RIO","name":"Rio Tinto","pct":5.9},{"ticker":"ANZ","name":"ANZ Banking Group","pct":5.2}],
-    "EWL":  [{"ticker":"NESN","name":"Nestlé SA","pct":19.2},{"ticker":"NVS","name":"Novartis","pct":13.8},{"ticker":"RHHBY","name":"Roche Holding","pct":12.4},{"ticker":"ABB","name":"ABB Ltd","pct":7.1},{"ticker":"ZURN","name":"Zürich Insurance","pct":5.8}],
-    "EWQ":  [{"ticker":"MC","name":"LVMH","pct":12.4},{"ticker":"TTE","name":"TotalEnergies","pct":8.7},{"ticker":"RMS","name":"Hermès Intl","pct":7.9},{"ticker":"SAN","name":"Sanofi","pct":7.2},{"ticker":"AI","name":"Air Liquide","pct":5.4}],
-    "ARGT": [{"ticker":"MercadoLibre","name":"MercadoLibre","pct":24.1},{"ticker":"GLOB","name":"Globant","pct":18.3},{"ticker":"YPF","name":"YPF SA","pct":11.2},{"ticker":"BIOX","name":"Bioceres Crop","pct":6.4},{"ticker":"LOMA","name":"Loma Negra","pct":5.1}],
-    "ECH":  [{"ticker":"SQM","name":"SQM Sociedad","pct":14.8},{"ticker":"CMPC","name":"Empresas CMPC","pct":9.2},{"ticker":"ENELAM","name":"Enel Americas","pct":8.7},{"ticker":"FALABELLA","name":"SACI Falabella","pct":7.4},{"ticker":"BSANTANDER","name":"Bco Santander Chile","pct":6.8}],
-    "EWW":  [{"ticker":"WALMEX","name":"Walmart Mexico","pct":12.4},{"ticker":"AMX","name":"America Movil","pct":10.8},{"ticker":"FEM","name":"Fomento Económico","pct":9.7},{"ticker":"GFNORTE","name":"Banorte","pct":6.3},{"ticker":"GRUMA","name":"Gruma SAB","pct":5.1}],
+    "ACWI": [
+        {"ticker":"AAPL","name":"Apple Inc","pct":4.1},{"ticker":"MSFT","name":"Microsoft","pct":3.8},
+        {"ticker":"NVDA","name":"NVIDIA","pct":3.2},{"ticker":"AMZN","name":"Amazon","pct":2.1},
+        {"ticker":"META","name":"Meta Platforms","pct":1.5},{"ticker":"GOOGL","name":"Alphabet A","pct":1.3},
+        {"ticker":"GOOG","name":"Alphabet C","pct":1.2},{"ticker":"TSLA","name":"Tesla","pct":0.9},
+        {"ticker":"BRK.B","name":"Berkshire Hath","pct":0.8},{"ticker":"JPM","name":"JPMorgan Chase","pct":0.7},
+    ],
+    "EEM": [
+        {"ticker":"TSM","name":"TSMC","pct":7.5},{"ticker":"005930","name":"Samsung Electronics","pct":4.5},
+        {"ticker":"PDD","name":"PDD Holdings","pct":3.2},{"ticker":"700","name":"Tencent Holdings","pct":2.9},
+        {"ticker":"BABA","name":"Alibaba","pct":2.6},{"ticker":"000660","name":"SK Hynix","pct":1.8},
+        {"ticker":"INFY","name":"Infosys","pct":1.6},{"ticker":"HDFCBANK","name":"HDFC Bank","pct":1.5},
+        {"ticker":"939","name":"China Const Bank","pct":1.2},{"ticker":"RELIANCE","name":"Reliance Inds","pct":1.1},
+    ],
+    "EFA": [
+        {"ticker":"NESN","name":"Nestlé SA","pct":2.4},{"ticker":"005930","name":"Samsung Elec","pct":2.3},
+        {"ticker":"ASML","name":"ASML Holding","pct":2.1},{"ticker":"MC","name":"LVMH","pct":1.9},
+        {"ticker":"7203","name":"Toyota Motor","pct":1.7},{"ticker":"AZN","name":"AstraZeneca","pct":1.6},
+        {"ticker":"RHHBY","name":"Roche Holding","pct":1.5},{"ticker":"SHEL","name":"Shell plc","pct":1.4},
+        {"ticker":"NVS","name":"Novartis","pct":1.3},{"ticker":"ALV","name":"Allianz SE","pct":1.2},
+    ],
+    "FXI": [
+        {"ticker":"700","name":"Tencent Holdings","pct":10.2},{"ticker":"9988","name":"Alibaba Group","pct":8.8},
+        {"ticker":"BIDU","name":"Baidu","pct":5.3},{"ticker":"3988","name":"Bank of China","pct":4.7},
+        {"ticker":"939","name":"China Const Bank","pct":4.5},{"ticker":"9618","name":"JD.com","pct":4.2},
+        {"ticker":"3690","name":"Meituan","pct":4.0},{"ticker":"PDD","name":"PDD Holdings","pct":3.8},
+        {"ticker":"1398","name":"ICBC","pct":3.5},{"ticker":"1810","name":"Xiaomi","pct":3.2},
+    ],
+    "KWEB": [
+        {"ticker":"700","name":"Tencent Holdings","pct":12.4},{"ticker":"9988","name":"Alibaba Group","pct":10.1},
+        {"ticker":"3690","name":"Meituan","pct":8.7},{"ticker":"9618","name":"JD.com","pct":6.2},
+        {"ticker":"BIDU","name":"Baidu","pct":5.4},{"ticker":"PDD","name":"PDD Holdings","pct":5.1},
+        {"ticker":"9999","name":"NetEase","pct":4.8},{"ticker":"9961","name":"Trip.com","pct":4.2},
+        {"ticker":"9626","name":"Bilibili","pct":3.6},{"ticker":"1024","name":"Kuaishou Tech","pct":3.1},
+    ],
+    "EWJ": [
+        {"ticker":"7203","name":"Toyota Motor","pct":5.8},{"ticker":"8306","name":"Mitsubishi UFJ","pct":4.2},
+        {"ticker":"6758","name":"Sony Group","pct":3.9},{"ticker":"6861","name":"Keyence","pct":3.4},
+        {"ticker":"8035","name":"Tokyo Electron","pct":2.8},{"ticker":"4063","name":"Shin-Etsu Chem","pct":2.6},
+        {"ticker":"9984","name":"SoftBank Group","pct":2.4},{"ticker":"6501","name":"Hitachi","pct":2.2},
+        {"ticker":"6098","name":"Recruit Holdings","pct":2.1},{"ticker":"9433","name":"KDDI","pct":1.9},
+    ],
+    "EWZ": [
+        {"ticker":"VALE","name":"Vale SA","pct":12.1},{"ticker":"PBR","name":"Petrobras","pct":10.4},
+        {"ticker":"ITUB","name":"Itaú Unibanco","pct":9.7},{"ticker":"BBD","name":"Bradesco","pct":6.8},
+        {"ticker":"SBS","name":"SABESP","pct":4.2},{"ticker":"BBAS3","name":"Banco do Brasil","pct":4.0},
+        {"ticker":"BPAC11","name":"BTG Pactual","pct":3.8},{"ticker":"WEGE3","name":"WEG SA","pct":3.5},
+        {"ticker":"ERJ","name":"Embraer","pct":3.2},{"ticker":"RENT3","name":"Localiza","pct":2.9},
+    ],
+    "EWG": [
+        {"ticker":"SAP","name":"SAP SE","pct":8.2},{"ticker":"SIE","name":"Siemens AG","pct":6.4},
+        {"ticker":"ALV","name":"Allianz SE","pct":5.7},{"ticker":"DTE","name":"Deutsche Telekom","pct":5.1},
+        {"ticker":"MRK","name":"Merck KGaA","pct":4.6},{"ticker":"BMW","name":"BMW AG","pct":4.3},
+        {"ticker":"VOW3","name":"Volkswagen","pct":3.9},{"ticker":"BAYN","name":"Bayer AG","pct":3.7},
+        {"ticker":"DBK","name":"Deutsche Bank","pct":3.2},{"ticker":"IFX","name":"Infineon Tech","pct":3.0},
+    ],
+    "EWY": [
+        {"ticker":"005930","name":"Samsung Electronics","pct":22.1},{"ticker":"000660","name":"SK Hynix","pct":6.4},
+        {"ticker":"373220","name":"LG Energy Solution","pct":4.8},{"ticker":"005380","name":"Hyundai Motor","pct":4.2},
+        {"ticker":"068270","name":"Celltrion","pct":2.9},{"ticker":"006400","name":"Samsung SDI","pct":2.6},
+        {"ticker":"105560","name":"KB Financial","pct":2.4},{"ticker":"055550","name":"Shinhan Financial","pct":2.2},
+        {"ticker":"207940","name":"Samsung Biologics","pct":2.0},{"ticker":"012330","name":"Hyundai Mobis","pct":1.8},
+    ],
+    "INDA": [
+        {"ticker":"HDFCBANK","name":"HDFC Bank","pct":10.8},{"ticker":"RELIANCE","name":"Reliance Inds","pct":10.2},
+        {"ticker":"INFY","name":"Infosys","pct":7.4},{"ticker":"ICICIBANK","name":"ICICI Bank","pct":7.1},
+        {"ticker":"TCS","name":"Tata Consultancy","pct":6.8},{"ticker":"BHARTIARTL","name":"Bharti Airtel","pct":4.2},
+        {"ticker":"WIPRO","name":"Wipro","pct":3.8},{"ticker":"AXISBANK","name":"Axis Bank","pct":3.5},
+        {"ticker":"HCLTECH","name":"HCL Technologies","pct":3.2},{"ticker":"LT","name":"Larsen & Toubro","pct":2.9},
+    ],
+    "EWT": [
+        {"ticker":"TSM","name":"TSMC","pct":25.4},{"ticker":"2454","name":"MediaTek","pct":6.8},
+        {"ticker":"2317","name":"Hon Hai Precision","pct":4.7},{"ticker":"2882","name":"Cathay Financial","pct":3.2},
+        {"ticker":"3008","name":"Largan Precision","pct":2.9},{"ticker":"2891","name":"CTBC Financial","pct":2.7},
+        {"ticker":"2311","name":"ASE Technology","pct":2.4},{"ticker":"2308","name":"Delta Electronics","pct":2.2},
+        {"ticker":"2881","name":"Fubon Financial","pct":2.0},{"ticker":"2379","name":"Realtek Semi","pct":1.8},
+    ],
+    "EWH": [
+        {"ticker":"1299","name":"AIA Group","pct":11.2},{"ticker":"5","name":"HSBC Holdings","pct":9.8},
+        {"ticker":"3690","name":"Meituan","pct":7.4},{"ticker":"388","name":"HK Exchanges","pct":6.5},
+        {"ticker":"669","name":"Techtronic Inds","pct":5.1},{"ticker":"1","name":"CK Hutchison","pct":4.8},
+        {"ticker":"16","name":"Sun Hung Kai Props","pct":4.5},{"ticker":"27","name":"Galaxy Entmt","pct":3.9},
+        {"ticker":"823","name":"Link REIT","pct":3.6},{"ticker":"2","name":"CLP Holdings","pct":3.2},
+    ],
+    "EWU": [
+        {"ticker":"AZN","name":"AstraZeneca","pct":9.8},{"ticker":"SHEL","name":"Shell plc","pct":8.4},
+        {"ticker":"HSBC","name":"HSBC Holdings","pct":7.2},{"ticker":"ULVR","name":"Unilever","pct":6.1},
+        {"ticker":"RIO","name":"Rio Tinto","pct":5.3},{"ticker":"BP","name":"BP plc","pct":4.8},
+        {"ticker":"GSK","name":"GSK plc","pct":4.5},{"ticker":"DGE","name":"Diageo","pct":4.2},
+        {"ticker":"NG.","name":"National Grid","pct":3.8},{"ticker":"RR.","name":"Rolls-Royce","pct":3.5},
+    ],
+    "EWC": [
+        {"ticker":"RY","name":"Royal Bank Canada","pct":10.2},{"ticker":"TD","name":"TD Bank","pct":8.7},
+        {"ticker":"SHOP","name":"Shopify","pct":6.4},{"ticker":"BAM","name":"Brookfield Asset","pct":5.1},
+        {"ticker":"BNS","name":"Bank Nova Scotia","pct":4.8},{"ticker":"CNQ","name":"Canadian Nat Res","pct":4.5},
+        {"ticker":"ENB","name":"Enbridge Inc","pct":4.2},{"ticker":"BMO","name":"BMO Financial","pct":4.0},
+        {"ticker":"ABX","name":"Barrick Gold","pct":3.7},{"ticker":"MFC","name":"Manulife Financial","pct":3.4},
+    ],
+    "EWA": [
+        {"ticker":"BHP","name":"BHP Group","pct":10.4},{"ticker":"CBA","name":"Commonwealth Bank","pct":9.8},
+        {"ticker":"CSL","name":"CSL Limited","pct":7.6},{"ticker":"RIO","name":"Rio Tinto","pct":5.9},
+        {"ticker":"ANZ","name":"ANZ Banking","pct":5.2},{"ticker":"NAB","name":"Natl Australia Bk","pct":5.0},
+        {"ticker":"WBC","name":"Westpac Banking","pct":4.8},{"ticker":"MQG","name":"Macquarie Group","pct":4.5},
+        {"ticker":"FMG","name":"Fortescue Metals","pct":4.2},{"ticker":"TCL","name":"Transurban Group","pct":3.9},
+    ],
+    "EWL": [
+        {"ticker":"NESN","name":"Nestlé SA","pct":19.2},{"ticker":"NVS","name":"Novartis","pct":13.8},
+        {"ticker":"RHHBY","name":"Roche Holding","pct":12.4},{"ticker":"ABB","name":"ABB Ltd","pct":7.1},
+        {"ticker":"ZURN","name":"Zürich Insurance","pct":5.8},{"ticker":"CFR","name":"Richemont","pct":5.4},
+        {"ticker":"LONN","name":"Lonza Group","pct":4.7},{"ticker":"SREN","name":"Swiss Re","pct":4.2},
+        {"ticker":"GIVN","name":"Givaudan","pct":3.9},{"ticker":"HOLN","name":"Holcim Group","pct":3.5},
+    ],
+    "EWQ": [
+        {"ticker":"MC","name":"LVMH","pct":12.4},{"ticker":"TTE","name":"TotalEnergies","pct":8.7},
+        {"ticker":"RMS","name":"Hermès Intl","pct":7.9},{"ticker":"SAN","name":"Sanofi","pct":7.2},
+        {"ticker":"AI","name":"Air Liquide","pct":5.4},{"ticker":"BNP","name":"BNP Paribas","pct":5.1},
+        {"ticker":"AIR","name":"Airbus","pct":4.8},{"ticker":"CS","name":"AXA SA","pct":4.5},
+        {"ticker":"SU","name":"Schneider Electric","pct":4.2},{"ticker":"STLA","name":"Stellantis","pct":3.8},
+    ],
+    "ARGT": [
+        {"ticker":"MELI","name":"MercadoLibre","pct":24.1},{"ticker":"GLOB","name":"Globant","pct":18.3},
+        {"ticker":"YPF","name":"YPF SA","pct":11.2},{"ticker":"BIOX","name":"Bioceres Crop","pct":6.4},
+        {"ticker":"LOMA","name":"Loma Negra","pct":5.1},{"ticker":"BMA","name":"Cia Macro Banco","pct":4.8},
+        {"ticker":"TEO","name":"Telecom Argentina","pct":4.5},{"ticker":"PAM","name":"Pampa Energia","pct":4.2},
+        {"ticker":"GGAL","name":"Grupo Fin Galicia","pct":3.9},{"ticker":"CEPU","name":"Central Puerto","pct":3.5},
+    ],
+    "ECH": [
+        {"ticker":"SQM","name":"SQM Sociedad","pct":14.8},{"ticker":"CMPC","name":"Empresas CMPC","pct":9.2},
+        {"ticker":"ENELAM","name":"Enel Americas","pct":8.7},{"ticker":"FALABELLA","name":"SACI Falabella","pct":7.4},
+        {"ticker":"BSANTANDER","name":"Bco Santander CL","pct":6.8},{"ticker":"CENCOSUD","name":"Cencosud SA","pct":5.8},
+        {"ticker":"COLBUN","name":"Colbun SA","pct":5.2},{"ticker":"BCH","name":"Banco de Chile","pct":4.7},
+        {"ticker":"LTM","name":"Latam Airlines","pct":4.1},{"ticker":"ANTO","name":"Antofagasta","pct":3.8},
+    ],
+    "EWW": [
+        {"ticker":"WALMEX","name":"Walmart Mexico","pct":12.4},{"ticker":"AMX","name":"America Movil","pct":10.8},
+        {"ticker":"FEM","name":"Fomento Económico","pct":9.7},{"ticker":"GFNORTE","name":"Banorte","pct":6.3},
+        {"ticker":"GRUMA","name":"Gruma SAB","pct":5.1},{"ticker":"GMEXICOB","name":"Grupo Mexico","pct":4.8},
+        {"ticker":"FIBRAMQ","name":"Fibra Uno","pct":4.5},{"ticker":"CEMEXCPO","name":"Cemex SAB","pct":4.2},
+        {"ticker":"LIVEPOLC","name":"Liverpool","pct":3.9},{"ticker":"TLEVICPO","name":"Televisa Univ","pct":3.6},
+    ],
 }
 
 BREADTH_TICKERS = {
@@ -1888,7 +2008,19 @@ def build_pulse_panel_html(pulse_data, all_results=None):
         # Country ETF pane: same perf table + expandable top-10 holdings sub-rows
         rows_html = _build_rows(sym_dict)
         hold_rows = {}
-        for sym, hlist in (holdings or {}).items():
+        # Merge live holdings with static fallback — live data takes priority,
+        # fallback ensures accordion always works even when yfinance is unavailable
+        merged_holdings = {}
+        for sym in sym_dict:
+            live = (holdings or {}).get(sym)
+            if live:
+                merged_holdings[sym] = live
+            elif sym in COUNTRY_ETF_FALLBACK_HOLDINGS:
+                fb = [dict(h) for h in COUNTRY_ETF_FALLBACK_HOLDINGS[sym]]
+                for h in fb:
+                    h.setdefault("cached", True)
+                merged_holdings[sym] = fb
+        for sym, hlist in merged_holdings.items():
             if not hlist:
                 continue
             h_inner = (
@@ -3590,7 +3722,6 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
     )
 
     return html
-
 
 
 def main():
