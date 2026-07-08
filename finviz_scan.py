@@ -33,12 +33,21 @@ import requests
 
 FILTERS = {
     "minervini": (
-        "ta_sma200_pa,"     # Price > 200 MA
-        "ta_sma150_pa,"     # Price > 150 MA
-        "ta_sma50_pa,"      # Price > 50 MA
-        "ta_highlow52w_b0to25h,"  # Within 25% of 52W High
-        "ta_perf_52w_o30,"  # 30%+ above 52W Low (proxy)
-        "ta_rsi_nob50,"     # RSI not oversold (healthy trend)
+        # ── Trend structure ──────────────────────────────────────────────────
+        "ta_sma200_pa,"     # Price > SMA200
+        "ta_sma150_pa,"     # Price > SMA150
+        "ta_sma50_pa,"      # Price > SMA50
+        "ta_sma50_pa200,"   # SMA50 > SMA200 (Golden Cross — true uptrend)
+        # ── 52-week position ─────────────────────────────────────────────────
+        "ta_highlow52w_b0to25h,"  # Within 25% of 52W High (upper quartile)
+        "ta_perf_52w_o30,"        # 30%+ above 52W Low (+30% off the bottom)
+        # ── Momentum / breakout day ──────────────────────────────────────────
+        "ta_perf_d_o2,"     # Today +2% or more (active breakout day)
+        "sh_relvol_o1p5,"   # Relative volume > 1.5× (volume confirms breakout)
+        "ta_rsi_ob60,"      # RSI > 60 (top 30% relative strength proxy)
+        # ── Fundamentals ─────────────────────────────────────────────────────
+        "fa_epsqoq_o20,"    # EPS growth QoQ > 20% (earnings acceleration)
+        # ── Liquidity / price floor ───────────────────────────────────────────
         "cap_smallover,"    # Market cap > $300M
         "sh_avgvol_o300,"   # Avg volume > 300K
         "sh_price_o10"      # Price > $10

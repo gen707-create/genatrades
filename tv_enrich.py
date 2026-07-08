@@ -160,6 +160,92 @@ SECTOR_ETFS = {
 MARKET_TICKERS = ["SPY", "QQQ", "IWM"]
 COMMODITY_TICKERS = {"GC=F": "Gold", "SI=F": "Silver", "CL=F": "Oil", "BTC-USD": "BTC"}
 
+# ── Market Pulse ETF universes ────────────────────────────────────────────────
+THEME_ETFS = {
+    "SMH":  "Semiconductors",
+    "SOXX": "Semicon. Equipment",
+    "HACK": "Cybersecurity",
+    "CLOU": "Cloud Computing",
+    "AIQ":  "AI & Big Data",
+    "BOTZ": "Robotics / AI",
+    "XBI":  "Biotech (Equal Wt)",
+    "IBB":  "Biotech (Large Cap)",
+    "IHI":  "Medical Devices",
+    "KRE":  "Regional Banks",
+    "KBE":  "Banks",
+    "KIE":  "Insurance",
+    "XOP":  "Oil & Gas E&P",
+    "OIH":  "Oil Services",
+    "TAN":  "Solar Energy",
+    "ICLN": "Clean Energy",
+    "XAR":  "Aerospace / Defense",
+    "PAVE": "Infrastructure",
+    "XRT":  "Retail",
+    "XHB":  "Homebuilders",
+    "COPX": "Copper Miners",
+    "GDX":  "Gold Miners",
+    "SLX":  "Steel",
+    "ARKK": "Innovation",
+    "ARKG": "Genomics",
+    "ARKW": "Internet / Next Gen",
+}
+
+COUNTRY_ETFS = {
+    "ACWI": "World (MSCI ACWI)",
+    "EEM":  "Emerging Markets",
+    "EFA":  "Developed ex-US",
+    "FXI":  "China Large Cap",
+    "KWEB": "China Internet",
+    "EWJ":  "Japan",
+    "EWZ":  "Brazil",
+    "EWG":  "Germany",
+    "EWY":  "South Korea",
+    "INDA": "India",
+    "EWT":  "Taiwan",
+    "EWH":  "Hong Kong",
+    "EWU":  "UK",
+    "EWC":  "Canada",
+    "EWA":  "Australia",
+    "EWL":  "Switzerland",
+    "EWQ":  "France",
+    "ARGT": "Argentina",
+    "ECH":  "Chile",
+    "EWW":  "Mexico",
+}
+
+# Fallback top-5 holdings for Country ETFs (used when yfinance data unavailable)
+# Weights are approximate; updated periodically
+COUNTRY_ETF_FALLBACK_HOLDINGS = {
+    "ACWI": [{"ticker":"AAPL","name":"Apple","pct":4.1},{"ticker":"MSFT","name":"Microsoft","pct":3.8},{"ticker":"NVDA","name":"NVIDIA","pct":3.2},{"ticker":"AMZN","name":"Amazon","pct":2.1},{"ticker":"META","name":"Meta","pct":1.5}],
+    "EEM":  [{"ticker":"005930","name":"Samsung Electronics","pct":4.5},{"ticker":"TSM","name":"TSMC","pct":4.1},{"ticker":"BABA","name":"Alibaba","pct":2.9},{"ticker":"9988","name":"Alibaba HK","pct":2.4},{"ticker":"3690","name":"Meituan","pct":2.1}],
+    "EFA":  [{"ticker":"NESN","name":"Nestlé","pct":2.4},{"ticker":"005930","name":"Samsung Elec","pct":2.3},{"ticker":"ASML","name":"ASML Holding","pct":2.1},{"ticker":"MC","name":"LVMH","pct":1.9},{"ticker":"7203","name":"Toyota Motor","pct":1.7}],
+    "FXI":  [{"ticker":"700","name":"Tencent Holdings","pct":10.2},{"ticker":"9988","name":"Alibaba Group","pct":8.8},{"ticker":"BIDU","name":"Baidu","pct":5.3},{"ticker":"3988","name":"Bank of China","pct":4.7},{"ticker":"939","name":"China Construction Bank","pct":4.5}],
+    "KWEB": [{"ticker":"700","name":"Tencent Holdings","pct":12.4},{"ticker":"9988","name":"Alibaba Group","pct":10.1},{"ticker":"3690","name":"Meituan","pct":8.7},{"ticker":"9618","name":"JD.com","pct":6.2},{"ticker":"BIDU","name":"Baidu","pct":5.4}],
+    "EWJ":  [{"ticker":"7203","name":"Toyota Motor","pct":5.8},{"ticker":"8306","name":"Mitsubishi UFJ","pct":4.2},{"ticker":"6758","name":"Sony Group","pct":3.9},{"ticker":"6861","name":"Keyence","pct":3.4},{"ticker":"8035","name":"Tokyo Electron","pct":2.8}],
+    "EWZ":  [{"ticker":"VALE","name":"Vale SA","pct":12.1},{"ticker":"PBR","name":"Petrobras","pct":10.4},{"ticker":"ITUB","name":"Itaú Unibanco","pct":9.7},{"ticker":"BBD","name":"Bradesco","pct":6.8},{"ticker":"SBS","name":"SABESP","pct":4.2}],
+    "EWG":  [{"ticker":"SAP","name":"SAP SE","pct":8.2},{"ticker":"SIE","name":"Siemens AG","pct":6.4},{"ticker":"ALV","name":"Allianz SE","pct":5.7},{"ticker":"DTE","name":"Deutsche Telekom","pct":5.1},{"ticker":"MRK","name":"Merck KGaA","pct":4.6}],
+    "EWY":  [{"ticker":"005930","name":"Samsung Electronics","pct":22.1},{"ticker":"000660","name":"SK Hynix","pct":6.4},{"ticker":"373220","name":"LG Energy Solution","pct":4.8},{"ticker":"005380","name":"Hyundai Motor","pct":4.2},{"ticker":"068270","name":"Celltrion","pct":2.9}],
+    "INDA": [{"ticker":"HDFCBANK","name":"HDFC Bank","pct":10.8},{"ticker":"RELIANCE","name":"Reliance Industries","pct":10.2},{"ticker":"INFY","name":"Infosys","pct":7.4},{"ticker":"ICICIBANK","name":"ICICI Bank","pct":7.1},{"ticker":"TCS","name":"Tata Consultancy","pct":6.8}],
+    "EWT":  [{"ticker":"TSM","name":"TSMC","pct":25.4},{"ticker":"2454","name":"MediaTek","pct":6.8},{"ticker":"2317","name":"Hon Hai Precision","pct":4.7},{"ticker":"2882","name":"Cathay Financial","pct":3.2},{"ticker":"3008","name":"Largan Precision","pct":2.9}],
+    "EWH":  [{"ticker":"1299","name":"AIA Group","pct":11.2},{"ticker":"5","name":"HSBC Holdings","pct":9.8},{"ticker":"3690","name":"Meituan","pct":7.4},{"ticker":"388","name":"HK Exchanges","pct":6.5},{"ticker":"669","name":"Techtronic Industries","pct":5.1}],
+    "EWU":  [{"ticker":"AZN","name":"AstraZeneca","pct":9.8},{"ticker":"SHEL","name":"Shell plc","pct":8.4},{"ticker":"HSBC","name":"HSBC Holdings","pct":7.2},{"ticker":"ULVR","name":"Unilever","pct":6.1},{"ticker":"RIO","name":"Rio Tinto","pct":5.3}],
+    "EWC":  [{"ticker":"RY","name":"Royal Bank of Canada","pct":10.2},{"ticker":"TD","name":"TD Bank","pct":8.7},{"ticker":"SHOP","name":"Shopify","pct":6.4},{"ticker":"BAM","name":"Brookfield Asset","pct":5.1},{"ticker":"BNS","name":"Bank of Nova Scotia","pct":4.8}],
+    "EWA":  [{"ticker":"BHP","name":"BHP Group","pct":10.4},{"ticker":"CBA","name":"Commonwealth Bank AU","pct":9.8},{"ticker":"CSL","name":"CSL Limited","pct":7.6},{"ticker":"RIO","name":"Rio Tinto","pct":5.9},{"ticker":"ANZ","name":"ANZ Banking Group","pct":5.2}],
+    "EWL":  [{"ticker":"NESN","name":"Nestlé SA","pct":19.2},{"ticker":"NVS","name":"Novartis","pct":13.8},{"ticker":"RHHBY","name":"Roche Holding","pct":12.4},{"ticker":"ABB","name":"ABB Ltd","pct":7.1},{"ticker":"ZURN","name":"Zürich Insurance","pct":5.8}],
+    "EWQ":  [{"ticker":"MC","name":"LVMH","pct":12.4},{"ticker":"TTE","name":"TotalEnergies","pct":8.7},{"ticker":"RMS","name":"Hermès Intl","pct":7.9},{"ticker":"SAN","name":"Sanofi","pct":7.2},{"ticker":"AI","name":"Air Liquide","pct":5.4}],
+    "ARGT": [{"ticker":"MercadoLibre","name":"MercadoLibre","pct":24.1},{"ticker":"GLOB","name":"Globant","pct":18.3},{"ticker":"YPF","name":"YPF SA","pct":11.2},{"ticker":"BIOX","name":"Bioceres Crop","pct":6.4},{"ticker":"LOMA","name":"Loma Negra","pct":5.1}],
+    "ECH":  [{"ticker":"SQM","name":"SQM Sociedad","pct":14.8},{"ticker":"CMPC","name":"Empresas CMPC","pct":9.2},{"ticker":"ENELAM","name":"Enel Americas","pct":8.7},{"ticker":"FALABELLA","name":"SACI Falabella","pct":7.4},{"ticker":"BSANTANDER","name":"Bco Santander Chile","pct":6.8}],
+    "EWW":  [{"ticker":"WALMEX","name":"Walmart Mexico","pct":12.4},{"ticker":"AMX","name":"America Movil","pct":10.8},{"ticker":"FEM","name":"Fomento Económico","pct":9.7},{"ticker":"GFNORTE","name":"Banorte","pct":6.3},{"ticker":"GRUMA","name":"Gruma SAB","pct":5.1}],
+}
+
+BREADTH_TICKERS = {
+    "^VIX": "VIX Fear Index",
+    "HYG":  "High Yield Bonds",
+    "LQD":  "Inv Grade Corp",
+    "TLT":  "20Y T-Bond",
+    "RSP":  "Equal Wt S&P500",
+}
+
 
 def detect_chart_patterns(df):
     """
@@ -321,49 +407,295 @@ def detect_chart_patterns(df):
 
 
 def fetch_market_context():
-    """Fetch live prices via fast_info; SMA50 via batch download (90d)."""
+    """
+    Fetch live market context via yfinance batch download.
+
+    Uses dual-interval approach:
+      - 5-min bars  (period="1d", interval="5m")  → current price, lower latency
+      - Daily bars  (period="5d", interval="1d")   → previous close for accurate daily %
+      → change = (5m_curr - daily_prev_close) / daily_prev_close × 100
+
+    Note: TradingView screener was NOT used here because it filters out ETFs
+    (it only returns equities), so SPY/QQQ/XLK would always return empty.
+    """
     import yfinance as yf
-    ctx_tickers = MARKET_TICKERS + ["^VIX"] + list(SECTOR_ETFS.keys()) + list(COMMODITY_TICKERS.keys())
     result = {}
 
-    # Step 1: batch download 90 days for SMA50 only
-    sma50_map = {}
+    # ── Batch download: SPY/QQQ/IWM + all sector ETFs ────────────────────────
+    etf_syms = MARKET_TICKERS + list(SECTOR_ETFS.keys())
     try:
-        raw = yf.download(
-            ctx_tickers, period="90d", interval="1d",
-            progress=False, auto_adjust=True, threads=True, group_by="column"
+        # Download 1: daily bars for previous close + SMA50
+        raw_d = yf.download(
+            etf_syms, period="5d", interval="1d",
+            progress=False, auto_adjust=True, threads=True
         )
-        for sym in ctx_tickers:
-            key = sym.replace("^", "")
+        # Download 2: 5-min bars for fresh current price
+        raw_5m = yf.download(
+            etf_syms, period="1d", interval="5m",
+            progress=False, auto_adjust=True, threads=True
+        )
+        multi = len(etf_syms) > 1
+        for sym in etf_syms:
             try:
-                closes = raw["Close"][sym].dropna() if len(ctx_tickers) > 1 else raw["Close"].dropna()
-                if len(closes) >= 50:
-                    sma50_map[key] = float(closes.tail(50).mean())
+                closes_d  = (raw_d["Close"][sym]  if multi else raw_d["Close"]).dropna()
+                closes_5m = (raw_5m["Close"][sym] if multi else raw_5m["Close"]).dropna()
+                if len(closes_d) < 2:
+                    continue
+                prev  = float(closes_d.iloc[-2])        # Previous session close
+                # Use 5-min bar if available (fresher), else fall back to daily partial bar
+                curr  = float(closes_5m.iloc[-1]) if not closes_5m.empty else float(closes_d.iloc[-1])
+                sma50 = float(closes_d.tail(50).mean()) if len(closes_d) >= 50 else None
+                chg   = (curr - prev) / prev * 100 if prev else 0.0
+                result[sym] = {
+                    "price":      round(curr, 2),
+                    "change":     round(chg, 2),
+                    "perf_1m":    0.0,
+                    "above_50ma": (curr > sma50) if sma50 else None,
+                    "label":      SECTOR_ETFS.get(sym, sym),
+                }
             except Exception:
                 pass
+        print(f"  → yfinance 5m+1d dual: {len(result)} ETF/index tickers", file=sys.stderr)
     except Exception as e:
-        print(f"  SMA50 batch failed: {e}", file=sys.stderr)
+        print(f"  ETF/index batch download failed: {e}", file=sys.stderr)
 
-    # Step 2: fast_info for LIVE price + today change
-    for sym in ctx_tickers:
+    # ── VIX + commodity futures/crypto (fast_info is fine for these) ─────────
+    for sym in ["^VIX"] + list(COMMODITY_TICKERS.keys()):
         key = sym.replace("^", "")
         try:
-            info   = yf.Ticker(sym).fast_info
-            price  = getattr(info, "last_price", None)
-            prev   = getattr(info, "previous_close", None)
-            change = ((price - prev) / prev * 100) if price and prev else 0.0
-            sma50  = sma50_map.get(key)
+            fi    = yf.Ticker(sym).fast_info
+            price = getattr(fi, "last_price", None)
+            prev  = getattr(fi, "previous_close", None)
+            chg   = ((price - prev) / prev * 100) if (price and prev) else 0.0
             result[key] = {
-                "price":      round(price, 2) if price else None,
-                "change":     round(change, 2),
+                "price":      round(float(price), 2) if price else None,
+                "change":     round(chg, 2),
                 "perf_1m":    0.0,
-                "above_50ma": (price > sma50) if (price and sma50) else None,
+                "above_50ma": None,
                 "label":      COMMODITY_TICKERS.get(sym, key),
             }
         except Exception:
             pass
 
-    print(f"  → {len(result)} market/sector tickers loaded", file=sys.stderr)
+    print(f"  → {len(result)} total market/sector tickers loaded", file=sys.stderr)
+    return result
+
+
+def fetch_market_highs_lows():
+    """
+    Query TradingView Screener for ALL US stocks to compute market-wide
+    52-week high/low breadth.  Returns dict with hi_by_sec, lo_by_sec,
+    hi_count, lo_count — or None on failure.
+    """
+    try:
+        print("  Fetching market 52w high/low breadth (all US stocks)...", file=sys.stderr)
+        _, df = (
+            Query()
+            .select("name", "close", "High.All", "Low.All", "sector")
+            .set_markets("america")
+            .limit(10000)
+            .get_scanner_data()
+        )
+        if df.empty:
+            return None
+        highs_by_sec = {}
+        lows_by_sec  = {}
+        for _, row in df.iterrows():
+            try:
+                price = float(row.get("close") or 0)
+                h52   = float(row.get("High.All") or 0)
+                l52   = float(row.get("Low.All")  or 0)
+                sec   = str(row.get("sector") or "Other").strip() or "Other"
+                tkr   = str(row.get("name") or "")
+                if not (price and tkr):
+                    continue
+                if h52 and price >= h52 * 0.97:
+                    highs_by_sec.setdefault(sec, []).append(tkr)
+                if l52 and price <= l52 * 1.03:
+                    lows_by_sec.setdefault(sec, []).append(tkr)
+            except Exception:
+                pass
+        hi_count = sum(len(v) for v in highs_by_sec.values())
+        lo_count = sum(len(v) for v in lows_by_sec.values())
+        print(f"    -> {hi_count} near highs, {lo_count} near lows across {len(df)} stocks",
+              file=sys.stderr)
+        return {
+            "hi_by_sec": highs_by_sec,
+            "lo_by_sec": lows_by_sec,
+            "hi_count":  hi_count,
+            "lo_count":  lo_count,
+        }
+    except Exception as e:
+        print(f"  ⚠ fetch_market_highs_lows failed: {e}", file=sys.stderr)
+        return None
+
+
+def fetch_market_pulse_data():
+    """
+    Download 1-year daily data for all Market Pulse ETFs.
+    Returns dict: sym -> {label, price, today, 1w, 1m, 3m, 6m, ytd}
+    Trading-day approx: 5=1W, 21=1M, 63=3M, 126=6M.
+    """
+    import yfinance as yf
+    import pandas as pd
+    from datetime import datetime
+
+    all_syms = list(dict.fromkeys(
+        list(THEME_ETFS.keys()) + list(SECTOR_ETFS.keys()) + list(COUNTRY_ETFS.keys())
+        + list(BREADTH_TICKERS.keys())
+    ))
+    label_map = {**THEME_ETFS, **SECTOR_ETFS, **COUNTRY_ETFS, **BREADTH_TICKERS}
+    result = {}
+    try:
+        print(f"  Market Pulse: downloading {len(all_syms)} ETFs (1Y daily)...", file=sys.stderr)
+        raw = yf.download(all_syms, period="1y", interval="1d",
+                          progress=False, auto_adjust=True, threads=True)
+        multi  = len(all_syms) > 1
+        ytd_ts = pd.Timestamp(datetime.now().year, 1, 1)
+        for sym in all_syms:
+            try:
+                closes = (raw["Close"][sym] if multi else raw["Close"]).dropna()
+                if len(closes) < 2:
+                    continue
+                curr = float(closes.iloc[-1])
+                prev = float(closes.iloc[-2])
+                def _td(n, _c=closes, _curr=curr):
+                    i = max(0, len(_c) - 1 - n)
+                    p = float(_c.iloc[i])
+                    return round((_curr - p) / p * 100, 2) if p else None
+                ytd_s = closes[closes.index >= ytd_ts]
+                ytd_p = float(ytd_s.iloc[0]) if not ytd_s.empty else None
+                ytd   = round((curr - ytd_p) / ytd_p * 100, 2) if ytd_p else None
+                result[sym] = {
+                    "label": label_map.get(sym, sym),
+                    "price": round(curr, 2),
+                    "today": round((curr - prev) / prev * 100, 2) if prev else 0.0,
+                    "1w": _td(5), "1m": _td(21), "3m": _td(63), "6m": _td(126), "ytd": ytd,
+                }
+            except Exception:
+                pass
+        print(f"    -> {len(result)} ETFs loaded for Market Pulse", file=sys.stderr)
+    except Exception as e:
+        print(f"  Market Pulse download failed: {e}", file=sys.stderr)
+    # Fetch ETF holdings for Country ETFs tab
+    try:
+        print("  Fetching ETF holdings for Country ETFs...", file=sys.stderr)
+        result["_holdings"] = fetch_etf_holdings_batch(list(COUNTRY_ETFS.keys()))
+        _n = len(result["_holdings"])
+        print(f"    -> holdings for {_n} ETFs loaded", file=sys.stderr)
+    except Exception as _he:
+        print(f"  Holdings fetch skipped: {_he}", file=sys.stderr)
+        result["_holdings"] = {}
+    # Fetch market-wide 52w highs/lows breadth via TV Screener
+    result["_market_hl"] = fetch_market_highs_lows()
+    return result
+
+
+def fetch_etf_holdings_batch(etf_syms):
+    """
+    Fetch top-10 holdings for a list of ETFs.
+    Tries multiple yfinance approaches for robustness in CI environments.
+    Returns: {sym: [{ticker, name, pct, price, today}, ...]}
+    """
+    import yfinance as yf
+    import concurrent.futures
+    result = {}
+
+    def _one(sym):
+        rows = []
+        tk = yf.Ticker(sym)
+
+        # Method 1: funds_data.top_holdings (yfinance 0.2.28+)
+        try:
+            fd = tk.funds_data
+            if fd is not None:
+                th = fd.top_holdings
+                if th is not None and hasattr(th, "empty") and not th.empty:
+                    for idx, row in th.head(10).iterrows():
+                        name = str(row.get("Name") or row.get("name") or str(idx))[:38]
+                        pct_raw = row.get("Holding Percent") or row.get("holdingPercent") or 0
+                        rows.append({
+                            "ticker": str(idx),
+                            "name": name,
+                            "pct": round(float(pct_raw or 0) * 100, 2),
+                            "price": None, "today": None,
+                        })
+                    if rows:
+                        return sym, rows
+        except Exception:
+            pass
+
+        # Method 2: info["holdings"] (older yfinance / fallback)
+        try:
+            info = tk.info
+            raw_h = info.get("holdings") or []
+            if raw_h:
+                for h in raw_h[:10]:
+                    tkr  = h.get("symbol") or h.get("ticker") or ""
+                    name = h.get("holdingName") or h.get("name") or tkr
+                    pct  = h.get("holdingPercent") or h.get("pct") or 0
+                    if tkr:
+                        rows.append({
+                            "ticker": str(tkr),
+                            "name": str(name)[:38],
+                            "pct": round(float(pct or 0) * 100, 2),
+                            "price": None, "today": None,
+                        })
+                if rows:
+                    return sym, rows
+        except Exception:
+            pass
+
+        return sym, []
+
+    print(f"  Fetching holdings for {len(etf_syms)} ETFs...", file=sys.stderr)
+    ok = 0
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
+        futs = {ex.submit(_one, s): s for s in etf_syms}
+        for fut in concurrent.futures.as_completed(futs):
+            sym, rows = fut.result()
+            if rows:
+                result[sym] = rows
+                ok += 1
+    print(f"  Holdings loaded for {ok}/{len(etf_syms)} ETFs", file=sys.stderr)
+
+    # Fallback: use static known holdings for ETFs that returned empty
+    fallback_used = 0
+    for sym in etf_syms:
+        if sym not in result and sym in COUNTRY_ETF_FALLBACK_HOLDINGS:
+            result[sym] = [dict(h) for h in COUNTRY_ETF_FALLBACK_HOLDINGS[sym]]
+            # Mark as cached so UI can show a note
+            for h in result[sym]:
+                h.setdefault("cached", True)
+            fallback_used += 1
+    if fallback_used:
+        print(f"  Holdings fallback used for {fallback_used} ETFs", file=sys.stderr)
+
+    # Batch-fetch today's price & perf for all unique holding tickers
+    all_tickers = list({h["ticker"] for rows in result.values() for h in rows})
+    if all_tickers:
+        try:
+            hd = yf.download(all_tickers, period="2d", interval="1d",
+                             progress=False, auto_adjust=True, threads=True)
+            multi = len(all_tickers) > 1
+            price_map = {}
+            for tk in all_tickers:
+                try:
+                    col = hd["Close"][tk] if multi else hd["Close"]
+                    closes = col.dropna()
+                    if len(closes) >= 2:
+                        c = float(closes.iloc[-1]); p = float(closes.iloc[-2])
+                        price_map[tk] = {"price": round(c,2),
+                                         "today": round((c-p)/p*100,2) if p else None}
+                except Exception:
+                    pass
+            for rows in result.values():
+                for h in rows:
+                    h.update(price_map.get(h["ticker"], {}))
+            print(f"  Holdings prices fetched for {len(price_map)} tickers", file=sys.stderr)
+        except Exception as e:
+            print(f"  Holdings price fetch failed: {e}", file=sys.stderr)
+
     return result
 
 
@@ -476,6 +808,88 @@ def _fetch_news_rss(sym):
     print(f"  news {sym}: all methods failed", file=sys.stderr)
     return []
 
+def _try_ibkr_prepost(tickers, host="127.0.0.1", ports=(7497, 7496, 4002, 4001)):
+    """
+    Optional: fetch pre/post-market prices from IBKR TWS or IB Gateway.
+    Returns {sym: {pre_price, post_price, pre_chg, post_chg}} or {} if unavailable.
+    Connects with readonly=True, timeout=3s per port — fails silently if TWS not running.
+    Ports: 7497=TWS paper, 7496=TWS live, 4002=Gateway paper, 4001=Gateway live.
+    """
+    try:
+        import ib_insync as _ib
+        _ib.util.logToConsole("CRITICAL")
+    except ImportError:
+        return {}
+
+    ib = _ib.IB()
+    connected = False
+    for port in ports:
+        try:
+            ib.connect(host, port, clientId=99, timeout=3, readonly=True)
+            connected = True
+            print(f"  🏦 IBKR connected on port {port}", file=sys.stderr)
+            break
+        except Exception:
+            continue
+
+    if not connected:
+        return {}
+
+    try:
+        from datetime import datetime as _dt2, timezone as _tz
+        # ET offset: UTC-4 summer, UTC-5 winter (DST approximation)
+        import time as _time
+        _utc_now = _dt2.now(_tz.utc)
+        # DST: 2nd Sun Mar – 1st Sun Nov (approx month check)
+        _dst = 3 <= _utc_now.month <= 10
+        _et_offset = -4 if _dst else -5
+        from datetime import timedelta as _td
+        _et_now = _utc_now + _td(hours=_et_offset)
+        _mkt_open  = _et_now.replace(hour=9,  minute=30, second=0, microsecond=0)
+        _mkt_close = _et_now.replace(hour=16, minute=0,  second=0, microsecond=0)
+        is_pre  = _et_now < _mkt_open
+        is_post = _et_now >= _mkt_close
+
+        if not is_pre and not is_post:
+            print("  🏦 IBKR: regular session — no extended-hours data needed", file=sys.stderr)
+            ib.disconnect()
+            return {}
+
+        # Batch request — all tickers at once
+        contracts   = [_ib.Stock(sym, "SMART", "USD") for sym in tickers]
+        ibk_tickers = [ib.reqMktData(c, "233", False, False) for c in contracts]
+        ib.sleep(4)          # wait for tick stream
+
+        out = {}
+        for sym, tkr in zip(tickers, ibk_tickers):
+            try:
+                close = tkr.close if tkr.close and tkr.close > 0 else None
+                last  = tkr.last  if tkr.last  and tkr.last  > 0 else None
+                if not close or not last or abs(last - close) < 0.001:
+                    continue
+                chg = round((last - close) / close * 100, 2)
+                if is_pre:
+                    out[sym] = {"pre_price": last,  "pre_chg": chg,
+                                "post_price": None,  "post_chg": None}
+                else:
+                    out[sym] = {"pre_price": None,  "pre_chg": None,
+                                "post_price": last,  "post_chg": chg}
+            except Exception:
+                pass
+
+        print(f"  🏦 IBKR extended-hours: {len(out)}/{len(tickers)} tickers", file=sys.stderr)
+        return out
+
+    except Exception as _e:
+        print(f"  ⚠ IBKR error: {_e}", file=sys.stderr)
+        return {}
+    finally:
+        try:
+            ib.disconnect()
+        except Exception:
+            pass
+
+
 def fetch_yahoo_data(tickers):
     """Fetch pre/post-market %, earnings, RS Line (3M vs SPY), analyst ratings, news."""
     import yfinance as yf
@@ -486,6 +900,10 @@ def fetch_yahoo_data(tickers):
     logging.getLogger("urllib3").setLevel(logging.CRITICAL)
     warnings.filterwarnings("ignore", module="yfinance")
     result = {}
+
+    # ── Optional IBKR pre/post override (falls back silently if TWS not running) ──
+    print("🏦 Trying IBKR extended-hours data...", file=sys.stderr)
+    _ibkr = _try_ibkr_prepost(list(tickers))
 
     def _calc_atr(df, periods=14):
         """14-period ATR from weekly OHLCV. Returns (atr_val, atr_pct) or (None, None)."""
@@ -567,9 +985,18 @@ def fetch_yahoo_data(tickers):
             reg_close = (getattr(info, "regular_market_previous_close", None)
                          or getattr(info, "previous_close", None))
 
-            # Try fast_info attrs first (yfinance 0.2.x)
-            pre_price  = getattr(info, "pre_market_price",  None)
-            post_price = getattr(info, "post_market_price", None)
+            # ── IBKR source (priority 1) ─────────────────────────────────
+            _ibkr_sym = _ibkr.get(sym, {})
+            pre_price  = _ibkr_sym.get("pre_price")
+            post_price = _ibkr_sym.get("post_price")
+            pre_chg    = _ibkr_sym.get("pre_chg")
+            post_chg   = _ibkr_sym.get("post_chg")
+
+            # ── yfinance fallback if IBKR didn't supply data ─────────────
+            if pre_price is None and post_price is None:
+                # Try fast_info attrs first (yfinance 0.2.x)
+                pre_price  = getattr(info, "pre_market_price",  None)
+                post_price = getattr(info, "post_market_price", None)
 
             # Fallback: t.info dict (camelCase keys)
             if pre_price is None or post_price is None:
@@ -615,8 +1042,11 @@ def fetch_yahoo_data(tickers):
                 except Exception:
                     pass
 
-            pre_chg  = pct(pre_price,  reg_close)
-            post_chg = pct(post_price, reg_close)
+            # Use IBKR chg if already computed, else calculate from yfinance prices
+            if pre_chg is None:
+                pre_chg  = pct(pre_price,  reg_close)
+            if post_chg is None:
+                post_chg = pct(post_price, reg_close)
 
             # Earnings date — calendar can be a dict or DataFrame depending on yfinance version
             earnings_date, days_to_earn = None, 999
@@ -787,6 +1217,7 @@ def fetch_yahoo_data(tickers):
                 "insider_sells":  insider_sells,
                 "institutions":   institutions,
                 "chart_pattern":  detect_chart_patterns(_weekly_data.get(sym)),
+                "pre_post_source": "ibkr" if (_ibkr_sym.get("pre_price") or _ibkr_sym.get("post_price")) else "yahoo",
             }
         except Exception as e:
             print(f"  ⚠ yfinance {sym}: {e}", file=sys.stderr)
@@ -1063,29 +1494,74 @@ def score_reversion(row):
 
 
 def calculate_trade_setup(row, strategy):
-    """Calculate entry, stop, T1, T2, and R/R for the trade."""
-    price  = safe(row.get("close"), 0)
-    sma50  = safe(row.get("SMA50"), 0)
-    sma200 = safe(row.get("SMA200"), 0)
+    """Calculate entry, stop, T1, T2, and R/R for the trade.
+
+    Entry logic:
+      Minervini  — breakout above 52w high (within 5%) or VCP base top
+      CANSLIM    — pivot breakout +1% above current price
+      Reversion  — buy the bounce +0.5% above close
+
+    Stop logic (ATR-based, clamped to strategy risk limits):
+      ATR estimated from daily high-low range × 1.5 (approximates True Range).
+      Minervini: entry − 2.0×ATR, clamped −3% to −8%
+      CANSLIM:   entry − 1.5×ATR, clamped −3% to −7%
+      Reversion: below day low OR entry − 1.5×ATR, clamped −2% to −5%
+
+    T1/T2 logic:
+      Minervini/CANSLIM: fixed R/R multiples (3:1 and 5:1 / 2.5:1 and 4:1)
+      Reversion: T1 = SMA50 (mean reversion target), T2 = SMA200
+    """
+    price    = safe(row.get("close"), 0)
+    sma50    = safe(row.get("SMA50"), 0)
+    sma200   = safe(row.get("SMA200"), 0)
+    high52   = safe(row.get("High.All"), 0)
+    day_high = safe(row.get("high"), 0)
+    day_low  = safe(row.get("low"), 0)
 
     if not price:
         return {}
 
+    # ── ATR estimate from daily range ────────────────────────────────────────
+    # True Range proxy: high-low of current session × 1.5 (accounts for gaps)
+    # Minimum fallback: 1.5% of price (avoids near-zero ATR on illiquid days)
+    daily_range = (day_high - day_low) if (day_high and day_low and day_high > day_low) else 0
+    atr = max(daily_range * 1.5, price * 0.015)
+
+    def clamp_stop(raw_stop, entry, min_pct, max_pct):
+        """Keep stop within [entry*(1-max_pct), entry*(1-min_pct)]."""
+        floor = entry * (1.0 - max_pct)   # furthest allowed stop
+        ceil_ = entry * (1.0 - min_pct)   # closest allowed stop
+        return round(max(floor, min(raw_stop, ceil_)), 2)
+
     if strategy == "minervini":
-        entry = round(price * 1.005, 2)
-        stop  = round(price * 0.92, 2)
-        t1    = round(price * 1.20, 2)
-        t2    = round(price * 1.30, 2)
+        # Breakout mode: price within 5% of 52w high → entry just above resistance
+        if high52 and price >= high52 * 0.95:
+            entry = round(high52 * 1.001, 2)
+        else:
+            # Consolidation/VCP base: entry slightly above current price
+            entry = round(price * 1.005, 2)
+        stop  = clamp_stop(entry - 2.0 * atr, entry, 0.03, 0.08)
+        risk  = entry - stop
+        t1    = round(entry + risk * 3.0, 2)   # 3:1 R/R
+        t2    = round(entry + risk * 5.0, 2)   # 5:1 R/R (trim point)
+
     elif strategy == "canslim":
         entry = round(price * 1.01, 2)
-        stop  = round(price * 0.93, 2)
-        t1    = round(price * 1.20, 2)
-        t2    = round(price * 1.25, 2)
+        stop  = clamp_stop(entry - 1.5 * atr, entry, 0.03, 0.07)
+        risk  = entry - stop
+        t1    = round(entry + risk * 2.5, 2)   # 2.5:1 R/R
+        t2    = round(entry + risk * 4.0, 2)   # 4:1 R/R
+
     else:  # reversion
-        entry = round(price * 1.01, 2)
-        stop  = round(price * 0.95, 2)
-        t1    = sma50 if sma50 and sma50 > entry else round(price * 1.08, 2)
-        t2    = round(price * 1.15, 2)
+        entry = round(price * 1.005, 2)
+        # Stop: just below the day low OR 1.5×ATR — whichever is tighter
+        stop_low = round(day_low * 0.99, 2) if (day_low and day_low < entry) else None
+        stop_atr = round(entry - 1.5 * atr, 2)
+        raw_stop = max(stop_low, stop_atr) if stop_low else stop_atr
+        stop = clamp_stop(raw_stop, entry, 0.02, 0.05)
+        # T1 = SMA50 (mean reversion to the mean), T2 = SMA200
+        t1   = round(sma50,  2) if (sma50  and sma50  > entry) else round(entry * 1.08, 2)
+        t2   = round(sma200, 2) if (sma200 and sma200 > t1)    else round(t1 * 1.05, 2)
 
     risk   = entry - stop
     reward = t1 - entry
@@ -1148,6 +1624,7 @@ def enrich_tickers(tickers, strategy, global_markets=False, fv_meta=None):
             "change_pct":  safe(row.get("change")),
             "rsi":         safe(row.get("RSI")),
             "rel_volume":  safe(row.get("relative_volume_10d_calc")),
+            "mkt_cap":     safe(row.get("market_cap_basic")),
             "sma50":       safe(row.get("SMA50")),
             "sma200":      safe(row.get("SMA200")),
             "high52":      safe(row.get("High.All")),
@@ -1166,10 +1643,438 @@ def enrich_tickers(tickers, strategy, global_markets=False, fv_meta=None):
     return results
 
 
-def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mode=False):
+
+def build_pulse_panel_html(pulse_data, all_results=None):
+    """
+    Collapsible Market Pulse panel:
+      Tabs -- Theme Tracker | S&P Sectors | Country ETFs | Highs / Lows
+    pulse_data  : dict from fetch_market_pulse_data()
+    all_results : enriched scanner rows (Highs/Lows tab)
+    """
+    if not pulse_data:
+        return ""
+
+    # Extract pre-fetched ETF holdings (country tab) without mutating caller dict
+    _holdings = (pulse_data or {}).get("_holdings", {})
+
+    SQ = "'"   # single-quote helper to avoid heredoc quoting issues
+
+    def _fmt(v):
+        if v is None:
+            return '<span style="color:#475569">&#8212;</span>'
+        c = "#10b981" if v >= 0 else "#ef4444"
+        s = "+" if v >= 0 else ""
+        return '<span style="color:%s;font-weight:600">%s%.2f%%</span>' % (c, s, v)
+
+    def _build_rows(sym_dict):
+        rows = []
+        for sym, _lbl in sym_dict.items():
+            d = pulse_data.get(sym)
+            if not d:
+                continue
+            rows.append((d.get("today") or 0.0, sym, d))
+        rows.sort(key=lambda x: x[0], reverse=True)
+        html = ""
+        for today_v, sym, d in rows:
+            bg  = "rgba(16,185,129,.07)" if today_v >= 0 else "rgba(239,68,68,.07)"
+            p   = d.get("price", 0)
+            lbl = d.get("label", sym)
+            fv_url = "https://finviz.com/quote.ashx?t=" + sym
+            html += (
+                "<tr style=\"border-bottom:1px solid #1e293b;cursor:pointer\""
+                " onclick=\"window.open(%s'%s',%s'_blank'%s)\"" % (SQ, fv_url, SQ, SQ)
+                + " onmouseover=\"this.style.background=%s#1e293b%s\"" % (SQ, SQ)
+                + " onmouseout=\"this.style.background=%stransparent%s\">" % (SQ, SQ)
+                + "<td style=\"padding:5px 10px;font-weight:700;color:#94a3b8;font-size:12px;white-space:nowrap\">%s</td>" % sym
+                + "<td style=\"padding:5px 10px;color:#64748b;font-size:12px;white-space:nowrap\">%s</td>" % lbl
+                + "<td style=\"padding:5px 10px;text-align:right;color:#94a3b8;font-size:12px\">$%.2f</td>" % p
+                + "<td style=\"padding:5px 10px;text-align:right;background:%s;font-size:12px\">%s</td>" % (bg, _fmt(today_v))
+                + "<td style=\"padding:5px 10px;text-align:right;font-size:12px\">%s</td>" % _fmt(d.get("1w"))
+                + "<td style=\"padding:5px 10px;text-align:right;font-size:12px\">%s</td>" % _fmt(d.get("1m"))
+                + "<td style=\"padding:5px 10px;text-align:right;font-size:12px\">%s</td>" % _fmt(d.get("3m"))
+                + "<td style=\"padding:5px 10px;text-align:right;font-size:12px\">%s</td>" % _fmt(d.get("6m"))
+                + "<td style=\"padding:5px 10px;text-align:right;font-size:12px\">%s</td>" % _fmt(d.get("ytd"))
+                + "</tr>"
+            )
+        return html
+
+    def _th(label, pane_id, col_i, active=False):
+        clr = "color:#f59e0b;" if active else "color:#64748b;"
+        return (
+            "<th style=\"padding:6px 10px;text-align:right;%sfont-size:11px;"
+            "cursor:pointer;user-select:none;white-space:nowrap\""
+            " onclick=\"mpSort(%s'%s',%s%d%s)\">%s</th>"
+        ) % (clr, SQ, pane_id, SQ, col_i, SQ[0:0], label)
+
+    def _build_pane(sym_dict, pane_id, visible=False):
+        rows = _build_rows(sym_dict)
+        disp = "block" if visible else "none"
+        thead = (
+            "<thead style=\"position:sticky;top:0;background:#151e2d;z-index:2\">"
+            "<tr style=\"border-bottom:2px solid #334155\">"
+            "<th style=\"padding:6px 10px;text-align:left;color:#64748b;font-size:11px;"
+            "cursor:pointer;user-select:none\" onclick=\"mpSort(%s'%s',0)\">Ticker</th>" % (SQ, pane_id)
+            + "<th style=\"padding:6px 10px;text-align:left;color:#64748b;font-size:11px\">Group</th>"
+            + "<th style=\"padding:6px 10px;text-align:right;color:#64748b;font-size:11px\">Price</th>"
+            + _th("Today &#9660;", pane_id, 3, active=True)
+            + _th("1W", pane_id, 4) + _th("1M", pane_id, 5)
+            + _th("3M", pane_id, 6) + _th("6M", pane_id, 7) + _th("YTD", pane_id, 8)
+            + "</tr></thead>"
+        )
+        return (
+            "<div id=\"mpp-%s\" class=\"mpp-pane\" style=\"display:%s\">"
+            "<div style=\"overflow-x:auto;max-height:420px;overflow-y:auto\">"
+            "<table style=\"width:100%%;border-collapse:collapse\">"
+            "%s"
+            "<tbody id=\"mpp-body-%s\">%s</tbody>"
+            "</table></div></div>"
+        ) % (pane_id, disp, thead, pane_id, rows)
+
+    def _highs_lows_pane():
+        # Prefer full-market breadth data (from TV Screener all-stocks query)
+        mhl = (pulse_data or {}).get("_market_hl") if pulse_data else None
+        if mhl:
+            highs_by_sec = mhl["hi_by_sec"]
+            lows_by_sec  = mhl["lo_by_sec"]
+            total_hi     = mhl["hi_count"]
+            total_lo     = mhl["lo_count"]
+        elif all_results:
+            # Fallback: use scan universe (growth stocks only — lows will be rare)
+            highs_by_sec = {}
+            lows_by_sec  = {}
+            total_hi = total_lo = 0
+            for r in all_results:
+                try:
+                    price = float(r.get("price") or r.get("close") or 0)
+                    h52   = float(str(r.get("high52") or r.get("high_52w") or "0").replace(",","") or 0)
+                    l52   = float(str(r.get("low52")  or r.get("low_52w")  or "0").replace(",","") or 0)
+                    sec   = (r.get("sector") or "Other").strip() or "Other"
+                    tkr   = r.get("ticker", "")
+                    if not (price and tkr):
+                        continue
+                    if h52 and price >= h52 * 0.97:
+                        highs_by_sec.setdefault(sec, []).append(tkr); total_hi += 1
+                    if l52 and price <= l52 * 1.03:
+                        lows_by_sec.setdefault(sec, []).append(tkr); total_lo += 1
+                except Exception:
+                    pass
+        else:
+            return (
+                "<div id=\"mpp-highs\" class=\"mpp-pane\" style=\"display:none;padding:20px;"
+                "color:#64748b;text-align:center\">&#9888; No data available</div>"
+            )
+        total  = total_hi + total_lo or 1
+        hi_pct = round(total_hi / total * 100)
+        lo_pct = 100 - hi_pct
+        html = (
+            "<div id=\"mpp-highs\" class=\"mpp-pane\" style=\"display:none;padding:14px 16px\">"
+            "<div style=\"display:flex;align-items:center;gap:12px;margin-bottom:14px\">"
+            "<span style=\"color:#10b981;font-size:13px;font-weight:700\">&#8679; Near Highs %d%% (%d)</span>"
+            "<div style=\"flex:1;height:7px;border-radius:4px;background:#ef4444\">"
+            "<div style=\"width:%d%%;height:100%%;background:#10b981;border-radius:4px\"></div></div>"
+            "<span style=\"color:#ef4444;font-size:13px;font-weight:700\">&#8681; Near Lows %d%% (%d)</span>"
+            "</div><div style=\"display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px\">"
+        ) % (hi_pct, total_hi, hi_pct, lo_pct, total_lo)
+        for sec, tkrs in sorted(highs_by_sec.items(), key=lambda x: -len(x[1]))[:12]:
+            chips = "".join(
+                "<span style=\"background:#064e3b;color:#34d399;padding:2px 7px;border-radius:5px;"
+                "font-size:11px;font-weight:700;cursor:pointer;display:inline-block\""
+                " onclick=\"window.open(%s'https://finviz.com/quote.ashx?t=%s',%s'_blank'%s)\">%s</span>" % (SQ, t, SQ, SQ, t)
+                for t in tkrs[:8]
+            )
+            html += (
+                "<div style=\"background:#0f172a;border:1px solid #1a3a2a;border-radius:8px;padding:8px 10px\">"
+                "<div style=\"color:#10b981;font-size:11px;font-weight:700;margin-bottom:6px\">&#9650; %s (%d)</div>"
+                "<div style=\"display:flex;flex-wrap:wrap;gap:4px\">%s</div></div>"
+            ) % (sec, len(tkrs), chips)
+        for sec, tkrs in sorted(lows_by_sec.items(), key=lambda x: -len(x[1]))[:4]:
+            chips = "".join(
+                "<span style=\"background:#450a0a;color:#fca5a5;padding:2px 7px;border-radius:5px;"
+                "font-size:11px;font-weight:700;cursor:pointer;display:inline-block\""
+                " onclick=\"window.open(%s'https://finviz.com/quote.ashx?t=%s',%s'_blank'%s)\">%s</span>" % (SQ, t, SQ, SQ, t)
+                for t in tkrs[:6]
+            )
+            html += (
+                "<div style=\"background:#0f172a;border:1px solid #3a1a1a;border-radius:8px;padding:8px 10px\">"
+                "<div style=\"color:#ef4444;font-size:11px;font-weight:700;margin-bottom:6px\">&#9660; %s (%d)</div>"
+                "<div style=\"display:flex;flex-wrap:wrap;gap:4px\">%s</div></div>"
+            ) % (sec, len(tkrs), chips)
+        return html + "</div></div>"
+
+    def _breadth_pane():
+        PERIODS = [("today","Today"),("1w","1W"),("1m","1M"),
+                   ("3m","3M"),("6m","6M"),("ytd","YTD")]
+
+        def _br(sym_dict, period):
+            vals = [pulse_data.get(s, {}).get(period) for s in sym_dict]
+            vals = [v for v in vals if v is not None]
+            if not vals:
+                return 0, len(sym_dict), 0
+            pos = sum(1 for v in vals if v > 0)
+            tot = len(vals)
+            return pos, tot, round(pos / tot * 100)
+
+        def _brow(lbl, pos, tot, pct):
+            bc = "#10b981" if pct >= 60 else "#f59e0b" if pct >= 40 else "#ef4444"
+            return (
+                "<tr style=\"border-bottom:1px solid #0f172a\">"
+                "<td style=\"padding:4px 10px;color:#94a3b8;font-size:12px;width:55px\">%s</td>"
+                "<td style=\"padding:4px 8px;width:90px\">"
+                "<div style=\"background:#0f172a;border-radius:3px;height:6px\">"
+                "<div style=\"width:%d%%;height:100%%;background:%s;border-radius:3px\"></div>"
+                "</div></td>"
+                "<td style=\"padding:4px 8px;color:%s;font-size:12px;font-weight:700;width:40px\">%d%%</td>"
+                "<td style=\"padding:4px 8px;color:#64748b;font-size:11px\">%d/%d</td>"
+                "</tr>"
+            ) % (lbl, pct, bc, bc, pct, pos, tot)
+
+        def _btable(title, sym_dict):
+            rows = "".join(_brow(lbl, *_br(sym_dict, p)) for p, lbl in PERIODS)
+            return (
+                "<div>"
+                "<div style=\"color:#94a3b8;font-size:11px;font-weight:700;text-transform:uppercase;"
+                "letter-spacing:.5px;margin-bottom:8px\">%s</div>"
+                "<table style=\"width:100%%;border-collapse:collapse\"><tbody>%s</tbody></table>"
+                "</div>"
+            ) % (title, rows)
+
+        def _risk_card(sym, fallback):
+            d = pulse_data.get(sym, {})
+            if not d:
+                return ""
+            price = d.get("price", 0)
+            today = d.get("today", 0)
+            lbl   = d.get("label", fallback)
+            c     = "#10b981" if today >= 0 else "#ef4444"
+            arr   = "+" if today >= 0 else ""
+            # VIX: invert colour (high VIX = red = bad)
+            if sym == "^VIX":
+                c = "#ef4444" if price > 20 else "#f59e0b" if price > 15 else "#10b981"
+            return (
+                "<div style=\"background:#0f172a;border:1px solid #1e293b;border-radius:8px;"
+                "padding:10px 14px;min-width:120px\">"
+                "<div style=\"color:#64748b;font-size:10px;text-transform:uppercase;"
+                "letter-spacing:.5px;margin-bottom:4px\">%s</div>"
+                "<div style=\"color:#e2e8f0;font-size:17px;font-weight:700\">%.2f</div>"
+                "<div style=\"color:%s;font-size:11px;margin-top:2px\">%s%.2f%%</div>"
+                "</div>"
+            ) % (lbl, price, c, arr, today)
+
+        risk_syms = [("^VIX","VIX"),("HYG","High Yield"),("LQD","IG Corp"),
+                     ("TLT","20Y T-Bond"),("RSP","Equal Wt S&P")]
+        risk_html = "".join(_risk_card(s, lb) for s, lb in risk_syms)
+
+        s_table = _btable("Sector Participation  (11 ETFs)", SECTOR_ETFS)
+        t_table = _btable("Theme Participation  (26 ETFs)",  THEME_ETFS)
+        c_table = _btable("Country Participation  (20 ETFs)", COUNTRY_ETFS)
+
+        return (
+            "<div id=\"mpp-breadth\" class=\"mpp-pane\" style=\"display:none;padding:16px\">"
+            "<div style=\"display:grid;grid-template-columns:repeat(3,1fr);gap:20px;"
+            "margin-bottom:20px\">"
+            + s_table + t_table + c_table
+            + "</div>"
+            "<div style=\"color:#94a3b8;font-size:11px;font-weight:700;text-transform:uppercase;"
+            "letter-spacing:.5px;margin-bottom:10px\">&#9888; Risk Sentiment</div>"
+            "<div style=\"display:flex;flex-wrap:wrap;gap:10px\">"
+            + risk_html
+            + "</div></div>"
+        )
+
+    themes_pane    = _build_pane(THEME_ETFS,   "themes",    visible=True)
+    sectors_pane   = _build_pane(SECTOR_ETFS,  "sectors")
+
+    def _build_country_pane(sym_dict, pane_id, holdings):
+        # Country ETF pane: same perf table + expandable top-10 holdings sub-rows
+        rows_html = _build_rows(sym_dict)
+        hold_rows = {}
+        for sym, hlist in (holdings or {}).items():
+            if not hlist:
+                continue
+            h_inner = (
+                "<tr id='hold-" + sym + "' style='display:none;background:#0a1628'>"
+                "<td colspan='9' style='padding:0'>"
+                "<div style='padding:10px 14px 14px'>"
+                "<div style='font-size:10px;color:#475569;font-weight:700;"
+                "text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px'>Top Holdings"
+                + (" <span style='font-weight:400;color:#374151;font-size:9px'>(cached)</span>"
+                   if any(h.get("cached") for h in hlist) else "")
+                + "</div>"
+                "<table style='width:100%;border-collapse:collapse'>"
+                "<thead><tr>"
+                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:left'>Ticker</th>"
+                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:left'>Company</th>"
+                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>Weight</th>"
+                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>Price</th>"
+                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>Today</th>"
+                "</tr></thead><tbody>"
+            )
+            for h in hlist:
+                tkr  = h.get("ticker", "")
+                name = h.get("name", tkr)
+                pct  = h.get("pct", 0)
+                px   = h.get("price")
+                td   = h.get("today")
+                px_s = ("$%.2f" % px) if px else "&#8212;"
+                if td is not None:
+                    tc  = "#10b981" if td >= 0 else "#ef4444"
+                    sgn = "+" if td >= 0 else ""
+                    td_s = "<span style='color:%s'>%s%.2f%%</span>" % (tc, sgn, td)
+                else:
+                    td_s = "<span style='color:#475569'>&#8212;</span>"
+                fv_url = "https://finviz.com/quote.ashx?t=" + tkr
+                h_inner += (
+                    "<tr style='border-bottom:1px solid #1e2d42'>"
+                    "<td style='padding:4px 8px;font-weight:700;font-size:11px'>"
+                    "<a href='%s' target='_blank' style='color:#60a5fa;text-decoration:none'>%s</a></td>"
+                    "<td style='padding:4px 8px;color:#94a3b8;font-size:11px'>%s</td>"
+                    "<td style='padding:4px 8px;color:#f59e0b;font-size:11px;text-align:right'>%.2f%%</td>"
+                    "<td style='padding:4px 8px;color:#94a3b8;font-size:11px;text-align:right'>%s</td>"
+                    "<td style='padding:4px 8px;font-size:11px;text-align:right'>%s</td>"
+                    "</tr>"
+                ) % (fv_url, tkr, name, pct, px_s, td_s)
+            h_inner += "</tbody></table></div></td></tr>"
+            hold_rows[sym] = h_inner
+
+        final_rows = ""
+        for sym in sym_dict:
+            row_marker = (
+                '<tr style="border-bottom:1px solid #1e293b;cursor:pointer"'
+                ' onclick="window.open(%s\'https://finviz.com/quote.ashx?t=%s\',%s\'_blank\'%s)"'
+                % (SQ, sym, SQ, SQ)
+            )
+            row_start = rows_html.find(row_marker)
+            if row_start == -1:
+                continue
+            row_end = rows_html.find("</tr>", row_start) + 5
+            orig_row = rows_html[row_start:row_end]
+            if sym in hold_rows:
+                toggled = orig_row.replace(
+                    'onclick="window.open(%s\'https://finviz.com/quote.ashx?t=%s\',%s\'_blank\'%s)"'
+                    % (SQ, sym, SQ, SQ),
+                    "onclick=\"toggleHold('%s')\"" % sym
+                )
+                arrow_td = (
+                    '<td style="padding:5px 10px;font-weight:700;color:#94a3b8;font-size:12px;white-space:nowrap">'
+                    "<span id='arr-%s' style='display:inline-block;margin-right:5px;"
+                    "transition:transform .2s;color:#64748b'>&#9658;</span>%s</td>"
+                ) % (sym, sym)
+                orig_td = (
+                    '<td style="padding:5px 10px;font-weight:700;color:#94a3b8;font-size:12px;white-space:nowrap">%s</td>'
+                    % sym
+                )
+                toggled = toggled.replace(orig_td, arrow_td)
+                final_rows += toggled + hold_rows[sym]
+            else:
+                final_rows += orig_row
+
+        thead = (
+            "<thead style='position:sticky;top:0;background:#151e2d;z-index:2'>"
+            "<tr style='border-bottom:2px solid #334155'>"
+            "<th style='padding:6px 10px;text-align:left;color:#64748b;font-size:11px'>Ticker</th>"
+            "<th style='padding:6px 10px;text-align:left;color:#64748b;font-size:11px'>Country / ETF</th>"
+            "<th style='padding:6px 10px;text-align:right;color:#64748b;font-size:11px'>Price</th>"
+            + _th("Today &#9660;", pane_id, 3, active=True)
+            + _th("1W", pane_id, 4) + _th("1M", pane_id, 5)
+            + _th("3M", pane_id, 6) + _th("6M", pane_id, 7) + _th("YTD", pane_id, 8)
+            + "</tr></thead>"
+        )
+        return (
+            "<div id='mpp-%s' class='mpp-pane' style='display:none'>"
+            "<div style='overflow-x:auto;max-height:520px;overflow-y:auto'>"
+            "<table style='width:100%%;border-collapse:collapse'>"
+            "%s<tbody id='mpp-body-%s'>%s</tbody>"
+            "</table></div></div>"
+        ) % (pane_id, thead, pane_id, final_rows)
+
+    countries_pane = _build_country_pane(COUNTRY_ETFS, "countries", _holdings)
+    highs_pane     = _highs_lows_pane()
+    breadth_pane   = _breadth_pane()
+
+    js = (
+        "<script>(function(){"
+        "var _d={};"
+        "window.mpSort=function(id,col){"
+        "var tb=document.getElementById(\"mpp-body-\"+id);if(!tb)return;"
+        "var rows=Array.from(tb.querySelectorAll(\"tr:not([id^='hold-'])\"));"
+        "var k=id+\"_\"+col;_d[k]=(_d[k]===\"desc\")?\"asc\":\"desc\";"
+        "rows.sort(function(a,b){"
+        "var av=((a.cells[col]||{}).textContent||\"\").replace(/[+%$,—\\s]+/g,\"\").trim();"
+        "var bv=((b.cells[col]||{}).textContent||\"\").replace(/[+%$,—\\s]+/g,\"\").trim();"
+        "var an=parseFloat(av),bn=parseFloat(bv);"
+        "if(isNaN(an)&&isNaN(bn))return _d[k]===\"asc\"?av.localeCompare(bv):bv.localeCompare(av);"
+        "if(isNaN(an))return 1;if(isNaN(bn))return -1;"
+        "return _d[k]===\"asc\"?an-bn:bn-an;});"
+        "rows.forEach(function(r){"
+        "tb.appendChild(r);"
+        "var sym=(r.cells[0]?r.cells[0].textContent:'').replace(/[^A-Z0-9]/g,'').trim();"
+        "if(sym){var hr=document.getElementById('hold-'+sym);if(hr)tb.appendChild(hr);}"
+        "});};"
+        "function toggleHold(sym){"
+        "var r=document.getElementById('hold-'+sym);"
+        "var a=document.getElementById('arr-'+sym);"
+        "if(!r)return;"
+        "var open=r.style.display==='table-row';"
+        "r.style.display=open?'none':'table-row';"
+        "if(a)a.style.transform=open?'':' rotate(90deg)';"
+        "}"
+        "window.mppSwitch=function(btn,pane){"
+        "document.querySelectorAll(\".mpp-tab\").forEach(function(b){"
+        "b.style.color=\"#64748b\";b.style.borderBottom=\"2px solid transparent\";b.style.fontWeight=\"400\";});"
+        "btn.style.color=\"#e2e8f0\";btn.style.borderBottom=\"2px solid #f59e0b\";btn.style.fontWeight=\"600\";"
+        "document.querySelectorAll(\".mpp-pane\").forEach(function(p){p.style.display=\"none\";});"
+        "var el=document.getElementById(\"mpp-\"+pane);if(el)el.style.display=\"block\";};"
+        "window.mppToggle=function(){"
+        "var b=document.getElementById(\"mpp-body-panel\");"
+        "var i=document.getElementById(\"mpp-toggle-icon\");if(!b)return;"
+        "var v=b.style.display!==\"none\";"
+        "b.style.display=v?\"none\":\"block\";"
+        "if(i)i.textContent=v?\"▼ expand\":\"▲ collapse\";};"
+        "})();</script>"
+    )
+
+    def _tab_btn(pane, label, active=False):
+        bb = "#f59e0b" if active else "transparent"
+        cc = "#e2e8f0" if active else "#64748b"
+        fw = "600" if active else "400"
+        return (
+            "      <button class=\"mpp-tab\" onclick=\"mppSwitch(this,'%s')\""
+            " style=\"background:none;border:none;border-bottom:2px solid %s;color:%s;font-weight:%s;"
+            "padding:9px 14px;cursor:pointer;font-size:12px;white-space:nowrap\">%s</button>\n"
+        ) % (pane, bb, cc, fw, label)
+
+    return (
+        "\n<!-- Market Pulse Panel -->\n"
+        "<div style=\"background:#1e293b;border:1px solid #334155;border-radius:12px;margin-bottom:14px;overflow:hidden\">\n"
+        "  <div onclick=\"mppToggle()\" style=\"display:flex;align-items:center;justify-content:space-between;"
+        "padding:10px 16px;cursor:pointer;user-select:none;border-bottom:1px solid #334155\">\n"
+        "    <span style=\"font-size:13px;font-weight:700;color:#e2e8f0\">&#128202; Market Pulse</span>\n"
+        "    <span id=\"mpp-toggle-icon\" style=\"color:#64748b;font-size:11px\">&#9660; expand</span>\n"
+        "  </div>\n"
+        "  <div id=\"mpp-body-panel\" style=\"display:none\">\n"
+        "    <div style=\"display:flex;border-bottom:1px solid #334155;padding:0 8px;overflow-x:auto\">\n"
+        + _tab_btn("themes",    "&#128200; Theme Tracker", active=True)
+        + _tab_btn("sectors",   "&#127959; S&amp;P Sectors")
+        + _tab_btn("countries", "&#127758; Country ETFs")
+        + _tab_btn("highs",     "&#128202; Highs / Lows")
+        + _tab_btn("breadth",   "&#128268; Breadth")
+        + "    </div>\n"
+        + themes_pane + "\n"
+        + sectors_pane + "\n"
+        + countries_pane + "\n"
+        + highs_pane + "\n"
+        + breadth_pane + "\n"
+        + "  </div>\n</div>\n"
+        + js
+    )
+
+
+
+def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mode=False, new_tickers=None, market_pulse=None):
     """Generate self-contained HTML dashboard."""
     market_ctx = market_ctx or {}
     yahoo      = yahoo or {}
+    new_tickers = set(new_tickers or [])
     now        = datetime.now().strftime("%B %d, %Y %H:%M")
     valid_count    = sum(1 for r in results if r["valid_setup"])
     strategy_label = {
@@ -1312,6 +2217,9 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         '<div style="display:flex;gap:6px;flex-wrap:wrap">%s</div>'
         '</div>'
     ) % "".join(sector_cells)
+
+    # Market Pulse panel (Theme Tracker / S&P Sectors / Country ETFs / Highs-Lows)
+    pulse_panel_html = build_pulse_panel_html(market_pulse, results) if market_pulse else ""
 
     # ── Table rows and detail cards ───────────────────────────────────────────
     rows_html  = ""
@@ -1470,7 +2378,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             ' data-stop="%(s)s" data-t1="%(t1)s" data-strategy="%(strat)s"'
             ' data-sector="%(sec)s" data-chg="%(chg_raw)s"'
             ' onclick="showDetail(\'%(t)s\')">'
-            '<td style="padding:8px 12px;font-weight:600;color:#e2e8f0">%(t)s%(sdot)s</td>'
+            '<td style="padding:8px 12px;font-weight:600;color:#e2e8f0">%(t)s%(new_badge)s%(sdot)s</td>'
             '<td style="padding:8px 12px;color:#94a3b8;font-size:12px">%(sec)s</td>'
             '<td style="padding:8px 12px;color:#e2e8f0">$%(p)s</td>'
             '<td style="padding:8px 12px;color:%(cc)s">%(cpct)s</td>'
@@ -1492,6 +2400,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             '</tr>'
         ) % {
             "t": ticker, "bg": row_bg,
+            "new_badge": ('<span style="background:#dc2626;color:#fff;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700;margin-left:4px;vertical-align:middle;letter-spacing:.5px">NEW</span>' if ticker in new_tickers else ""),
             "p": price_val, "e": entry_val, "s": stop_val, "t1": t1_val,
             "strat": r.get("strategy", strategy), "sec": sector_val, "chg_raw": chg_pct,
             "cc": chg_col, "cpct": ("%+.1f%%" % chg_pct),
@@ -2164,7 +3073,12 @@ function renderWatchlist(){
   if(!panel)return;
   wl=wl.map(function(item){
     var row=document.querySelector('[data-ticker="'+item.ticker+'"]');
-    if(row){var lp=parseFloat(row.getAttribute('data-price'));if(lp)item.price=lp;}
+    if(row){
+      var lp=parseFloat(row.getAttribute('data-price')); if(lp) item.price=lp;
+      var le=parseFloat(row.getAttribute('data-entry')); if(le) item.entry=le;
+      var ls=parseFloat(row.getAttribute('data-stop'));  if(ls) item.stop=ls;
+      var lt=parseFloat(row.getAttribute('data-t1'));    if(lt) item.t1=lt;
+    }
     return item;
   });
   if(!wl.length){panel.innerHTML='';return;}
@@ -2313,6 +3227,189 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         'border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px">&#8631; TradingView</button>'
     )
 
+    # Pulse panel with auto-expanded body for dedicated page
+    pulse_page_html = ""
+    if pulse_panel_html:
+        pulse_page_html = (pulse_panel_html
+            .replace('id="mpp-body-panel" style="display:none"',
+                     'id="mpp-body-panel" style="display:block"')
+            .replace('>&#9660; expand<', '>&#9650; collapse<')
+        )
+
+    # ── Pre / Post Market page builder ──────────────────────────────────────
+    def _prepost_page(mode):
+        chg_key   = "pre_chg"   if mode == "pre" else "post_chg"
+        price_key = "pre_price" if mode == "pre" else "post_price"
+        label     = "Pre-Market" if mode == "pre" else "Post-Market (AH)"
+        icon      = "&#9728;&#65039;" if mode == "pre" else "&#9790;&#65039;"
+        pid       = "premarket"  if mode == "pre" else "postmarket"
+        tlbl      = "Pre" if mode == "pre" else "AH"
+        movers = []; src_used = set(); ydata = yahoo or {}
+        for r in results:
+            sym = r.get("ticker", "")
+            y   = ydata.get(sym, {})
+            chg = y.get(chg_key); px = y.get(price_key)
+            if chg is None or px is None:
+                continue
+            src_v = y.get("pre_post_source", "yahoo")
+            movers.append({
+                "ticker": sym, "sector": r.get("sector",""),
+                "reg_close": r.get("price",0) or 0, "pm_price": px,
+                "pm_chg": chg, "src": src_v,
+                "dir": "up" if chg>0 else "down",
+                "mkt_cap": r.get("mkt_cap") or 0,
+                "rvol":    r.get("rel_volume") or 0,
+            })
+            src_used.add(src_v)
+        movers.sort(key=lambda x: x["pm_chg"])
+        src_label = ("IBKR + Yahoo" if "ibkr" in src_used and "yahoo" in src_used
+                     else "IBKR" if "ibkr" in src_used else "Yahoo Finance")
+        src_col   = "#10b981" if "ibkr" in src_used else "#64748b"
+        if not movers:
+            note = ("Данные доступны только в 16:00–20:00 ET (после закрытия рынка). "
+                    "Последнее обновление дашборда могло быть в рабочие часы.")
+            return ('<div class="swt-page" id="pg-' + pid
+                    + '" style="display:none;padding:40px;text-align:center">'
+                    '<div style="color:#64748b;font-size:14px;margin-bottom:8px">'
+                    + icon + ' ' + label + ' — нет данных</div>'
+                    '<div style="color:#475569;font-size:12px;max-width:480px;margin:0 auto">'
+                    + note + '</div></div>\n')
+        rows = ""
+        for m in movers:
+            cv  = m["pm_chg"]; cc = "#4ade80" if cv>0 else "#f87171"
+            sgn = "+" if cv>0 else ""
+            pmx = ("$%.2f" % m["pm_price"]) if m["pm_price"] else "—"
+            rgx = ("$%.2f" % m["reg_close"]) if m["reg_close"] else "—"
+            mc  = m["mkt_cap"] or 0
+            mc_b = round(mc / 1e9, 2) if mc else 0
+            rvol_v = round(m["rvol"] or 0, 2)
+            sb = ('<span style="background:#0d3d2a;color:#10b981;border:1px solid #065f46;'
+                  'font-size:9px;padding:1px 5px;border-radius:4px">IBKR</span>'
+                  if m["src"] == "ibkr" else
+                  '<span style="background:#1e293b;color:#64748b;border:1px solid #334155;'
+                  'font-size:9px;padding:1px 5px;border-radius:4px">Yahoo</span>')
+            mc_str = ("%.1fB" % mc_b if mc_b >= 1 else "%.0fM" % (mc/1e6)) if mc else "—"
+            rvol_str = ("%.1fx" % rvol_v) if rvol_v else "—"
+            rows += ('<tr data-dir="' + m["dir"]
+                     + '" data-mktcap="' + str(mc_b)
+                     + '" data-rvol="' + str(rvol_v)
+                     + '" data-ticker="' + m["ticker"].lower()
+                     + '" style="border-bottom:1px solid #1e293b">'
+                     '<td style="padding:8px 12px;font-weight:700;color:#e2e8f0">' + m["ticker"] + '</td>'
+                     '<td style="padding:8px 12px;color:#64748b;font-size:12px">' + m["sector"][:22] + '</td>'
+                     '<td style="padding:8px 12px;color:#94a3b8">' + rgx + '</td>'
+                     '<td style="padding:8px 12px;color:#a78bfa;font-weight:600">' + pmx + '</td>'
+                     '<td style="padding:8px 12px;font-weight:700;color:' + cc + '">'
+                     + sgn + ("%.2f%%" % cv) + '</td>'
+                     '<td style="padding:8px 12px;color:#94a3b8;font-size:12px">' + mc_str + '</td>'
+                     '<td style="padding:8px 12px;color:#94a3b8;font-size:12px">' + rvol_str + '</td>'
+                     '<td style="padding:8px 12px">' + sb + '</td></tr>\n')
+        ups = sum(1 for m in movers if m["dir"] == "up"); dns = len(movers) - ups
+        sel_s = ('background:#1e293b;color:#94a3b8;border:1px solid #334155;'
+                 'border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer')
+        inp_s = ('background:#1e293b;color:#e2e8f0;border:1px solid #334155;'
+                 'border-radius:6px;padding:4px 10px;font-size:12px;width:140px;outline:none')
+        toolbar = (
+            '<div style="display:flex;align-items:center;justify-content:space-between;'
+            'flex-wrap:wrap;gap:10px;margin-bottom:16px">\n'
+            '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">\n'
+            '<div>\n'
+            '<h2 style="font-size:16px;font-weight:700;color:#e2e8f0">' + icon + ' ' + label + '</h2>\n'
+            + '<div id="cnt-' + pid + '" style="font-size:11px;color:#64748b;margin-top:2px">'
+            + str(len(movers)) + ' stocks'
+            + ' &nbsp;·&nbsp;<span style="color:#4ade80">&#8679; ' + str(ups) + '</span>'
+            + ' &nbsp;<span style="color:#f87171">&#8681; ' + str(dns) + '</span>'
+            + '</div></div>\n'
+            + '<div style="display:flex;gap:6px">\n'
+            + '<button class="sec-btn act" id="dir-all-' + pid + '" data-dir="all" onclick="setPMDir(\'' + pid + '\',\'all\',this)">All</button>\n'
+            + '<button class="sec-btn" id="dir-up-' + pid + '" data-dir="up" onclick="setPMDir(\'' + pid + '\',\'up\',this)">&#8679; Up</button>\n'
+            + '<button class="sec-btn" id="dir-dn-' + pid + '" data-dir="down" onclick="setPMDir(\'' + pid + '\',\'down\',this)">&#8681; Down</button>\n'
+            + '</div>\n</div>\n'
+            + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">\n'
+            + '<label style="color:#64748b;font-size:11px">SVol (10d) ≥</label>'
+            + '<select id="svol-' + pid + '" style="' + sel_s + '" onchange="filterPMAll(\'' + pid + '\')">'
+            + '<option value="0">Off</option><option value="1">1x</option>'
+            + '<option value="1.5">1.5x</option><option value="2">2x</option>'
+            + '<option value="3">3x</option><option value="5">5x</option></select>\n'
+            + '<label style="color:#64748b;font-size:11px">Mkt Cap ≥</label>'
+            + '<select id="mktcap-' + pid + '" style="' + sel_s + '" onchange="filterPMAll(\'' + pid + '\')">'
+            + '<option value="0">Off</option><option value="0.3">Micro $300M+</option>'
+            + '<option value="2">Small $2B+</option><option value="10">Mid $10B+</option>'
+            + '<option value="50">Large $50B+</option></select>\n'
+            + '<input id="search-' + pid + '" type="text" placeholder="Search..." style="' + inp_s + '"'
+            + ' oninput="filterPMAll(\'' + pid + '\')"/>\n'
+            + '<span style="background:#1a2332;color:' + src_col
+            + ';border:1px solid #334155;font-size:11px;padding:3px 10px;border-radius:6px">'
+            + src_label + '</span>\n'
+            + '</div>\n</div>\n'
+        )
+        return ('<div class="swt-page" id="pg-' + pid + '" style="display:none">\n'
+                + toolbar
+                + '<div style="background:#1e293b;border:1px solid #334155;border-radius:12px;overflow-x:auto">\n'
+                + '<table id="tbl-' + pid + '">\n<thead><tr>\n'
+                + '<th>Ticker</th><th>Sector</th><th>Close</th>'
+                + '<th style="color:#a78bfa">' + tlbl + ' Price</th>'
+                + '<th style="color:#a78bfa">' + tlbl + ' Chg%</th>'
+                + '<th>Mkt Cap</th><th>SVol (10d)</th><th>Source</th>\n</tr></thead><tbody>\n'
+                + rows + '</tbody></table></div>\n</div>\n')
+
+    _pm_page_html   = _prepost_page("pre")
+    _post_page_html = _prepost_page("post")
+
+    # ── Page-switching JS ───────────────────────────────────────────────────
+    _page_js = (
+        'function showPage(pid,el){'
+        'document.querySelectorAll(".swt-page").forEach(function(p){p.style.display="none";});'
+        'document.querySelectorAll(".nav-item").forEach(function(n){n.classList.remove("active");});'
+        'var pg=document.getElementById("pg-"+pid);if(pg)pg.style.display="block";'
+        'if(el){el.classList.add("active");}'
+        'else{var nv=document.getElementById("nav-"+pid);if(nv)nv.classList.add("active");}'
+        'try{localStorage.setItem("swt_page",pid);}catch(e){}}'
+        '\nfunction goToPulsePane(pane,el){'
+        'showPage("pulse");'
+        'if(el){document.querySelectorAll(".nav-item").forEach(function(n){n.classList.remove("active");});el.classList.add("active");}'
+        'setTimeout(function(){'
+        'var btn=null;'
+        'document.querySelectorAll(".mpp-tab").forEach(function(b){'
+        'var oc=b.getAttribute("onclick")||"";'
+        'if(oc.indexOf("\'"+pane+"\'")>-1)btn=b;'
+        '});'
+        'if(btn&&typeof mppSwitch==="function")mppSwitch(btn,pane);'
+        'var b=document.getElementById("mpp-body-panel");'
+        'var ic=document.getElementById("mpp-toggle-icon");'
+        'if(b&&b.style.display==="none"){b.style.display="block";if(ic)ic.textContent="▲ collapse";}'
+        '},0);}'
+        '\nfunction setPMDir(pid,dir,btn){'
+        'document.querySelectorAll("#dir-all-"+pid+",#dir-up-"+pid+",#dir-dn-"+pid)'
+        '.forEach(function(b){b.classList.remove("act");});'
+        'btn.classList.add("act");btn.setAttribute("data-dir",dir);filterPMAll(pid);}'
+        '\nfunction filterPMAll(pid){'
+        'var tbl=document.getElementById("tbl-"+pid);if(!tbl)return;'
+        'var dirBtn=document.querySelector("#dir-all-"+pid+".act,#dir-up-"+pid+".act,#dir-dn-"+pid+".act");'
+        'var dir=dirBtn?dirBtn.getAttribute("data-dir"):"all";'
+        'var svolEl=document.getElementById("svol-"+pid);'
+        'var mcEl=document.getElementById("mktcap-"+pid);'
+        'var srchEl=document.getElementById("search-"+pid);'
+        'var svolMin=svolEl?parseFloat(svolEl.value)||0:0;'
+        'var mcMin=mcEl?parseFloat(mcEl.value)||0:0;'
+        'var q=srchEl?srchEl.value.toLowerCase().trim():"";'
+        'var vis=0,tot=0;'
+        'tbl.querySelectorAll("tbody tr").forEach(function(r){'
+        'tot++;var ok=true;'
+        'if(dir!=="all"&&r.getAttribute("data-dir")!==dir)ok=false;'
+        'if(ok&&svolMin>0){var rv=parseFloat(r.getAttribute("data-rvol"))||0;if(rv<svolMin)ok=false;}'
+        'if(ok&&mcMin>0){var mc=parseFloat(r.getAttribute("data-mktcap"))||0;if(mc<mcMin)ok=false;}'
+        'if(ok&&q){var tk=r.getAttribute("data-ticker")||"";if(tk.indexOf(q)===-1)ok=false;}'
+        'r.style.display=ok?"":"none";if(ok)vis++;});'
+        'var cnt=document.getElementById("cnt-"+pid);'
+        'if(cnt)cnt.textContent=vis+" / "+tot+" stocks";}'
+        '\nfunction filterPM(pid,dir,btn){setPMDir(pid,dir,btn);}'
+        '\ndocument.addEventListener("DOMContentLoaded",function(){'
+        'try{var s=localStorage.getItem("swt_page");'
+        'if(s&&document.getElementById("pg-"+s)){showPage(s);return;}'
+        '}catch(e){}showPage("scanner");});\n'
+    )
+
     html = (
         '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
         '<meta charset="UTF-8">\n'
@@ -2320,44 +3417,128 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         '<title>Swing Trader Dashboard &mdash; ' + now + '</title>\n'
         '<style>\n'
         '* { box-sizing:border-box; margin:0; padding:0; }\n'
-        'body { background:#0f172a; color:#e2e8f0; font-family:system-ui,-apple-system,sans-serif; min-height:100vh; }\n'
+        'body { background:#0f172a; color:#e2e8f0;'
+        ' font-family:system-ui,-apple-system,sans-serif; display:flex; min-height:100vh; }\n'
+        '#sidebar { width:200px; min-width:200px; background:#131e2e;'
+        ' border-right:1px solid #334155;'
+        ' position:fixed; top:0; left:0; height:100vh; overflow-y:auto;'
+        ' z-index:200; display:flex; flex-direction:column; }\n'
+        '#main-content { margin-left:200px; flex:1; min-width:0;'
+        ' display:flex; flex-direction:column; }\n'
+        '#topbar { padding:14px 24px 10px; border-bottom:1px solid #334155;'
+        ' position:sticky; top:0; background:#0f172a; z-index:100; }\n'
+        '.swt-page { padding:20px 24px; }\n'
+        '.nav-item { display:flex; align-items:center; gap:10px; padding:9px 16px;'
+        ' color:#94a3b8; text-decoration:none; font-size:13px; cursor:pointer;'
+        ' transition:all .15s; border-left:3px solid transparent; }\n'
+        '.nav-item:hover { background:#0c1520; color:#e2e8f0; }\n'
+        '.nav-item.active { color:#60a5fa; background:rgba(59,130,246,.12);'
+        ' border-left-color:#3b82f6; }\n'
+        '.nav-badge { margin-left:auto; background:#1e293b; color:#94a3b8;'
+        ' font-size:10px; padding:1px 6px; border-radius:10px;'
+        ' min-width:22px; text-align:center; }\n'
+        '.nav-section { padding:14px 16px 5px; font-size:10px; font-weight:700;'
+        ' color:#3d5166; text-transform:uppercase; letter-spacing:.5px; }\n'
         'table { width:100%; border-collapse:collapse; }\n'
         'tr:hover { background:#1e293b !important; }\n'
-        'th { color:#64748b; font-size:11px; font-weight:500; text-align:left; padding:8px 12px; border-bottom:1px solid #334155; }\n'
+        'th { color:#64748b; font-size:11px; font-weight:500; text-align:left;'
+        ' padding:8px 12px; border-bottom:1px solid #334155; }\n'
         'th[onclick] { cursor:pointer; user-select:none; }\n'
         'th[onclick]:hover { color:#cbd5e1 !important; }\n'
         '.sh { font-size:10px; color:#94a3b8; }\n'
-        '.tab-btn{background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:8px;padding:5px 16px;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;white-space:nowrap}\n'
+        '.tab-btn{background:#1e293b;color:#94a3b8;border:1px solid #334155;'
+        'border-radius:8px;padding:5px 16px;cursor:pointer;font-size:13px;'
+        'font-weight:500;transition:all .15s;white-space:nowrap}\n'
         '.tab-btn.act{background:#1e3a5f;color:#60a5fa;border-color:#3b82f6}\n'
         '.tab-btn:hover{border-color:#475569;color:#e2e8f0}\n'
-        '.sec-btn{background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px;transition:all .15s;white-space:nowrap}\n'
+        '.sec-btn{background:#1e293b;color:#94a3b8;border:1px solid #334155;'
+        'border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px;'
+        'transition:all .15s;white-space:nowrap}\n'
         '.sec-btn.act{background:#162416;color:#4ade80;border-color:#22c55e}\n'
         '.sec-btn:hover{border-color:#475569;color:#e2e8f0}\n'
         'details summary { padding:6px 0; cursor:pointer; }\n'
-        '.detail-card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:20px; margin-top:16px; }\n'
+        '.detail-card { background:#1e293b; border:1px solid #334155;'
+        ' border-radius:12px; padding:20px; margin-top:16px; }\n'
         '</style>\n</head>\n<body>\n'
-        '<div style="max-width:1150px;margin:0 auto;padding:24px">\n'
 
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">\n'
-        '  <div>\n'
-        '    <h1 style="font-size:20px;font-weight:600;color:#e2e8f0">&#9889; Swing Trader Dashboard</h1>\n'
-        '    <div style="color:#64748b;font-size:13px;margin-top:2px">' + now + ' &middot; ' + ('All Strategies' if tabs_mode else strategy_label) + '</div>\n'
+        # ── Sidebar ──────────────────────────────────────────────────────────
+        '<nav id="sidebar">\n'
+        '  <div style="padding:14px 16px 14px;border-bottom:1px solid #334155">\n'
+        '    <div style="font-size:14px;font-weight:700;color:#e2e8f0">'
+        '&#9889; SwingTrader</div>\n'
+        '    <div style="font-size:10px;color:#4d6a82;margin-top:2px">' + now + '</div>\n'
         '  </div>\n'
-        '  <div style="display:flex;gap:10px;align-items:center">\n'
-        '    ' + header_btns + '\n'
-        '    <div style="text-align:center"><div style="font-size:22px;font-weight:600;color:#10b981">' + str(valid_count) + '</div>'
-        '<div style="font-size:11px;color:#64748b">Valid</div></div>\n'
-        '    <div style="text-align:center"><div style="font-size:22px;font-weight:600;color:#94a3b8">' + str(len(results)) + '</div>'
-        '<div style="font-size:11px;color:#64748b">Scanned</div></div>\n'
+        '  <div class="nav-section">Trading</div>\n'
+        '  <a class="nav-item active" id="nav-scanner" href="#"'
+        ' onclick="showPage(\'scanner\',this);return false">'
+        '<span>&#9889;</span><span>Scanner</span>'
+        '<span class="nav-badge">' + str(len(results)) + '</span>'
+        '</a>\n'
+        '  <a class="nav-item" id="nav-watchlist" href="#"'
+        ' onclick="showPage(\'watchlist\',this);return false">'
+        '<span>&#11088;</span><span>Watchlist</span>'
+        '</a>\n'
+        '  <div class="nav-section">Market Data</div>\n'
+        '  <a class="nav-item" id="nav-pulse" href="#"'
+        ' onclick="showPage(\'pulse\',this);return false">'
+        '<span>&#128200;</span><span>Market Pulse</span>'
+        '</a>\n'
+        '  <a class="nav-item" id="nav-breadth" href="#"'
+        ' onclick="goToPulsePane(\'breadth\',this);return false">'
+        '<span>&#128268;</span><span>Breadth</span>'
+        '</a>\n'
+        '  <a class="nav-item" id="nav-highs" href="#"'
+        ' onclick="goToPulsePane(\'highs\',this);return false">'
+        '<span>&#128202;</span><span>Highs / Lows</span>'
+        '</a>\n'
+        '  <a class="nav-item" id="nav-sectors" href="#"'
+        ' onclick="showPage(\'sectors\',this);return false">'
+        '<span>&#127759;</span><span>Sectors</span>'
+        '</a>\n'
+        '  <div class="nav-section">Extended Hours</div>\n'
+        '  <a class="nav-item" id="nav-premarket" href="#"'
+        ' onclick="showPage(\'premarket\',this);return false">'
+        '<span>&#9728;&#65039;</span><span>Pre-Market</span>'
+        '</a>\n'
+        '  <a class="nav-item" id="nav-postmarket" href="#"'
+        ' onclick="showPage(\'postmarket\',this);return false">'
+        '<span>&#9790;&#65039;</span><span>Post-Market</span>'
+        '</a>\n'
+        '  <div style="margin-top:auto;padding:10px 16px;border-top:1px solid #1e293b">\n'
+        '    <div style="font-size:11px;color:#3d5166">'
+        'Valid: <span style="color:#10b981">' + str(valid_count) + '</span>'
+        '&nbsp;&nbsp;'
+        'Scanned: <span style="color:#64748b">' + str(len(results)) + '</span>'
+        '</div>\n'
         '  </div>\n'
-        '</div>\n\n'
+        '</nav>\n\n'
+
+        # ── Main content area ─────────────────────────────────────────────────
+        '<div id="main-content">\n'
+
+        # Top bar (always visible: title + market stats line)
+        '<div id="topbar">\n'
+        '  <div style="display:flex;align-items:center;justify-content:space-between;'
+        'margin-bottom:10px">\n'
+        '    <div>\n'
+        '      <h1 style="font-size:18px;font-weight:600;color:#e2e8f0">'
+        '&#9889; Swing Trader Dashboard</h1>\n'
+        '      <div style="color:#64748b;font-size:12px;margin-top:1px">'
+        + ('All Strategies' if tabs_mode else strategy_label) + '</div>\n'
+        '    </div>\n'
+        '    <div style="display:flex;gap:10px;align-items:center">\n'
+        '      ' + header_btns + '\n'
+        '    </div>\n'
+        '  </div>\n'
         + market_pulse_html + '\n'
-        + sector_html + '\n\n'
+        '</div>\n\n'  # end topbar
 
-        '<div id="watchlist-panel"></div>\n\n'
+        # ── Page: Scanner (default, shown) ───────────────────────────────────
+        '<div class="swt-page" id="pg-scanner" style="display:block">\n'
         + (_tabs_html + '\n' if _tabs_html else '')
         + (_sectors_html + '\n' if _sectors_html else '')
-        + '<div style="background:#1e293b;border:1px solid #334155;border-radius:12px;overflow-x:auto;margin-bottom:20px">\n'
+        + '<div style="background:#1e293b;border:1px solid #334155;'
+        'border-radius:12px;overflow-x:auto;margin-bottom:20px">\n'
         '<table id="scanner-table">\n<thead>\n<tr>\n'
         '<th onclick="sortTable(0,\'str\')">Ticker <span class="sh"></span></th>'
         '<th onclick="sortTable(1,\'str\')">Sector <span class="sh"></span></th>'
@@ -2371,22 +3552,48 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         '<th title="Chart pattern (VCP/Cup/Flat)" style="color:#34d399">Pattern</th>\n'
         '<th title="Insider activity (30d)" style="color:#a78bfa">Insider</th>\n'
         '<th title="Top institutional holder" style="color:#818cf8">Inst. Top</th>\n'
-        '<th title="Watchlist" style="position:sticky;right:0;background:#1e293b;z-index:2">&#9734;</th>\n'
+        '<th title="Watchlist"'
+        ' style="position:sticky;right:0;background:#1e293b;z-index:2">&#9734;</th>\n'
         '</tr>\n</thead>\n<tbody>\n'
-        + rows_html +
-        '</tbody>\n</table>\n</div>\n\n'
-
+        + rows_html
+        + '</tbody>\n</table>\n</div>\n\n'
         '<div id="detail-panel">'
         '<div style="color:#64748b;font-size:13px;text-align:center;padding:20px">'
         '&#8593; Click a row to see full trade setup</div></div>\n'
         + cards_html + '\n\n'
+        '</div>\n'  # end pg-scanner
 
+        # ── Page: Watchlist ───────────────────────────────────────────────────
+        '<div class="swt-page" id="pg-watchlist" style="display:none">\n'
+        '<div id="watchlist-panel"></div>\n'
         '</div>\n'
-        '<script>' + js + '</script>\n'
+
+        '<div id="watchlist-panel"></div>\n'
+        '</div>\n'
+
+        # ── Page: Market Pulse (auto-expanded) ────────────────────────────────
+        + ('<div class="swt-page" id="pg-pulse" style="display:none">\n'
+           + pulse_page_html + '\n</div>\n'
+           if pulse_page_html else
+           '<div class="swt-page" id="pg-pulse" style="display:none">'
+           '<p style="color:#64748b;padding:40px;text-align:center">'
+           'Market Pulse data unavailable</p></div>\n')
+
+        # ── Page: Sectors heatmap ──────────────────────────────────────────────
+        + '<div class="swt-page" id="pg-sectors" style="display:none">\n'
+        + sector_html + '\n'
+        + '</div>\n'
+
+        + _pm_page_html
+        + _post_page_html
+
+        + '</div>\n'  # end #main-content
+        '<script>' + js + _page_js + '</script>\n'
         '</body></html>'
     )
 
     return html
+
 
 
 def main():
@@ -2404,6 +3611,8 @@ def main():
     parser.add_argument("--html",   action="store_true", help="Output HTML dashboard")
     parser.add_argument("--output", help="Output file path (for --html)")
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON")
+    parser.add_argument("--new-tickers", dest="new_tickers_file", metavar="FILE",
+                        help="JSON file with list of new ticker symbols (for NEW badge)")
     args = parser.parse_args()
 
     tickers = []
@@ -2448,7 +3657,15 @@ def main():
         _ytk = [r["ticker"] for r in all_results[:150]]
         print(f"🌙 Pre/post + earnings for {len(_ytk)} tickers...", file=sys.stderr)
         _yahoo = fetch_yahoo_data(_ytk)
-        html = build_html_dashboard(all_results, "all", _mctx, _yahoo, tabs_mode=True)
+        print("🌐 Fetching Market Pulse data...", file=sys.stderr)
+        _mpulse = fetch_market_pulse_data()
+        _new_tickers = []
+        if getattr(args, 'new_tickers_file', None) and Path(args.new_tickers_file).exists():
+            try:
+                _new_tickers = json.loads(Path(args.new_tickers_file).read_text(encoding='utf-8'))
+            except Exception:
+                pass
+        html = build_html_dashboard(all_results, "all", _mctx, _yahoo, tabs_mode=True, new_tickers=_new_tickers, market_pulse=_mpulse)
         out_path = args.output or ("watchlist_tabs_%s.html" % datetime.now().strftime("%Y-%m-%d"))
         Path(out_path).write_text(html, encoding="utf-8")
         print(f"✅ Tabs dashboard saved: {out_path}", file=sys.stderr)
@@ -2467,7 +3684,15 @@ def main():
         print(f"🌙 Fetching pre/post market + earnings for top {len(yahoo_tickers)} tickers...", file=sys.stderr)
         yahoo = fetch_yahoo_data(yahoo_tickers)
         print(f"  → {len(yahoo)} tickers enriched from Yahoo", file=sys.stderr)
-        html = build_html_dashboard(results, args.strategy, market_ctx, yahoo)
+        print("🌐 Fetching Market Pulse data...", file=sys.stderr)
+        market_pulse = fetch_market_pulse_data()
+        _new_tickers = []
+        if getattr(args, 'new_tickers_file', None) and Path(args.new_tickers_file).exists():
+            try:
+                _new_tickers = json.loads(Path(args.new_tickers_file).read_text(encoding='utf-8'))
+            except Exception:
+                pass
+        html = build_html_dashboard(results, args.strategy, market_ctx, yahoo, new_tickers=_new_tickers, market_pulse=market_pulse)
         out_path = args.output or ("watchlist_%s.html" % datetime.now().strftime("%Y-%m-%d"))
         Path(out_path).write_text(html, encoding="utf-8")
         print(f"✅ HTML dashboard saved to: {out_path}", file=sys.stderr)
