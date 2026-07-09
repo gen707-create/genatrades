@@ -927,19 +927,26 @@ def fetch_market_pulse_data():
     import pandas as pd
     from datetime import datetime
 
-    all_syms = list(dict.fromkeys(
+    _etf_syms = list(dict.fromkeys(
         list(THEME_ETFS.keys()) + list(SECTOR_ETFS.keys()) + list(COUNTRY_ETFS.keys())
         + list(BREADTH_TICKERS.keys())
     ))
     label_map = {**THEME_ETFS, **SECTOR_ETFS, **COUNTRY_ETFS, **BREADTH_TICKERS}
+    # Collect holding tickers for live sub-row data (Theme + Sector fallback dicts)
+    _hold_tkrs = set()
+    for _hl in list(THEME_ETF_FALLBACK_HOLDINGS.values()) + list(SECTOR_ETF_FALLBACK_HOLDINGS.values()):
+        for _h in _hl:
+            _hold_tkrs.add(_h["ticker"])
+    _hold_tkrs -= set(_etf_syms)
+    all_syms = list(dict.fromkeys(_etf_syms + sorted(_hold_tkrs)))
     result = {}
     try:
-        print(f"  Market Pulse: downloading {len(all_syms)} ETFs (1Y daily)...", file=sys.stderr)
+        print(f"  Market Pulse: downloading {len(all_syms)} syms ({len(_etf_syms)} ETFs + {len(_hold_tkrs)} holdings, 1Y daily)...", file=sys.stderr)
         raw = yf.download(all_syms, period="1y", interval="1d",
                           progress=False, auto_adjust=True, threads=True)
         multi  = len(all_syms) > 1
         ytd_ts = pd.Timestamp(datetime.now().year, 1, 1)
-        for sym in all_syms:
+        for sym in _etf_syms:
             try:
                 closes = (raw["Close"][sym] if multi else raw["Close"]).dropna()
                 if len(closes) < 2:
@@ -953,15 +960,48 @@ def fetch_market_pulse_data():
                 ytd_s = closes[closes.index >= ytd_ts]
                 ytd_p = float(ytd_s.iloc[0]) if not ytd_s.empty else None
                 ytd   = round((curr - ytd_p) / ytd_p * 100, 2) if ytd_p else None
+                _op = (raw["Open"][sym] if multi else raw["Open"]).dropna()
+                _op_t = float(_op.iloc[-1]) if not _op.empty else None
+                _chg_op = round((curr - _op_t) / _op_t * 100, 2) if _op_t else None
                 result[sym] = {
                     "label": label_map.get(sym, sym),
                     "price": round(curr, 2),
+                    "chg_open": _chg_op,
                     "today": round((curr - prev) / prev * 100, 2) if prev else 0.0,
                     "1w": _td(5), "1m": _td(21), "3m": _td(63), "6m": _td(126), "ytd": ytd,
                 }
             except Exception:
                 pass
         print(f"    -> {len(result)} ETFs loaded for Market Pulse", file=sys.stderr)
+        # Compute live data for individual holding tickers (same raw download)
+        _hl_live = {}
+        for sym in _hold_tkrs:
+            try:
+                _hc = (raw["Close"][sym] if multi else raw["Close"]).dropna()
+                _ho = (raw["Open"][sym]  if multi else raw["Open"]).dropna()
+                if len(_hc) < 2:
+                    continue
+                _hcurr = float(_hc.iloc[-1])
+                _hprev = float(_hc.iloc[-2])
+                _hop_t = float(_ho.iloc[-1]) if not _ho.empty else None
+                _hchg_op = round((_hcurr - _hop_t) / _hop_t * 100, 2) if _hop_t else None
+                def _htd(n, _c=_hc, _cv=_hcurr):
+                    _i = max(0, len(_c) - 1 - n)
+                    _p = float(_c.iloc[_i])
+                    return round((_cv - _p) / _p * 100, 2) if _p else None
+                _hytd_s = _hc[_hc.index >= ytd_ts]
+                _hytd_p = float(_hytd_s.iloc[0]) if not _hytd_s.empty else None
+                _hytd   = round((_hcurr - _hytd_p) / _hytd_p * 100, 2) if _hytd_p else None
+                _hl_live[sym] = {
+                    "price":    round(_hcurr, 2),
+                    "chg_open": _hchg_op,
+                    "today":    round((_hcurr - _hprev) / _hprev * 100, 2) if _hprev else 0.0,
+                    "1w": _htd(5), "1m": _htd(21), "3m": _htd(63), "6m": _htd(126), "ytd": _hytd,
+                }
+            except Exception:
+                pass
+        result["_holdings_live"] = _hl_live
+        print(f"    -> {len(_hl_live)}/{len(_hold_tkrs)} holding tickers enriched", file=sys.stderr)
     except Exception as e:
         print(f"  Market Pulse download failed: {e}", file=sys.stderr)
     # Fetch ETF holdings for Country ETFs tab
@@ -2148,6 +2188,7 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
 
     # Extract pre-fetched ETF holdings (country tab) without mutating caller dict
     _holdings = (pulse_data or {}).get("_holdings", {})
+    _holdings_live = (pulse_data or {}).get("_holdings_live", {})
 
     SQ = "'"   # single-quote helper to avoid heredoc quoting issues
 
@@ -2180,6 +2221,7 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
                 + "<td style=\"padding:5px 10px;font-weight:700;color:#94a3b8;font-size:12px;white-space:nowrap\">%s</td>" % sym
                 + "<td style=\"padding:5px 10px;color:#64748b;font-size:12px;white-space:nowrap\">%s</td>" % lbl
                 + "<td style=\"padding:5px 10px;text-align:right;color:#94a3b8;font-size:12px\">$%.2f</td>" % p
+                + "<td style=\"padding:5px 10px;text-align:right;font-size:12px\">%s</td>" % _fmt(d.get("chg_open"))
                 + "<td style=\"padding:5px 10px;text-align:right;background:%s;font-size:12px\">%s</td>" % (bg, _fmt(today_v))
                 + "<td style=\"padding:5px 10px;text-align:right;font-size:12px\">%s</td>" % _fmt(d.get("1w"))
                 + "<td style=\"padding:5px 10px;text-align:right;font-size:12px\">%s</td>" % _fmt(d.get("1m"))
@@ -2373,7 +2415,7 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
             + "</div></div>"
         )
 
-    def _build_country_pane(sym_dict, pane_id, holdings, fallback_dict=None, group_label="Country / ETF", visible=False):
+    def _build_country_pane(sym_dict, pane_id, holdings, fallback_dict=None, group_label="Country / ETF", visible=False, holdings_live=None):
         # Country/Theme/Sector ETF pane: perf table + expandable top-10 holdings sub-rows
         rows_html = _build_rows(sym_dict)
         hold_rows = {}
@@ -2399,46 +2441,61 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
                 continue
             h_inner = (
                 "<tr id='hold-" + sym + "' style='display:none;background:#0a1628'>"
-                "<td colspan='9' style='padding:0'>"
+                "<td colspan='10' style='padding:0'>"
                 "<div style='padding:10px 14px 14px'>"
                 "<div style='font-size:10px;color:#475569;font-weight:700;"
                 "text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px'>Top Holdings"
-                + (" <span style='font-weight:400;color:#374151;font-size:9px'>(cached)</span>"
-                   if any(h.get("cached") for h in hlist) else "")
+                + (" <span style='font-weight:400;color:#374151;font-size:9px'>(static)</span>"
+                   if any(h.get("cached") for h in hlist) else " <span style='font-weight:400;color:#22c55e;font-size:9px'>(live)</span>")
                 + "</div>"
                 "<table style='width:100%;border-collapse:collapse'>"
-                "<thead><tr>"
+                "<thead><tr style='border-bottom:1px solid #1e293b'>"
                 "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:left'>Ticker</th>"
                 "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:left'>Company</th>"
-                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>Weight</th>"
                 "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>Price</th>"
-                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>Today</th>"
+                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>Chg/Open</th>"
+                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>Day</th>"
+                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>1W</th>"
+                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>1M</th>"
+                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>3M</th>"
+                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>6M</th>"
+                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>YTD</th>"
                 "</tr></thead><tbody>"
             )
+            def _hfmt(v):
+                if v is None:
+                    return "<span style='color:#374151'>&#8212;</span>"
+                c = "#10b981" if v >= 0 else "#ef4444"
+                s = "+" if v >= 0 else ""
+                return "<span style='color:%s'>%s%.2f%%</span>" % (c, s, v)
             for h in hlist:
                 tkr  = h.get("ticker", "")
                 name = h.get("name", tkr)
                 pct  = h.get("pct", 0)
-                px   = h.get("price")
-                td   = h.get("today")
+                ld   = (holdings_live or {}).get(tkr, {})
+                px   = ld.get("price") or h.get("price")
                 px_s = ("$%.2f" % px) if px else "&#8212;"
-                if td is not None:
-                    tc  = "#10b981" if td >= 0 else "#ef4444"
-                    sgn = "+" if td >= 0 else ""
-                    td_s = "<span style='color:%s'>%s%.2f%%</span>" % (tc, sgn, td)
-                else:
-                    td_s = "<span style='color:#475569'>&#8212;</span>"
                 fv_url = "https://finviz.com/quote.ashx?t=" + tkr
                 h_inner += (
                     "<tr style='border-bottom:1px solid #1e2d42'>"
                     "<td style='padding:4px 8px;font-weight:700;font-size:11px'>"
-                    "<a href='%s' target='_blank' style='color:#60a5fa;text-decoration:none'>%s</a></td>"
+                    "<a href='%s' target='_blank' style='color:#60a5fa;text-decoration:none'>%s</a>"
+                    " <span style='color:#f59e0b;font-size:10px'>%.1f%%</span></td>"
                     "<td style='padding:4px 8px;color:#94a3b8;font-size:11px'>%s</td>"
-                    "<td style='padding:4px 8px;color:#f59e0b;font-size:11px;text-align:right'>%.2f%%</td>"
                     "<td style='padding:4px 8px;color:#94a3b8;font-size:11px;text-align:right'>%s</td>"
                     "<td style='padding:4px 8px;font-size:11px;text-align:right'>%s</td>"
+                    "<td style='padding:4px 8px;font-size:11px;text-align:right'>%s</td>"
+                    "<td style='padding:4px 8px;font-size:11px;text-align:right'>%s</td>"
+                    "<td style='padding:4px 8px;font-size:11px;text-align:right'>%s</td>"
+                    "<td style='padding:4px 8px;font-size:11px;text-align:right'>%s</td>"
+                    "<td style='padding:4px 8px;font-size:11px;text-align:right'>%s</td>"
+                    "<td style='padding:4px 8px;font-size:11px;text-align:right'>%s</td>"
                     "</tr>"
-                ) % (fv_url, tkr, name, pct, px_s, td_s)
+                ) % (fv_url, tkr, pct, name, px_s,
+                     _hfmt(ld.get("chg_open")), _hfmt(ld.get("today")),
+                     _hfmt(ld.get("1w")), _hfmt(ld.get("1m")),
+                     _hfmt(ld.get("3m")), _hfmt(ld.get("6m")),
+                     _hfmt(ld.get("ytd")))
             h_inner += "</tbody></table></div></td></tr>"
             hold_rows[sym] = h_inner
 
@@ -2480,9 +2537,10 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
             "<th style='padding:6px 10px;text-align:left;color:#64748b;font-size:11px'>Ticker</th>"
             "<th style='padding:6px 10px;text-align:left;color:#64748b;font-size:11px'>" + group_label + "</th>"
             "<th style='padding:6px 10px;text-align:right;color:#64748b;font-size:11px'>Price</th>"
-            + _th("Today &#9660;", pane_id, 3, active=True)
-            + _th("1W", pane_id, 4) + _th("1M", pane_id, 5)
-            + _th("3M", pane_id, 6) + _th("6M", pane_id, 7) + _th("YTD", pane_id, 8)
+            + _th("Chg/Open", pane_id, 3)
+            + _th("Day &#9660;", pane_id, 4, active=True)
+            + _th("1W", pane_id, 5) + _th("1M", pane_id, 6)
+            + _th("3M", pane_id, 7) + _th("6M", pane_id, 8) + _th("YTD", pane_id, 9)
             + "</tr></thead>"
         )
         disp = "block" if visible else "none"
@@ -2494,9 +2552,9 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
             "</table></div></div>"
         ) % (pane_id, disp, thead, pane_id, final_rows)
 
-    themes_pane  = _build_country_pane(THEME_ETFS,  "themes",  None, THEME_ETF_FALLBACK_HOLDINGS,  "Theme / ETF",  visible=True)
-    sectors_pane = _build_country_pane(SECTOR_ETFS, "sectors", None, SECTOR_ETF_FALLBACK_HOLDINGS, "Sector / ETF")
-    countries_pane = _build_country_pane(COUNTRY_ETFS, "countries", _holdings)
+    themes_pane  = _build_country_pane(THEME_ETFS,  "themes",  None, THEME_ETF_FALLBACK_HOLDINGS,  "Theme / ETF",  visible=True,  holdings_live=_holdings_live)
+    sectors_pane = _build_country_pane(SECTOR_ETFS, "sectors", None, SECTOR_ETF_FALLBACK_HOLDINGS, "Sector / ETF", holdings_live=_holdings_live)
+    countries_pane = _build_country_pane(COUNTRY_ETFS, "countries", _holdings, holdings_live=_holdings_live)
     highs_pane     = _highs_lows_pane()
     breadth_pane   = _breadth_pane()
 
