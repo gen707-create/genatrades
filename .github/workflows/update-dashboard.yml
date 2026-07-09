@@ -2,7 +2,7 @@ name: Update Trading Dashboard
 
 on:
   schedule:
-    - cron: '*/30 9-22 * * 1-5'
+    - cron: "*/30 9-22 * * 1-5"
   workflow_dispatch:
 
 permissions:
@@ -15,45 +15,59 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5.6.0
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
           pip install tradingview-screener yfinance requests pandas
+          pip install ib_insync || echo "ib_insync optional"
 
       - name: Run scanners and build dashboard
         env:
           FINVIZ_TOKEN: ${{ secrets.FINVIZ_TOKEN }}
         run: |
           echo "=== Step 1: Minervini scan ==="
-          python finviz_scan.py --strategy minervini > /tmp/scan_min.json || echo '{"strategy":"minervini","tickers":[]}' > /tmp/scan_min.json
-          echo "scan_min.json: $(wc -c < /tmp/scan_min.json) bytes"
-          head -c 200 /tmp/scan_min.json
+          python finviz_scan.py --strategy minervini > /tmp/scan_min.json || echo "{"strategy":"minervini","tickers":[]}" > /tmp/scan_min.json
+          echo "scan_min: $(python3 -c 'import json;d=json.load(open("/tmp/scan_min.json"));print(len(d.get("tickers",[])),"tickers")' 2>/dev/null || echo FAILED)"
 
           echo "=== Step 2: CANSLIM scan ==="
-          python finviz_scan.py --strategy canslim > /tmp/scan_can.json || echo '{"strategy":"canslim","tickers":[]}' > /tmp/scan_can.json
-          echo "scan_can.json: $(wc -c < /tmp/scan_can.json) bytes"
+          python finviz_scan.py --strategy canslim > /tmp/scan_can.json || echo "{"strategy":"canslim","tickers":[]}" > /tmp/scan_can.json
+          echo "scan_can: $(python3 -c 'import json;d=json.load(open("/tmp/scan_can.json"));print(len(d.get("tickers",[])),"tickers")' 2>/dev/null || echo FAILED)"
 
           echo "=== Step 3: Reversion scan ==="
-          python finviz_scan.py --strategy reversion > /tmp/scan_rev.json || echo '{"strategy":"reversion","tickers":[]}' > /tmp/scan_rev.json
-          echo "scan_rev.json: $(wc -c < /tmp/scan_rev.json) bytes"
+          python finviz_scan.py --strategy reversion > /tmp/scan_rev.json || echo "{"strategy":"reversion","tickers":[]}" > /tmp/scan_rev.json
+          echo "scan_rev: $(python3 -c 'import json;d=json.load(open("/tmp/scan_rev.json"));print(len(d.get("tickers",[])),"tickers")' 2>/dev/null || echo FAILED)"
+
+          echo "=== Step 3b: Track new tickers ==="
+          python track_new_tickers.py /tmp/scan_min.json /tmp/scan_can.json /tmp/scan_rev.json || echo '[]' > /tmp/new_tickers.json
+          echo "new tickers: $(cat /tmp/new_tickers.json)"
 
           echo "=== Step 4: Build dashboard ==="
-          python tv_enrich.py --tabs --scan /tmp/scan_min.json --scan /tmp/scan_can.json --scan /tmp/scan_rev.json --html --output index.html
-          echo "index.html size: $(wc -c < index.html 2>/dev/null || echo MISSING) bytes"
-          echo "index.html first line: $(head -1 index.html | head -c 200)"
-          echo "date in html: $(grep -o 'June [0-9]\+, [0-9]\+' index.html | head -1)"
+          python tv_enrich.py --tabs \
+            --scan /tmp/scan_min.json \
+            --scan /tmp/scan_can.json \
+            --scan /tmp/scan_rev.json \
+            --new-tickers /tmp/new_tickers.json \
+            --html --output index.html
+          echo "index.html: $(wc -l < index.html) lines / $(wc -c < index.html) bytes"
+          echo "JS check: $(grep -c mppSwitch index.html) mppSwitch refs"
 
-      - name: Commit updated dashboard
+      - name: Commit and push dashboard
         run: |
-          git config user.name "github-actions[bot]"
+          git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git status
-          git add index.html
-          git diff --staged --stat
-          git commit -m "Dashboard update $(date -u '+%Y-%m-%d %H:%M UTC')" || true
-          git push
+          git add index.html prev_tickers.json || true
+          git diff --cached --stat
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Dashboard update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          fi
+          git pull --rebase origin main || true
+          git push origin main
