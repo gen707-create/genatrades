@@ -3905,6 +3905,8 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
             chg = y.get(chg_key); px = y.get(price_key)
             if chg is None or px is None:
                 continue
+            if abs(chg) < 1.0:   # skip tickers with < 1% pre/post-market move
+                continue
             src_v = y.get("pre_post_source", "yahoo")
             movers.append({
                 "ticker": sym, "sector": r.get("sector",""),
