@@ -2053,17 +2053,26 @@ def fetch_daily_breadth_data(history_file="breadth_history.json"):
             except Exception:
                 history = {}
 
-        # ── One broad query: US common stocks + ETFs, price > 1 ──────────────
-        print("  Daily Breadth: querying TV screener (all US stocks)...", file=__import__("sys").stderr)
-        _, df = (
-            Query()
-            .set_markets("america")
-            .select("name", "close", "change", "Perf.W", "Perf.1M", "Perf.3M",
-                    "SMA50", "SMA200", "exchange")
-            .where(Col("close") > 1, Col("type").isin(["stock", "dr"]))
-            .limit(10000)
-            .get_scanner_data()
-        )
+        # ── One broad query: US common stocks, price > 1, with 45-sec timeout ──
+        import concurrent.futures as _cf
+        print("  Daily Breadth: querying TV screener (all US stocks, 45s timeout)...", file=__import__("sys").stderr)
+        def _run_query():
+            return (
+                Query()
+                .set_markets("america")
+                .select("name", "close", "change", "Perf.W", "Perf.1M", "Perf.3M",
+                        "SMA50", "SMA200", "exchange")
+                .where(Col("close") > 1, Col("type").isin(["stock", "dr"]))
+                .limit(5000)
+                .get_scanner_data()
+            )
+        with _cf.ThreadPoolExecutor(max_workers=1) as _ex:
+            _fut = _ex.submit(_run_query)
+            try:
+                _, df = _fut.result(timeout=45)
+            except _cf.TimeoutError:
+                print("  Daily Breadth: TV screener timed out (45s) — skipping", file=__import__("sys").stderr)
+                return {}, []
 
         total = len(df)
         if total == 0:
