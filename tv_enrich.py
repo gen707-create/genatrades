@@ -2364,9 +2364,6 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
             + "</div></div>"
         )
 
-    themes_pane  = _build_country_pane(THEME_ETFS,  "themes",  None, THEME_ETF_FALLBACK_HOLDINGS,  "Theme / ETF",  visible=True)
-    sectors_pane = _build_country_pane(SECTOR_ETFS, "sectors", None, SECTOR_ETF_FALLBACK_HOLDINGS, "Sector / ETF")
-
     def _build_country_pane(sym_dict, pane_id, holdings, fallback_dict=None, group_label="Country / ETF", visible=False):
         # Country/Theme/Sector ETF pane: perf table + expandable top-10 holdings sub-rows
         rows_html = _build_rows(sym_dict)
@@ -2488,6 +2485,8 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
             "</table></div></div>"
         ) % (pane_id, disp, thead, pane_id, final_rows)
 
+    themes_pane  = _build_country_pane(THEME_ETFS,  "themes",  None, THEME_ETF_FALLBACK_HOLDINGS,  "Theme / ETF",  visible=True)
+    sectors_pane = _build_country_pane(SECTOR_ETFS, "sectors", None, SECTOR_ETF_FALLBACK_HOLDINGS, "Sector / ETF")
     countries_pane = _build_country_pane(COUNTRY_ETFS, "countries", _holdings)
     highs_pane     = _highs_lows_pane()
     breadth_pane   = _breadth_pane()
