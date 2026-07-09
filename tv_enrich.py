@@ -358,6 +358,273 @@ COUNTRY_ETF_FALLBACK_HOLDINGS = {
     ],
 }
 
+# Fallback top-10 holdings for S&P Sector ETFs
+SECTOR_ETF_FALLBACK_HOLDINGS = {
+    "XLK": [
+        {"ticker":"MSFT","name":"Microsoft","pct":22.1},{"ticker":"AAPL","name":"Apple Inc","pct":20.8},
+        {"ticker":"NVDA","name":"NVIDIA","pct":9.2},{"ticker":"AVGO","name":"Broadcom","pct":5.1},
+        {"ticker":"ORCL","name":"Oracle","pct":2.8},{"ticker":"CSCO","name":"Cisco Systems","pct":2.4},
+        {"ticker":"ADBE","name":"Adobe Inc","pct":2.2},{"ticker":"AMD","name":"AMD","pct":2.0},
+        {"ticker":"QCOM","name":"Qualcomm","pct":1.9},{"ticker":"TXN","name":"Texas Instruments","pct":1.8},
+    ],
+    "XLV": [
+        {"ticker":"LLY","name":"Eli Lilly","pct":12.4},{"ticker":"UNH","name":"UnitedHealth","pct":11.8},
+        {"ticker":"JNJ","name":"Johnson & Johnson","pct":7.2},{"ticker":"ABBV","name":"AbbVie","pct":6.9},
+        {"ticker":"MRK","name":"Merck & Co","pct":5.8},{"ticker":"TMO","name":"Thermo Fisher","pct":4.2},
+        {"ticker":"DHR","name":"Danaher Corp","pct":3.6},{"ticker":"ABT","name":"Abbott Labs","pct":3.4},
+        {"ticker":"AMGN","name":"Amgen Inc","pct":3.2},{"ticker":"ISRG","name":"Intuitive Surgical","pct":2.9},
+    ],
+    "XLF": [
+        {"ticker":"BRK.B","name":"Berkshire Hathaway","pct":12.8},{"ticker":"JPM","name":"JPMorgan Chase","pct":11.4},
+        {"ticker":"V","name":"Visa Inc","pct":8.2},{"ticker":"MA","name":"Mastercard","pct":7.1},
+        {"ticker":"BAC","name":"Bank of America","pct":5.4},{"ticker":"WFC","name":"Wells Fargo","pct":4.8},
+        {"ticker":"GS","name":"Goldman Sachs","pct":3.2},{"ticker":"MS","name":"Morgan Stanley","pct":2.9},
+        {"ticker":"SPGI","name":"S&P Global","pct":2.6},{"ticker":"BLK","name":"BlackRock","pct":2.4},
+    ],
+    "XLE": [
+        {"ticker":"XOM","name":"Exxon Mobil","pct":22.4},{"ticker":"CVX","name":"Chevron Corp","pct":15.1},
+        {"ticker":"COP","name":"ConocoPhillips","pct":7.2},{"ticker":"SLB","name":"SLB","pct":4.8},
+        {"ticker":"EOG","name":"EOG Resources","pct":4.5},{"ticker":"MPC","name":"Marathon Petroleum","pct":3.9},
+        {"ticker":"PSX","name":"Phillips 66","pct":3.6},{"ticker":"WMB","name":"Williams Cos","pct":3.2},
+        {"ticker":"OKE","name":"ONEOK Inc","pct":3.0},{"ticker":"PXD","name":"Pioneer Natural Res","pct":2.8},
+    ],
+    "XLY": [
+        {"ticker":"AMZN","name":"Amazon","pct":23.5},{"ticker":"TSLA","name":"Tesla","pct":16.8},
+        {"ticker":"HD","name":"Home Depot","pct":8.4},{"ticker":"MCD","name":"McDonald's","pct":4.5},
+        {"ticker":"BKNG","name":"Booking Holdings","pct":3.8},{"ticker":"LOW","name":"Lowe's Companies","pct":3.5},
+        {"ticker":"NKE","name":"Nike Inc","pct":2.9},{"ticker":"SBUX","name":"Starbucks","pct":2.4},
+        {"ticker":"TJX","name":"TJX Companies","pct":2.2},{"ticker":"CMG","name":"Chipotle Mexican","pct":2.0},
+    ],
+    "XLP": [
+        {"ticker":"PG","name":"Procter & Gamble","pct":15.2},{"ticker":"COST","name":"Costco Wholesale","pct":13.4},
+        {"ticker":"WMT","name":"Walmart Inc","pct":12.8},{"ticker":"KO","name":"Coca-Cola","pct":9.2},
+        {"ticker":"PEP","name":"PepsiCo","pct":8.7},{"ticker":"MDLZ","name":"Mondelez Intl","pct":4.1},
+        {"ticker":"PM","name":"Philip Morris","pct":3.8},{"ticker":"MO","name":"Altria Group","pct":3.2},
+        {"ticker":"CL","name":"Colgate-Palmolive","pct":2.9},{"ticker":"GIS","name":"General Mills","pct":2.4},
+    ],
+    "XLI": [
+        {"ticker":"CAT","name":"Caterpillar","pct":5.8},{"ticker":"RTX","name":"RTX Corp","pct":5.4},
+        {"ticker":"HON","name":"Honeywell Intl","pct":5.2},{"ticker":"UNP","name":"Union Pacific","pct":4.8},
+        {"ticker":"GE","name":"GE Aerospace","pct":4.5},{"ticker":"DE","name":"Deere & Company","pct":4.1},
+        {"ticker":"UPS","name":"United Parcel Svc","pct":3.8},{"ticker":"ETN","name":"Eaton Corp","pct":3.5},
+        {"ticker":"FDX","name":"FedEx Corp","pct":3.2},{"ticker":"WM","name":"Waste Management","pct":2.9},
+    ],
+    "XLB": [
+        {"ticker":"LIN","name":"Linde plc","pct":18.4},{"ticker":"SHW","name":"Sherwin-Williams","pct":9.8},
+        {"ticker":"APD","name":"Air Products","pct":8.2},{"ticker":"FCX","name":"Freeport-McMoRan","pct":5.4},
+        {"ticker":"NEM","name":"Newmont Corp","pct":4.8},{"ticker":"NUE","name":"Nucor Corp","pct":4.2},
+        {"ticker":"ALB","name":"Albemarle Corp","pct":3.5},{"ticker":"CE","name":"Celanese Corp","pct":3.1},
+        {"ticker":"IFF","name":"Intl Flavors","pct":2.8},{"ticker":"MOS","name":"Mosaic Company","pct":2.6},
+    ],
+    "XLRE": [
+        {"ticker":"AMT","name":"American Tower","pct":10.2},{"ticker":"PLD","name":"Prologis","pct":9.8},
+        {"ticker":"EQIX","name":"Equinix Inc","pct":7.4},{"ticker":"CCI","name":"Crown Castle","pct":6.8},
+        {"ticker":"SPG","name":"Simon Property","pct":6.2},{"ticker":"PSA","name":"Public Storage","pct":5.8},
+        {"ticker":"WELL","name":"Welltower Inc","pct":5.4},{"ticker":"VTR","name":"Ventas Inc","pct":4.1},
+        {"ticker":"EXR","name":"Extra Space Storage","pct":3.8},{"ticker":"DLR","name":"Digital Realty","pct":3.5},
+    ],
+    "XLU": [
+        {"ticker":"NEE","name":"NextEra Energy","pct":15.4},{"ticker":"SO","name":"Southern Company","pct":8.2},
+        {"ticker":"DUK","name":"Duke Energy","pct":7.8},{"ticker":"AEP","name":"Am. Electric Power","pct":5.4},
+        {"ticker":"SRE","name":"Sempra Energy","pct":4.8},{"ticker":"EXC","name":"Exelon Corp","pct":4.5},
+        {"ticker":"XEL","name":"Xcel Energy","pct":4.1},{"ticker":"ED","name":"Consolidated Edison","pct":3.8},
+        {"ticker":"ES","name":"Eversource Energy","pct":3.5},{"ticker":"AWK","name":"Am. Water Works","pct":3.2},
+    ],
+    "XLC": [
+        {"ticker":"META","name":"Meta Platforms","pct":22.8},{"ticker":"GOOGL","name":"Alphabet A","pct":17.4},
+        {"ticker":"GOOG","name":"Alphabet C","pct":14.2},{"ticker":"NFLX","name":"Netflix","pct":8.1},
+        {"ticker":"CHTR","name":"Charter Comm","pct":3.8},{"ticker":"DIS","name":"Walt Disney","pct":3.5},
+        {"ticker":"T","name":"AT&T Inc","pct":3.2},{"ticker":"VZ","name":"Verizon Comm","pct":2.9},
+        {"ticker":"CMCSA","name":"Comcast Corp","pct":2.6},{"ticker":"EA","name":"Electronic Arts","pct":2.2},
+    ],
+}
+
+# Fallback top-10 holdings for Theme ETFs
+THEME_ETF_FALLBACK_HOLDINGS = {
+    "SMH": [
+        {"ticker":"NVDA","name":"NVIDIA","pct":20.1},{"ticker":"TSM","name":"TSMC (ADR)","pct":14.8},
+        {"ticker":"AVGO","name":"Broadcom","pct":8.2},{"ticker":"ASML","name":"ASML Holding","pct":5.4},
+        {"ticker":"QCOM","name":"Qualcomm","pct":4.9},{"ticker":"TXN","name":"Texas Instruments","pct":4.6},
+        {"ticker":"AMD","name":"AMD","pct":4.2},{"ticker":"AMAT","name":"Applied Materials","pct":4.0},
+        {"ticker":"LRCX","name":"Lam Research","pct":3.8},{"ticker":"MU","name":"Micron Technology","pct":3.5},
+    ],
+    "SOXX": [
+        {"ticker":"NVDA","name":"NVIDIA","pct":10.4},{"ticker":"AVGO","name":"Broadcom","pct":9.8},
+        {"ticker":"AMD","name":"AMD","pct":8.2},{"ticker":"QCOM","name":"Qualcomm","pct":7.4},
+        {"ticker":"AMAT","name":"Applied Materials","pct":6.8},{"ticker":"LRCX","name":"Lam Research","pct":6.4},
+        {"ticker":"TXN","name":"Texas Instruments","pct":6.1},{"ticker":"KLAC","name":"KLA Corp","pct":5.8},
+        {"ticker":"INTC","name":"Intel Corp","pct":5.2},{"ticker":"MU","name":"Micron Technology","pct":4.9},
+    ],
+    "HACK": [
+        {"ticker":"PANW","name":"Palo Alto Networks","pct":8.4},{"ticker":"CRWD","name":"CrowdStrike","pct":7.8},
+        {"ticker":"FTNT","name":"Fortinet","pct":6.5},{"ticker":"ZS","name":"Zscaler","pct":5.9},
+        {"ticker":"MSFT","name":"Microsoft","pct":5.2},{"ticker":"CHKP","name":"Check Point Sftwr","pct":4.8},
+        {"ticker":"OKTA","name":"Okta Inc","pct":4.2},{"ticker":"CYBR","name":"CyberArk Software","pct":3.9},
+        {"ticker":"S","name":"SentinelOne","pct":3.5},{"ticker":"TENB","name":"Tenable Holdings","pct":3.1},
+    ],
+    "CLOU": [
+        {"ticker":"MSFT","name":"Microsoft","pct":7.8},{"ticker":"AMZN","name":"Amazon","pct":6.4},
+        {"ticker":"GOOGL","name":"Alphabet","pct":5.9},{"ticker":"ORCL","name":"Oracle","pct":5.2},
+        {"ticker":"CRM","name":"Salesforce","pct":4.8},{"ticker":"SNOW","name":"Snowflake","pct":4.4},
+        {"ticker":"NET","name":"Cloudflare","pct":4.1},{"ticker":"DDOG","name":"Datadog","pct":3.8},
+        {"ticker":"CFLT","name":"Confluent","pct":3.2},{"ticker":"TWLO","name":"Twilio Inc","pct":2.9},
+    ],
+    "AIQ": [
+        {"ticker":"NVDA","name":"NVIDIA","pct":9.2},{"ticker":"MSFT","name":"Microsoft","pct":8.4},
+        {"ticker":"GOOGL","name":"Alphabet","pct":6.8},{"ticker":"META","name":"Meta Platforms","pct":5.9},
+        {"ticker":"AMZN","name":"Amazon","pct":5.4},{"ticker":"BIDU","name":"Baidu","pct":4.2},
+        {"ticker":"BABA","name":"Alibaba","pct":3.8},{"ticker":"IBM","name":"IBM Corp","pct":3.5},
+        {"ticker":"ORCL","name":"Oracle","pct":3.2},{"ticker":"SAP","name":"SAP SE","pct":2.9},
+    ],
+    "BOTZ": [
+        {"ticker":"NVDA","name":"NVIDIA","pct":8.4},{"ticker":"ISRG","name":"Intuitive Surgical","pct":6.2},
+        {"ticker":"ABB","name":"ABB Ltd","pct":5.8},{"ticker":"HON","name":"Honeywell Intl","pct":5.1},
+        {"ticker":"ZBRA","name":"Zebra Technologies","pct":4.8},{"ticker":"OMCL","name":"Omnicell Inc","pct":4.2},
+        {"ticker":"AMBA","name":"Ambarella Inc","pct":3.9},{"ticker":"BLDP","name":"Ballard Power","pct":3.5},
+        {"ticker":"MASI","name":"Masimo Corp","pct":3.2},{"ticker":"IRBT","name":"iRobot Corp","pct":2.8},
+    ],
+    "XBI": [
+        {"ticker":"MRNA","name":"Moderna Inc","pct":5.2},{"ticker":"BNTX","name":"BioNTech SE","pct":4.8},
+        {"ticker":"ALNY","name":"Alnylam Pharma","pct":4.4},{"ticker":"VRTX","name":"Vertex Pharma","pct":4.1},
+        {"ticker":"REGN","name":"Regeneron","pct":3.8},{"ticker":"BIIB","name":"Biogen Inc","pct":3.5},
+        {"ticker":"GILD","name":"Gilead Sciences","pct":3.2},{"ticker":"BMRN","name":"BioMarin Pharma","pct":3.0},
+        {"ticker":"SRPT","name":"Sarepta Therapeutics","pct":2.8},{"ticker":"RARE","name":"Ultragenyx","pct":2.6},
+    ],
+    "IBB": [
+        {"ticker":"AMGN","name":"Amgen Inc","pct":9.8},{"ticker":"GILD","name":"Gilead Sciences","pct":8.2},
+        {"ticker":"VRTX","name":"Vertex Pharma","pct":7.4},{"ticker":"REGN","name":"Regeneron","pct":6.8},
+        {"ticker":"BIIB","name":"Biogen Inc","pct":6.2},{"ticker":"BNTX","name":"BioNTech SE","pct":5.8},
+        {"ticker":"MRNA","name":"Moderna Inc","pct":5.4},{"ticker":"ABBV","name":"AbbVie","pct":4.9},
+        {"ticker":"BMRN","name":"BioMarin Pharma","pct":4.2},{"ticker":"ALNY","name":"Alnylam Pharma","pct":3.8},
+    ],
+    "IHI": [
+        {"ticker":"MDT","name":"Medtronic","pct":9.8},{"ticker":"ABT","name":"Abbott Labs","pct":9.2},
+        {"ticker":"ISRG","name":"Intuitive Surgical","pct":8.4},{"ticker":"BSX","name":"Boston Scientific","pct":7.8},
+        {"ticker":"EW","name":"Edwards Lifesciences","pct":5.4},{"ticker":"ZBH","name":"Zimmer Biomet","pct":4.8},
+        {"ticker":"HOLX","name":"Hologic Inc","pct":4.2},{"ticker":"DXCM","name":"DexCom Inc","pct":3.9},
+        {"ticker":"PODD","name":"Insulet Corp","pct":3.5},{"ticker":"IDXX","name":"IDEXX Labs","pct":3.2},
+    ],
+    "KRE": [
+        {"ticker":"CFG","name":"Citizens Financial","pct":4.8},{"ticker":"HBAN","name":"Huntington Bancshares","pct":4.2},
+        {"ticker":"RF","name":"Regions Financial","pct":3.9},{"ticker":"KEY","name":"KeyCorp","pct":3.7},
+        {"ticker":"FITB","name":"Fifth Third Bancorp","pct":3.5},{"ticker":"ZION","name":"Zions Bancorporation","pct":3.2},
+        {"ticker":"CMA","name":"Comerica Inc","pct":3.0},{"ticker":"MTB","name":"M&T Bank Corp","pct":2.9},
+        {"ticker":"SNV","name":"Synovus Financial","pct":2.7},{"ticker":"BOKF","name":"BOK Financial","pct":2.5},
+    ],
+    "KBE": [
+        {"ticker":"JPM","name":"JPMorgan Chase","pct":10.2},{"ticker":"BAC","name":"Bank of America","pct":8.8},
+        {"ticker":"WFC","name":"Wells Fargo","pct":7.4},{"ticker":"GS","name":"Goldman Sachs","pct":6.2},
+        {"ticker":"MS","name":"Morgan Stanley","pct":5.8},{"ticker":"C","name":"Citigroup","pct":5.4},
+        {"ticker":"USB","name":"U.S. Bancorp","pct":4.9},{"ticker":"TFC","name":"Truist Financial","pct":4.5},
+        {"ticker":"SCHW","name":"Charles Schwab","pct":4.2},{"ticker":"BK","name":"Bank of NY Mellon","pct":3.8},
+    ],
+    "KIE": [
+        {"ticker":"BRK.B","name":"Berkshire Hathaway","pct":8.4},{"ticker":"MET","name":"MetLife Inc","pct":5.8},
+        {"ticker":"PRU","name":"Prudential Financial","pct":5.4},{"ticker":"AIG","name":"AIG","pct":4.9},
+        {"ticker":"AFL","name":"Aflac Inc","pct":4.5},{"ticker":"ALL","name":"Allstate Corp","pct":4.2},
+        {"ticker":"CB","name":"Chubb Ltd","pct":3.9},{"ticker":"HIG","name":"Hartford Financial","pct":3.5},
+        {"ticker":"LNC","name":"Lincoln National","pct":3.2},{"ticker":"UNM","name":"Unum Group","pct":2.9},
+    ],
+    "XOP": [
+        {"ticker":"EOG","name":"EOG Resources","pct":8.4},{"ticker":"DVN","name":"Devon Energy","pct":7.2},
+        {"ticker":"COP","name":"ConocoPhillips","pct":6.8},{"ticker":"MRO","name":"Marathon Oil","pct":5.8},
+        {"ticker":"HES","name":"Hess Corp","pct":5.4},{"ticker":"APA","name":"APA Corp","pct":4.9},
+        {"ticker":"FANG","name":"Diamondback Energy","pct":4.5},{"ticker":"XOM","name":"Exxon Mobil","pct":4.2},
+        {"ticker":"CVX","name":"Chevron Corp","pct":3.8},{"ticker":"OVV","name":"Ovintiv Inc","pct":3.4},
+    ],
+    "OIH": [
+        {"ticker":"HAL","name":"Halliburton","pct":14.8},{"ticker":"SLB","name":"SLB","pct":13.4},
+        {"ticker":"BKR","name":"Baker Hughes","pct":11.2},{"ticker":"NOV","name":"NOV Inc","pct":6.8},
+        {"ticker":"HP","name":"Helmerich & Payne","pct":5.4},{"ticker":"FTI","name":"TechnipFMC","pct":5.1},
+        {"ticker":"RIG","name":"Transocean Ltd","pct":4.8},{"ticker":"WTTR","name":"Select Water Soln","pct":4.2},
+        {"ticker":"PTEN","name":"Patterson-UTI","pct":3.9},{"ticker":"NR","name":"Newpark Resources","pct":3.5},
+    ],
+    "TAN": [
+        {"ticker":"ENPH","name":"Enphase Energy","pct":12.4},{"ticker":"FSLR","name":"First Solar","pct":10.8},
+        {"ticker":"SEDG","name":"SolarEdge Tech","pct":8.2},{"ticker":"SPWR","name":"SunPower Corp","pct":6.4},
+        {"ticker":"RUN","name":"Sunrun Inc","pct":5.8},{"ticker":"CSIQ","name":"Canadian Solar","pct":5.4},
+        {"ticker":"JKS","name":"JinkoSolar Holding","pct":5.1},{"ticker":"MAXN","name":"Maxeon Solar","pct":4.5},
+        {"ticker":"NEE","name":"NextEra Energy","pct":4.2},{"ticker":"AES","name":"AES Corp","pct":3.8},
+    ],
+    "ICLN": [
+        {"ticker":"PLUG","name":"Plug Power","pct":6.8},{"ticker":"FSLR","name":"First Solar","pct":6.4},
+        {"ticker":"ENPH","name":"Enphase Energy","pct":5.9},{"ticker":"NEE","name":"NextEra Energy","pct":5.4},
+        {"ticker":"CWEN","name":"Clearway Energy","pct":4.4},{"ticker":"RUN","name":"Sunrun Inc","pct":4.1},
+        {"ticker":"BEP","name":"Brookfield Renew","pct":3.8},{"ticker":"SEDG","name":"SolarEdge Tech","pct":3.4},
+        {"ticker":"NOVA","name":"Sunnova Energy","pct":3.1},{"ticker":"ORA","name":"Ormat Technologies","pct":2.8},
+    ],
+    "XAR": [
+        {"ticker":"RTX","name":"RTX Corp","pct":14.8},{"ticker":"LMT","name":"Lockheed Martin","pct":13.4},
+        {"ticker":"NOC","name":"Northrop Grumman","pct":10.8},{"ticker":"GD","name":"General Dynamics","pct":9.2},
+        {"ticker":"TDG","name":"TransDigm Group","pct":6.4},{"ticker":"HEICO","name":"HEICO Corp","pct":5.8},
+        {"ticker":"LDOS","name":"Leidos Holdings","pct":5.4},{"ticker":"SAIC","name":"Science Apps Intl","pct":4.9},
+        {"ticker":"HII","name":"Huntington Ingalls","pct":4.5},{"ticker":"LHX","name":"L3Harris Tech","pct":4.2},
+    ],
+    "PAVE": [
+        {"ticker":"BLDR","name":"Builders FirstSource","pct":5.8},{"ticker":"FAST","name":"Fastenal Co","pct":5.4},
+        {"ticker":"MLM","name":"Martin Marietta","pct":5.1},{"ticker":"VMC","name":"Vulcan Materials","pct":4.8},
+        {"ticker":"URI","name":"United Rentals","pct":4.5},{"ticker":"PWR","name":"Quanta Services","pct":4.2},
+        {"ticker":"AECOM","name":"AECOM","pct":3.9},{"ticker":"MAS","name":"Masco Corp","pct":3.5},
+        {"ticker":"NUE","name":"Nucor Corp","pct":3.2},{"ticker":"CARR","name":"Carrier Global","pct":2.9},
+    ],
+    "XRT": [
+        {"ticker":"AMZN","name":"Amazon","pct":7.4},{"ticker":"WMT","name":"Walmart Inc","pct":6.8},
+        {"ticker":"TGT","name":"Target Corp","pct":5.9},{"ticker":"COST","name":"Costco Wholesale","pct":5.4},
+        {"ticker":"HD","name":"Home Depot","pct":4.9},{"ticker":"LOW","name":"Lowe's Companies","pct":4.5},
+        {"ticker":"NKE","name":"Nike Inc","pct":4.1},{"ticker":"LULU","name":"Lululemon","pct":3.8},
+        {"ticker":"DKNG","name":"DraftKings","pct":3.2},{"ticker":"FIVE","name":"Five Below","pct":2.9},
+    ],
+    "XHB": [
+        {"ticker":"DHI","name":"D.R. Horton","pct":14.8},{"ticker":"LEN","name":"Lennar Corp","pct":13.2},
+        {"ticker":"PHM","name":"PulteGroup","pct":10.8},{"ticker":"NVR","name":"NVR Inc","pct":9.4},
+        {"ticker":"TOL","name":"Toll Brothers","pct":7.8},{"ticker":"MDC","name":"MDC Holdings","pct":5.4},
+        {"ticker":"MHO","name":"M/I Homes","pct":4.8},{"ticker":"CCS","name":"Century Communities","pct":4.2},
+        {"ticker":"IBP","name":"Installed Building","pct":3.8},{"ticker":"BLD","name":"TopBuild Corp","pct":3.5},
+    ],
+    "COPX": [
+        {"ticker":"FCX","name":"Freeport-McMoRan","pct":14.8},{"ticker":"SCCO","name":"Southern Copper","pct":12.4},
+        {"ticker":"HBM","name":"Hudbay Minerals","pct":6.8},{"ticker":"ERO","name":"Ero Copper","pct":5.4},
+        {"ticker":"TECK","name":"Teck Resources","pct":4.9},{"ticker":"IVN","name":"Ivanhoe Mines","pct":4.5},
+        {"ticker":"CMMC","name":"Capstone Copper","pct":4.2},{"ticker":"TRQ","name":"Turquoise Hill","pct":3.8},
+        {"ticker":"GGB","name":"Gerdau SA","pct":3.4},{"ticker":"CS","name":"Capstone Mining","pct":3.1},
+    ],
+    "GDX": [
+        {"ticker":"NEM","name":"Newmont Corp","pct":14.2},{"ticker":"GOLD","name":"Barrick Gold","pct":12.8},
+        {"ticker":"AEM","name":"Agnico Eagle","pct":10.4},{"ticker":"WPM","name":"Wheaton Precious","pct":7.8},
+        {"ticker":"KGC","name":"Kinross Gold","pct":5.4},{"ticker":"FNV","name":"Franco-Nevada","pct":5.1},
+        {"ticker":"PAAS","name":"Pan American Silver","pct":4.8},{"ticker":"HMY","name":"Harmony Gold","pct":4.2},
+        {"ticker":"AU","name":"AngloGold Ashanti","pct":3.9},{"ticker":"AGI","name":"Alamos Gold","pct":3.5},
+    ],
+    "SLX": [
+        {"ticker":"NUE","name":"Nucor Corp","pct":18.4},{"ticker":"STLD","name":"Steel Dynamics","pct":14.8},
+        {"ticker":"X","name":"U.S. Steel","pct":10.2},{"ticker":"CLF","name":"Cleveland-Cliffs","pct":8.4},
+        {"ticker":"MT","name":"ArcelorMittal","pct":6.8},{"ticker":"TS","name":"Tenaris SA","pct":5.4},
+        {"ticker":"WOR","name":"Worthington Inds","pct":4.9},{"ticker":"GGB","name":"Gerdau SA","pct":4.5},
+        {"ticker":"CRS","name":"Carpenter Technology","pct":4.1},{"ticker":"ATI","name":"ATI Inc","pct":3.7},
+    ],
+    "ARKK": [
+        {"ticker":"TSLA","name":"Tesla","pct":10.8},{"ticker":"CRSP","name":"CRISPR Therapeutics","pct":8.4},
+        {"ticker":"COIN","name":"Coinbase","pct":7.2},{"ticker":"ROKU","name":"Roku Inc","pct":6.8},
+        {"ticker":"RBLX","name":"Roblox Corp","pct":5.9},{"ticker":"SQ","name":"Block Inc","pct":5.4},
+        {"ticker":"DKNG","name":"DraftKings","pct":4.8},{"ticker":"EXAS","name":"Exact Sciences","pct":4.2},
+        {"ticker":"PATH","name":"UiPath Inc","pct":3.9},{"ticker":"RXRX","name":"Recursion Pharma","pct":3.5},
+    ],
+    "ARKG": [
+        {"ticker":"CRSP","name":"CRISPR Therapeutics","pct":9.8},{"ticker":"NVTA","name":"Invitae Corp","pct":7.4},
+        {"ticker":"TDOC","name":"Teladoc Health","pct":6.8},{"ticker":"FATE","name":"Fate Therapeutics","pct":6.2},
+        {"ticker":"RXRX","name":"Recursion Pharma","pct":5.8},{"ticker":"BEAM","name":"Beam Therapeutics","pct":5.4},
+        {"ticker":"TWST","name":"Twist Bioscience","pct":4.9},{"ticker":"VCYT","name":"Veracyte Inc","pct":4.5},
+        {"ticker":"ACMR","name":"ACM Research","pct":4.1},{"ticker":"SEER","name":"Seer Inc","pct":3.7},
+    ],
+    "ARKW": [
+        {"ticker":"TSLA","name":"Tesla","pct":12.4},{"ticker":"COIN","name":"Coinbase","pct":9.8},
+        {"ticker":"SQ","name":"Block Inc","pct":8.4},{"ticker":"DKNG","name":"DraftKings","pct":6.8},
+        {"ticker":"ROKU","name":"Roku Inc","pct":6.2},{"ticker":"HOOD","name":"Robinhood Markets","pct":5.4},
+        {"ticker":"SPOT","name":"Spotify Technology","pct":4.8},{"ticker":"Z","name":"Zillow Group","pct":4.2},
+        {"ticker":"OPEN","name":"Opendoor Tech","pct":3.8},{"ticker":"JD","name":"JD.com","pct":3.4},
+    ],
+}
+
 BREADTH_TICKERS = {
     "^VIX": "VIX Fear Index",
     "HYG":  "High Yield Bonds",
@@ -2001,20 +2268,25 @@ def build_pulse_panel_html(pulse_data, all_results=None):
             + "</div></div>"
         )
 
-    themes_pane    = _build_pane(THEME_ETFS,   "themes",    visible=True)
-    sectors_pane   = _build_pane(SECTOR_ETFS,  "sectors")
+    themes_pane  = _build_country_pane(THEME_ETFS,  "themes",  None, THEME_ETF_FALLBACK_HOLDINGS,  "Theme / ETF",  visible=True)
+    sectors_pane = _build_country_pane(SECTOR_ETFS, "sectors", None, SECTOR_ETF_FALLBACK_HOLDINGS, "Sector / ETF")
 
-    def _build_country_pane(sym_dict, pane_id, holdings):
-        # Country ETF pane: same perf table + expandable top-10 holdings sub-rows
+    def _build_country_pane(sym_dict, pane_id, holdings, fallback_dict=None, group_label="Country / ETF", visible=False):
+        # Country/Theme/Sector ETF pane: perf table + expandable top-10 holdings sub-rows
         rows_html = _build_rows(sym_dict)
         hold_rows = {}
         # Merge live holdings with static fallback — live data takes priority,
-        # fallback ensures accordion always works even when yfinance is unavailable
+        # fallback_dict checked first, then COUNTRY_ETF_FALLBACK_HOLDINGS
         merged_holdings = {}
         for sym in sym_dict:
             live = (holdings or {}).get(sym)
             if live:
                 merged_holdings[sym] = live
+            elif fallback_dict and sym in fallback_dict:
+                fb = [dict(h) for h in fallback_dict[sym]]
+                for h in fb:
+                    h.setdefault("cached", True)
+                merged_holdings[sym] = fb
             elif sym in COUNTRY_ETF_FALLBACK_HOLDINGS:
                 fb = [dict(h) for h in COUNTRY_ETF_FALLBACK_HOLDINGS[sym]]
                 for h in fb:
@@ -2104,20 +2376,21 @@ def build_pulse_panel_html(pulse_data, all_results=None):
             "<thead style='position:sticky;top:0;background:#151e2d;z-index:2'>"
             "<tr style='border-bottom:2px solid #334155'>"
             "<th style='padding:6px 10px;text-align:left;color:#64748b;font-size:11px'>Ticker</th>"
-            "<th style='padding:6px 10px;text-align:left;color:#64748b;font-size:11px'>Country / ETF</th>"
+            "<th style='padding:6px 10px;text-align:left;color:#64748b;font-size:11px'>" + group_label + "</th>"
             "<th style='padding:6px 10px;text-align:right;color:#64748b;font-size:11px'>Price</th>"
             + _th("Today &#9660;", pane_id, 3, active=True)
             + _th("1W", pane_id, 4) + _th("1M", pane_id, 5)
             + _th("3M", pane_id, 6) + _th("6M", pane_id, 7) + _th("YTD", pane_id, 8)
             + "</tr></thead>"
         )
+        disp = "block" if visible else "none"
         return (
-            "<div id='mpp-%s' class='mpp-pane' style='display:none'>"
+            "<div id='mpp-%s' class='mpp-pane' style='display:%s'>"
             "<div style='overflow-x:auto;max-height:520px;overflow-y:auto'>"
             "<table style='width:100%%;border-collapse:collapse'>"
             "%s<tbody id='mpp-body-%s'>%s</tbody>"
             "</table></div></div>"
-        ) % (pane_id, thead, pane_id, final_rows)
+        ) % (pane_id, disp, thead, pane_id, final_rows)
 
     countries_pane = _build_country_pane(COUNTRY_ETFS, "countries", _holdings)
     highs_pane     = _highs_lows_pane()
@@ -3426,6 +3699,7 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
                      + '" data-mktcap="' + str(mc_b)
                      + '" data-rvol="' + str(rvol_v)
                      + '" data-ticker="' + m["ticker"].lower()
+                     + '" data-chg="' + str(round(m["pm_chg"], 4))
                      + '" style="border-bottom:1px solid #1e293b">'
                      '<td style="padding:8px 12px;font-weight:700;color:#e2e8f0">' + m["ticker"] + '</td>'
                      '<td style="padding:8px 12px;color:#64748b;font-size:12px">' + m["sector"][:22] + '</td>'
@@ -3481,7 +3755,7 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
                 + '<table id="tbl-' + pid + '">\n<thead><tr>\n'
                 + '<th>Ticker</th><th>Sector</th><th>Close</th>'
                 + '<th style="color:#a78bfa">' + tlbl + ' Price</th>'
-                + '<th style="color:#a78bfa">' + tlbl + ' Chg%</th>'
+                + '<th style="color:#a78bfa;cursor:pointer;user-select:none" onclick="sortPMChg(\'' + pid + '\')" title="Sort by change">' + tlbl + ' Chg% &#8597;</th>'
                 + '<th>Mkt Cap</th><th>SVol (10d)</th><th>Source</th>\n</tr></thead><tbody>\n'
                 + rows + '</tbody></table></div>\n</div>\n')
 
@@ -3536,6 +3810,7 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         'var cnt=document.getElementById("cnt-"+pid);'
         'if(cnt)cnt.textContent=vis+" / "+tot+" stocks";}'
         '\nfunction filterPM(pid,dir,btn){setPMDir(pid,dir,btn);}'
+        '\nfunction sortPMChg(pid){''var tbl=document.getElementById("tbl-"+pid);if(!tbl)return;''var tbody=tbl.querySelector("tbody");''var rows=Array.from(tbody.querySelectorAll("tr"));''var cur=tbl.getAttribute("data-chg-sort")||"none";''var asc=cur!=="asc";''tbl.setAttribute("data-chg-sort",asc?"asc":"desc");''rows.sort(function(a,b){''var av=parseFloat(a.getAttribute("data-chg")||"0");''var bv=parseFloat(b.getAttribute("data-chg")||"0");''return asc?av-bv:bv-av;});''rows.forEach(function(r){tbody.appendChild(r);});''var th=tbl.querySelector("th[onclick*=\'sortPMChg\']");''if(th){var b=th.innerHTML.replace(/[\u25b2\u25bc\u2195]/g,"").trim();''th.innerHTML=b+" "+(asc?"&#9650;":"&#9660;");}}'
         '\ndocument.addEventListener("DOMContentLoaded",function(){'
         'try{var s=localStorage.getItem("swt_page");'
         'if(s&&document.getElementById("pg-"+s)){showPage(s);return;}'
