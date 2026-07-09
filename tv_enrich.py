@@ -190,6 +190,24 @@ THEME_ETFS = {
     "ARKW": "Internet / Next Gen",
 }
 
+SECTOR_INDUSTRY_MAP = {
+    "XLK":  [("SMH","Semiconductors"), ("SOXX","Semicon. Equipment"),
+              ("CLOU","Cloud Computing"), ("AIQ","AI & Big Data"),
+              ("HACK","Cybersecurity"), ("BOTZ","Robotics / AI"),
+              ("ARKK","Innovation"), ("ARKW","Next Gen Internet")],
+    "XLF":  [("KBE","Banks"), ("KRE","Regional Banks"), ("KIE","Insurance")],
+    "XLV":  [("IBB","Biotech (LC)"), ("XBI","Biotech (EW)"),
+              ("IHI","Medical Devices"), ("ARKG","Genomics")],
+    "XLE":  [("XOP","Oil & Gas E&P"), ("OIH","Oil Services")],
+    "XLC":  [],
+    "XLY":  [("XRT","Retail"), ("XHB","Homebuilders")],
+    "XLP":  [],
+    "XLI":  [("XAR","Aerospace / Defense"), ("PAVE","Infrastructure")],
+    "XLB":  [("COPX","Copper Miners"), ("GDX","Gold Miners"), ("SLX","Steel")],
+    "XLRE": [],
+    "XLU":  [("TAN","Solar Energy"), ("ICLN","Clean Energy")],
+}
+
 COUNTRY_ETFS = {
     "ACWI": "World (MSCI ACWI)",
     "EEM":  "Emerging Markets",
@@ -2854,23 +2872,95 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         else:
             bg = "rgba(239,68,68,%.2f)" % (0.15 + intensity * 0.45)
             tc = "#fca5a5" if chg < -1.5 else "#f87171"
+        _hdrill = bool(SECTOR_INDUSTRY_MAP.get(etf))
+        _hcur   = "cursor:pointer;" if _hdrill else ""
+        _hclk   = "onclick=\"toggleSectorDrill('%s')\" " % etf if _hdrill else ""
         sector_cells.append(
-            '<div style="background:%s;border-radius:6px;padding:8px 10px;'
-            'text-align:center;min-width:90px;flex:1">'
+            '<div %sstyle="%sbackground:%s;border-radius:6px;padding:8px 10px;'
+            'text-align:center;min-width:90px;flex:1" id="sec-tile-%s">'
             '<div style="font-size:11px;font-weight:700;color:%s">%s%.2f%%</div>'
             '<div style="font-size:10px;color:#94a3b8;margin-top:2px">%s</div>'
             '<div style="font-size:10px;color:#64748b">%s</div>'
-            '</div>' % (bg, tc, chg_arrow(chg), abs(chg), name, etf)
+            '</div>' % (_hclk, _hcur, bg, etf, tc, chg_arrow(chg), abs(chg), name, etf)
         )
 
+    # Embed sub-industry performance data for JS drill-down
+    import json as _json
+    _mp = market_pulse or {}
+    _ddata = {}
+    for _etf, _inds in SECTOR_INDUSTRY_MAP.items():
+        _ddata[_etf] = []
+        for _sym, _lbl in _inds:
+            _d = _mp.get(_sym, {})
+            _ddata[_etf].append({
+                "sym": _sym, "lbl": _lbl,
+                "day": _d.get("today"), "w1": _d.get("1w"),
+                "m1":  _d.get("1m"),   "m3": _d.get("3m"),
+            })
+    _djson = _json.dumps(_ddata)
+
+    _dpanel = (
+        '<div id="sector-drill-panel" style="display:none;margin-top:8px;'
+        'background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 14px">'
+        '<div id="sector-drill-title" style="font-size:12px;font-weight:700;color:#94a3b8;'
+        'text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px"></div>'
+        '<div id="sector-drill-body"></div>'
+        '</div>'
+    )
+
+    # JS uses single-quote string delimiters (safe inside double-quoted Python strings)
+    _djs = (
+        "<script>var _sdi=" + _djson + ";"
+        "var _sdActive=null;"
+        "function _pct(v){"
+        "if(v===null||v===undefined)return '<span style=\"color:#64748b\">n/a</span>';"
+        "var c=v>=0?'#10b981':'#ef4444';"
+        "var s=v>=0?'▲':'▼';"
+        "return '<span style=\"color:'+c+';font-weight:600\">'+s+Math.abs(v).toFixed(2)+'%</span>';}"
+        "function toggleSectorDrill(etf){"
+        "var panel=document.getElementById('sector-drill-panel');"
+        "var title=document.getElementById('sector-drill-title');"
+        "var body=document.getElementById('sector-drill-body');"
+        "if(_sdActive===etf){panel.style.display='none';_sdActive=null;return;}"
+        "_sdActive=etf;panel.style.display='block';"
+        "title.textContent=etf+' - Industries';"
+        "var rows=_sdi[etf]||[];"
+        "var h='<table style=\"width:100%;border-collapse:collapse\">';"
+        "h+='<tr style=\"border-bottom:1px solid #1e293b\">"
+        "<th style=\"text-align:left;padding:4px 8px;font-size:10px;color:#475569\">Industry</th>"
+        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#475569\">ETF</th>"
+        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#475569\">Day</th>"
+        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#475569\">1W</th>"
+        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#475569\">1M</th>"
+        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#475569\">3M</th>"
+        "</tr>';"
+        "rows.forEach(function(r){"
+        "h+='<tr style=\"border-bottom:1px solid #0f172a\">"
+        "<td style=\"padding:5px 8px;font-size:11px;color:#cbd5e1\">'+r.lbl+'</td>"
+        "<td style=\"padding:5px 8px;font-size:11px;color:#64748b;text-align:right\">'+r.sym+'</td>"
+        "<td style=\"padding:5px 8px;font-size:11px;text-align:right\">'+_pct(r.day)+'</td>"
+        "<td style=\"padding:5px 8px;font-size:11px;text-align:right\">'+_pct(r.w1)+'</td>"
+        "<td style=\"padding:5px 8px;font-size:11px;text-align:right\">'+_pct(r.m1)+'</td>"
+        "<td style=\"padding:5px 8px;font-size:11px;text-align:right\">'+_pct(r.m3)+'</td>"
+        "</tr>';"
+        "});h+='</table>';body.innerHTML=h;}"
+        "</script>"
+    )
+
+    # Use plain concatenation — avoids "%" in _djson/_djs being misinterpreted
+    # as format specifiers if we used % operator on sector_html.
     sector_html = (
         '<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;'
         'padding:12px 16px;margin-bottom:12px">'
         '<div style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;'
-        'letter-spacing:.5px;margin-bottom:10px">Sector Heatmap — today</div>'
-        '<div style="display:flex;gap:6px;flex-wrap:wrap">%s</div>'
-        '</div>'
-    ) % "".join(sector_cells)
+        'letter-spacing:.5px;margin-bottom:10px">Sector Heatmap &#8212; today</div>'
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+        + "".join(sector_cells)
+        + '</div>'
+        + _dpanel
+        + _djs
+        + '</div>'
+    )
 
     # Market Pulse panel (Theme Tracker / S&P Sectors / Country ETFs / Highs-Lows)
     pulse_panel_html = build_pulse_panel_html(market_pulse, results, daily_breadth=kwargs.get("daily_breadth")) if market_pulse else ""
@@ -4284,87 +4374,3 @@ def main():
         print(f"✅ Received {len(tickers)} tickers from pipe (strategy: {args.strategy})", file=sys.stderr)
 
     # ── Multi-strategy tabs mode ─────────────────────────────────────────
-    if getattr(args, "tabs", False) and args.scan:
-        if not args.html:
-            print("❌ --tabs requires --html", file=sys.stderr); sys.exit(1)
-        all_results = []
-        for _sf in args.scan:
-            with open(_sf, encoding="utf-8") as _f:
-                try:
-                    _sd = json.load(_f)
-                except (json.JSONDecodeError, ValueError) as _e:
-                    print(f"⚠️  Invalid JSON in {_sf}: {_e}", file=sys.stderr)
-                    _sd = {"strategy": "minervini", "tickers": []}
-            _strat = _sd.get("strategy", "minervini")
-            _ticker_meta = {
-                (t["ticker"] if isinstance(t, dict) else str(t)): t
-                for t in _sd.get("tickers", []) if isinstance(t, dict)
-            }
-            _tickers = list(_ticker_meta.keys())
-            if not _tickers:
-                print(f"⚠️  No tickers in {_sf}", file=sys.stderr); continue
-            print(f"📊 Enriching {len(_tickers)} [{_strat}]...", file=sys.stderr)
-            _enriched = enrich_tickers(_tickers, _strat, args.global_markets, fv_meta=_ticker_meta)
-            all_results.extend(_enriched)
-        print("📊 Fetching market context...", file=sys.stderr)
-        _mctx = fetch_market_context()
-        _ytk = [r["ticker"] for r in all_results[:150]]
-        print(f"🌙 Pre/post + earnings for {len(_ytk)} tickers...", file=sys.stderr)
-        _yahoo = fetch_yahoo_data(_ytk)
-        print("🌐 Fetching Market Pulse data...", file=sys.stderr)
-        _mpulse = fetch_market_pulse_data()
-        print("📊 Fetching daily breadth data...", file=sys.stderr)
-        _dbreadth = fetch_daily_breadth_data()
-        _new_tickers = []
-        if getattr(args, 'new_tickers_file', None) and Path(args.new_tickers_file).exists():
-            try:
-                _new_tickers = json.loads(Path(args.new_tickers_file).read_text(encoding='utf-8'))
-            except Exception:
-                pass
-        html = build_html_dashboard(all_results, "all", _mctx, _yahoo, tabs_mode=True, new_tickers=_new_tickers, market_pulse=_mpulse, daily_breadth=_dbreadth)
-        out_path = args.output or ("watchlist_tabs_%s.html" % datetime.now().strftime("%Y-%m-%d"))
-        Path(out_path).write_text(html, encoding="utf-8")
-        print(f"✅ Tabs dashboard saved: {out_path}", file=sys.stderr)
-        return
-
-    if not tickers:
-        print("❌ No tickers provided. Use --tickers or pipe from finviz_scan.py", file=sys.stderr)
-        sys.exit(1)
-
-    results = enrich_tickers(tickers, args.strategy, args.global_markets)
-
-    if args.html:
-        print("📊 Fetching market context (SPY/QQQ/sectors)...", file=sys.stderr)
-        market_ctx = fetch_market_context()
-        yahoo_tickers = [r["ticker"] for r in results[:100]]
-        print(f"🌙 Fetching pre/post market + earnings for top {len(yahoo_tickers)} tickers...", file=sys.stderr)
-        yahoo = fetch_yahoo_data(yahoo_tickers)
-        print(f"  → {len(yahoo)} tickers enriched from Yahoo", file=sys.stderr)
-        print("🌐 Fetching Market Pulse data...", file=sys.stderr)
-        market_pulse = fetch_market_pulse_data()
-        print("📊 Fetching daily breadth data...", file=sys.stderr)
-        _dbr = fetch_daily_breadth_data()
-        _new_tickers = []
-        if getattr(args, 'new_tickers_file', None) and Path(args.new_tickers_file).exists():
-            try:
-                _new_tickers = json.loads(Path(args.new_tickers_file).read_text(encoding='utf-8'))
-            except Exception:
-                pass
-        html = build_html_dashboard(results, args.strategy, market_ctx, yahoo, new_tickers=_new_tickers, market_pulse=market_pulse, daily_breadth=_dbr)
-        out_path = args.output or ("watchlist_%s.html" % datetime.now().strftime("%Y-%m-%d"))
-        Path(out_path).write_text(html, encoding="utf-8")
-        print(f"✅ HTML dashboard saved to: {out_path}", file=sys.stderr)
-    else:
-        output = {
-            "scan_time":    datetime.now().isoformat(),
-            "strategy":     args.strategy,
-            "count":        len(results),
-            "valid_setups": sum(1 for r in results if r["valid_setup"]),
-            "results":      results,
-        }
-        indent = 2 if args.pretty else None
-        print(json.dumps(output, indent=indent, ensure_ascii=False, default=str))
-
-
-if __name__ == "__main__":
-    main()
