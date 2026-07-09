@@ -2149,7 +2149,7 @@ def build_pulse_panel_html(pulse_data, all_results=None):
         "var open=r.style.display==='table-row';"
         "r.style.display=open?'none':'table-row';"
         "if(a)a.style.transform=open?'rotate(90deg)':'';"
-        "}"
+        "};"
         "window.mppSwitch=function(btn,pane){"
         "document.querySelectorAll(\".mpp-tab\").forEach(function(b){"
         "b.style.color=\"#64748b\";b.style.borderBottom=\"2px solid transparent\";b.style.fontWeight=\"400\";});"
