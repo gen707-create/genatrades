@@ -2031,12 +2031,108 @@ def enrich_tickers(tickers, strategy, global_markets=False, fv_meta=None):
 
 
 
-def build_pulse_panel_html(pulse_data, all_results=None):
+
+def fetch_daily_breadth_data(history_file="breadth_history.json"):
+    """
+    Fetch market-wide breadth metrics via TradingView screener.
+    Counts US stocks meeting each criterion, stores daily in history_file.
+    Returns (today_data_dict, history_list_sorted_desc).
+    """
+    try:
+        from tradingview_screener import Query, col as Col
+        import json as _json, os as _os
+        from datetime import date as _date
+
+        today_str = _date.today().isoformat()
+
+        # Load accumulated history {date: metrics}
+        history = {}
+        if _os.path.exists(history_file):
+            try:
+                history = _json.loads(open(history_file, encoding="utf-8").read())
+            except Exception:
+                history = {}
+
+        # ── One broad query: US common stocks + ETFs, price > 1 ──────────────
+        print("  Daily Breadth: querying TV screener (all US stocks)...", file=__import__("sys").stderr)
+        _, df = (
+            Query()
+            .set_markets("america")
+            .select("name", "close", "change", "Perf.W", "Perf.1M", "Perf.3M",
+                    "SMA50", "SMA200", "exchange")
+            .where(Col("close") > 1, Col("type").isin(["stock", "dr"]))
+            .limit(10000)
+            .get_scanner_data()
+        )
+
+        total = len(df)
+        if total == 0:
+            print("  Daily Breadth: no data returned", file=__import__("sys").stderr)
+            return {}, list(history.values())
+
+        chg   = df["change"].fillna(0)
+        p1m   = df["Perf.1M"].fillna(0)
+        p3m   = df["Perf.3M"].fillna(0)
+        close = df["close"].fillna(0)
+        sma50 = df["SMA50"].fillna(0)
+
+        up4   = int((chg >= 4).sum())
+        dn4   = int((chg <= -4).sum())
+        adv   = int((chg > 0).sum())
+        dec   = int((chg < 0).sum())
+
+        today_data = {
+            "date":    today_str,
+            "up4":     up4,
+            "dn4":     dn4,
+            "adv":     adv,
+            "dec":     dec,
+            "up25q":   int((p3m >= 25).sum()),
+            "dn25q":   int((p3m <= -25).sum()),
+            "up25m":   int((p1m >= 25).sum()),
+            "dn25m":   int((p1m <= -25).sum()),
+            "up50m":   int((p1m >= 50).sum()),
+            "dn50m":   int((p1m <= -50).sum()),
+            "above50": int(((close > 0) & (sma50 > 0) & (close > sma50)).sum()),
+            "universe": total,
+        }
+
+        # Accumulate history (keep last 60 trading days)
+        history[today_str] = today_data
+        sorted_keys = sorted(history.keys(), reverse=True)[:60]
+        history = {k: history[k] for k in sorted_keys}
+        try:
+            open(history_file, "w", encoding="utf-8").write(_json.dumps(history, indent=2))
+        except Exception as e:
+            print(f"  Daily Breadth: could not write {history_file}: {e}", file=__import__("sys").stderr)
+
+        # Compute rolling A/D ratios from history
+        hist_list = [history[k] for k in sorted(history.keys(), reverse=True)]
+        adv_vals  = [d.get("adv", 0) for d in hist_list]
+        dec_vals  = [d.get("dec", 1) for d in hist_list]
+        for i, d in enumerate(hist_list):
+            a5  = sum(adv_vals[i:i+5]);  d5  = sum(dec_vals[i:i+5])
+            a10 = sum(adv_vals[i:i+10]); d10 = sum(dec_vals[i:i+10])
+            d["ratio5"]  = round(a5  / d5,  2) if d5  else 0
+            d["ratio10"] = round(a10 / d10, 2) if d10 else 0
+            pct50 = round(d.get("above50", 0) / d.get("universe", 1) * 100, 1)
+            d["pct50"] = pct50
+
+        print(f"  Daily Breadth: {total} stocks | up4={up4} dn4={dn4} above50={today_data['above50']}", file=__import__("sys").stderr)
+        return today_data, hist_list
+
+    except Exception as e:
+        print(f"  Daily Breadth fetch failed: {e}", file=__import__("sys").stderr)
+        return {}, []
+
+
+def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
     """
     Collapsible Market Pulse panel:
-      Tabs -- Theme Tracker | S&P Sectors | Country ETFs | Highs / Lows
-    pulse_data  : dict from fetch_market_pulse_data()
-    all_results : enriched scanner rows (Highs/Lows tab)
+      Tabs -- Theme Tracker | S&P Sectors | Country ETFs | Highs / Lows | Daily Breadth
+    pulse_data    : dict from fetch_market_pulse_data()
+    all_results   : enriched scanner rows (Highs/Lows tab)
+    daily_breadth : (today_dict, hist_list) from fetch_daily_breadth_data()
     """
     if not pulse_data:
         return ""
@@ -2110,7 +2206,7 @@ def build_pulse_panel_html(pulse_data, all_results=None):
         )
         return (
             "<div id=\"mpp-%s\" class=\"mpp-pane\" style=\"display:%s\">"
-            "<div style=\"overflow-x:auto;max-height:420px;overflow-y:auto\">"
+            "<div style=\"overflow-x:auto;max-height:760px;overflow-y:auto\">"
             "<table style=\"width:100%%;border-collapse:collapse\">"
             "%s"
             "<tbody id=\"mpp-body-%s\">%s</tbody>"
@@ -2386,7 +2482,7 @@ def build_pulse_panel_html(pulse_data, all_results=None):
         disp = "block" if visible else "none"
         return (
             "<div id='mpp-%s' class='mpp-pane' style='display:%s'>"
-            "<div style='overflow-x:auto;max-height:520px;overflow-y:auto'>"
+            "<div style='overflow-x:auto;max-height:760px;overflow-y:auto'>"
             "<table style='width:100%%;border-collapse:collapse'>"
             "%s<tbody id='mpp-body-%s'>%s</tbody>"
             "</table></div></div>"
@@ -2448,6 +2544,91 @@ def build_pulse_panel_html(pulse_data, all_results=None):
             "padding:9px 14px;cursor:pointer;font-size:12px;white-space:nowrap\">%s</button>\n"
         ) % (pane, bb, cc, fw, label)
 
+    def _daily_breadth_pane():
+        """Historical daily breadth table (like RealSimpleAriel Breadth indicator)."""
+        today_d, hist_list = (daily_breadth if daily_breadth else ({}, []))
+
+        def _ratio_cell(v):
+            if v is None or v == 0:
+                return "<td style='padding:5px 8px;text-align:center;color:#64748b;font-size:12px'>—</td>"
+            c = "#10b981" if v >= 1.0 else "#ef4444"
+            return "<td style='padding:5px 8px;text-align:center;font-weight:700;font-size:12px;color:%s'>%.2f</td>" % (c, v)
+
+        def _int_cell(v, hi_thr=None, lo_thr=None, invert=False):
+            if v is None:
+                return "<td style='padding:5px 8px;text-align:center;color:#64748b;font-size:12px'>—</td>"
+            c = "#e2e8f0"
+            if hi_thr is not None and v >= hi_thr:
+                c = "#ef4444" if invert else "#10b981"
+            elif lo_thr is not None and v <= lo_thr:
+                c = "#10b981" if invert else "#ef4444"
+            return "<td style='padding:5px 8px;text-align:center;font-size:12px;color:%s'>%d</td>" % (c, v)
+
+        def _pct_cell(v):
+            if v is None:
+                return "<td style='padding:5px 8px;text-align:center;color:#64748b;font-size:12px'>—</td>"
+            c = "#10b981" if v >= 60 else "#f59e0b" if v >= 40 else "#ef4444"
+            return "<td style='padding:5px 8px;text-align:center;font-weight:700;font-size:12px;color:%s'>%.1f%%</td>" % (c, v)
+
+        def _date_cell(d):
+            return "<td style='padding:5px 8px;color:#64748b;font-size:11px;white-space:nowrap'>%s</td>" % d
+
+        rows_html = ""
+        for d in hist_list[:30]:
+            rows_html += (
+                "<tr style='border-bottom:1px solid #0f172a'>"
+                + _date_cell(d.get("date",""))
+                + _int_cell(d.get("up4"),   hi_thr=200,  lo_thr=50)
+                + _int_cell(d.get("dn4"),   hi_thr=200,  lo_thr=50, invert=True)
+                + _ratio_cell(d.get("ratio5"))
+                + _ratio_cell(d.get("ratio10"))
+                + _int_cell(d.get("up25q"),  hi_thr=400,  lo_thr=100)
+                + _int_cell(d.get("dn25q"),  hi_thr=100,  lo_thr=20, invert=True)
+                + _int_cell(d.get("up25m"),  hi_thr=150,  lo_thr=30)
+                + _int_cell(d.get("dn25m"),  hi_thr=100,  lo_thr=20, invert=True)
+                + _int_cell(d.get("up50m"),  hi_thr=50,   lo_thr=5)
+                + _int_cell(d.get("dn50m"),  hi_thr=30,   lo_thr=5,  invert=True)
+                + _pct_cell(d.get("pct50"))
+                + _int_cell(d.get("universe"))
+                + "</tr>"
+            )
+
+        if not rows_html:
+            rows_html = ("<tr><td colspan='13' style='padding:20px;text-align:center;"
+                         "color:#475569;font-size:12px'>No breadth history yet — "
+                         "data will accumulate with each dashboard build</td></tr>")
+
+        thead = (
+            "<thead style='position:sticky;top:0;background:#151e2d;z-index:2'>"
+            "<tr style='border-bottom:2px solid #334155'>"
+            "<th style='padding:6px 8px;color:#94a3b8;font-size:10px;text-align:left'>Date</th>"
+            "<th style='padding:6px 6px;color:#10b981;font-size:10px;text-align:center' title='Stocks up 4%+ today'>Up 4%+<br>Today</th>"
+            "<th style='padding:6px 6px;color:#ef4444;font-size:10px;text-align:center' title='Stocks down 4%+ today'>Dn 4%+<br>Today</th>"
+            "<th style='padding:6px 6px;color:#a78bfa;font-size:10px;text-align:center' title='5-day advance/decline ratio'>5D<br>Ratio</th>"
+            "<th style='padding:6px 6px;color:#a78bfa;font-size:10px;text-align:center' title='10-day advance/decline ratio'>10D<br>Ratio</th>"
+            "<th style='padding:6px 6px;color:#10b981;font-size:10px;text-align:center' title='Stocks up 25%+ this quarter'>Up 25%+<br>Qtr</th>"
+            "<th style='padding:6px 6px;color:#ef4444;font-size:10px;text-align:center' title='Stocks down 25%+ this quarter'>Dn 25%+<br>Qtr</th>"
+            "<th style='padding:6px 6px;color:#10b981;font-size:10px;text-align:center' title='Stocks up 25%+ this month'>Up 25%+<br>Mo</th>"
+            "<th style='padding:6px 6px;color:#ef4444;font-size:10px;text-align:center' title='Stocks down 25%+ this month'>Dn 25%+<br>Mo</th>"
+            "<th style='padding:6px 6px;color:#10b981;font-size:10px;text-align:center' title='Stocks up 50%+ this month'>Up 50%+<br>Mo</th>"
+            "<th style='padding:6px 6px;color:#ef4444;font-size:10px;text-align:center' title='Stocks down 50%+ this month'>Dn 50%+<br>Mo</th>"
+            "<th style='padding:6px 6px;color:#f59e0b;font-size:10px;text-align:center' title='% of stocks above 50-day MA'>&gt;50dma<br>%</th>"
+            "<th style='padding:6px 6px;color:#64748b;font-size:10px;text-align:center'>Universe</th>"
+            "</tr></thead>"
+        )
+
+        return (
+            "<div id='mpp-dbreadth' class='mpp-pane' style='display:none'>"
+            "<div style='overflow-x:auto;max-height:760px;overflow-y:auto'>"
+            "<table style='width:100%;border-collapse:collapse'>"
+            + thead
+            + "<tbody>" + rows_html + "</tbody>"
+            "</table></div></div>"
+        )
+
+    daily_breadth_pane = _daily_breadth_pane()
+
+
     return (
         "\n<!-- Market Pulse Panel -->\n"
         "<div style=\"background:#1e293b;border:1px solid #334155;border-radius:12px;margin-bottom:14px;overflow:hidden\">\n"
@@ -2463,19 +2644,21 @@ def build_pulse_panel_html(pulse_data, all_results=None):
         + _tab_btn("countries", "&#127758; Country ETFs")
         + _tab_btn("highs",     "&#128202; Highs / Lows")
         + _tab_btn("breadth",   "&#128268; Breadth")
+        + _tab_btn("dbreadth",  "&#128202; Daily Breadth")
         + "    </div>\n"
         + themes_pane + "\n"
         + sectors_pane + "\n"
         + countries_pane + "\n"
         + highs_pane + "\n"
         + breadth_pane + "\n"
+        + daily_breadth_pane + "\n"
         + "  </div>\n</div>\n"
         + js
     )
 
 
 
-def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mode=False, new_tickers=None, market_pulse=None):
+def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mode=False, new_tickers=None, market_pulse=None, **kwargs):
     """Generate self-contained HTML dashboard."""
     market_ctx = market_ctx or {}
     yahoo      = yahoo or {}
@@ -2624,7 +2807,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
     ) % "".join(sector_cells)
 
     # Market Pulse panel (Theme Tracker / S&P Sectors / Country ETFs / Highs-Lows)
-    pulse_panel_html = build_pulse_panel_html(market_pulse, results) if market_pulse else ""
+    pulse_panel_html = build_pulse_panel_html(market_pulse, results, daily_breadth=kwargs.get("daily_breadth")) if market_pulse else ""
 
     # ── Table rows and detail cards ───────────────────────────────────────────
     rows_html  = ""
@@ -4062,13 +4245,15 @@ def main():
         _yahoo = fetch_yahoo_data(_ytk)
         print("🌐 Fetching Market Pulse data...", file=sys.stderr)
         _mpulse = fetch_market_pulse_data()
+        print("📊 Fetching daily breadth data...", file=sys.stderr)
+        _dbreadth = fetch_daily_breadth_data()
         _new_tickers = []
         if getattr(args, 'new_tickers_file', None) and Path(args.new_tickers_file).exists():
             try:
                 _new_tickers = json.loads(Path(args.new_tickers_file).read_text(encoding='utf-8'))
             except Exception:
                 pass
-        html = build_html_dashboard(all_results, "all", _mctx, _yahoo, tabs_mode=True, new_tickers=_new_tickers, market_pulse=_mpulse)
+        html = build_html_dashboard(all_results, "all", _mctx, _yahoo, tabs_mode=True, new_tickers=_new_tickers, market_pulse=_mpulse, daily_breadth=_dbreadth)
         out_path = args.output or ("watchlist_tabs_%s.html" % datetime.now().strftime("%Y-%m-%d"))
         Path(out_path).write_text(html, encoding="utf-8")
         print(f"✅ Tabs dashboard saved: {out_path}", file=sys.stderr)
@@ -4089,13 +4274,15 @@ def main():
         print(f"  → {len(yahoo)} tickers enriched from Yahoo", file=sys.stderr)
         print("🌐 Fetching Market Pulse data...", file=sys.stderr)
         market_pulse = fetch_market_pulse_data()
+        print("📊 Fetching daily breadth data...", file=sys.stderr)
+        _dbr = fetch_daily_breadth_data()
         _new_tickers = []
         if getattr(args, 'new_tickers_file', None) and Path(args.new_tickers_file).exists():
             try:
                 _new_tickers = json.loads(Path(args.new_tickers_file).read_text(encoding='utf-8'))
             except Exception:
                 pass
-        html = build_html_dashboard(results, args.strategy, market_ctx, yahoo, new_tickers=_new_tickers, market_pulse=market_pulse)
+        html = build_html_dashboard(results, args.strategy, market_ctx, yahoo, new_tickers=_new_tickers, market_pulse=market_pulse, daily_breadth=_dbr)
         out_path = args.output or ("watchlist_%s.html" % datetime.now().strftime("%Y-%m-%d"))
         Path(out_path).write_text(html, encoding="utf-8")
         print(f"✅ HTML dashboard saved to: {out_path}", file=sys.stderr)
