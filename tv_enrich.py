@@ -4046,8 +4046,12 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         pid       = "premarket"  if mode == "pre" else "postmarket"
         tlbl      = "Pre" if mode == "pre" else "AH"
         movers = []; src_used = set(); ydata = yahoo or {}
+        _seen_pre = set()  # deduplicate — same ticker may appear in multiple scan files
         for r in results:
             sym = r.get("ticker", "")
+            if sym in _seen_pre:
+                continue
+            _seen_pre.add(sym)
             y   = ydata.get(sym, {})
             chg = y.get(chg_key); px = y.get(price_key)
             if chg is None or px is None:
@@ -4453,6 +4457,24 @@ def main():
             print(f"📊 Enriching {len(_tickers)} [{_strat}]...", file=sys.stderr)
             _enriched = enrich_tickers(_tickers, _strat, args.global_markets, fv_meta=_ticker_meta)
             all_results.extend(_enriched)
+        # Deduplicate by ticker — keep highest-scoring entry per ticker
+        _seen_ar = {}; _deduped = []
+        for _r in all_results:
+            _tk = _r.get("ticker", "")
+            _sc = _r.get("score", {}).get("score_pct", 0) or 0
+            if _tk not in _seen_ar or _sc > _seen_ar[_tk]:
+                _seen_ar[_tk] = _sc
+        _deduped = []
+        _used = set()
+        for _r in all_results:
+            _tk = _r.get("ticker", "")
+            if _tk in _used:
+                continue
+            _used.add(_tk)
+            _deduped.append(_r)
+        if len(_deduped) < len(all_results):
+            print(f"  Deduped {len(all_results)} -> {len(_deduped)} results", file=sys.stderr)
+        all_results = _deduped
         print("📊 Fetching market context...", file=sys.stderr)
         _mctx = fetch_market_context()
         _ytk = [r["ticker"] for r in all_results[:150]]
