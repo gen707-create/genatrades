@@ -1054,9 +1054,16 @@ def fetch_market_pulse_data():
     # Fetch ETF holdings for Country ETFs tab
     try:
         print("  Fetching ETF holdings for Country ETFs...", file=sys.stderr)
-        result["_holdings"] = fetch_etf_holdings_batch(list(COUNTRY_ETFS.keys()))
+        _hbatch = fetch_etf_holdings_batch(list(COUNTRY_ETFS.keys()))
+        _cperf = _hbatch.pop("__country_perf__", {})
+        result["_holdings"] = _hbatch
+        if _cperf:
+            _hl = result.setdefault("_holdings_live", {})
+            for _tk, _pf in _cperf.items():
+                if _tk not in _hl:
+                    _hl[_tk] = _pf
         _n = len(result["_holdings"])
-        print(f"    -> holdings for {_n} ETFs loaded", file=sys.stderr)
+        print(f"    -> holdings for {_n} ETFs, {len(_cperf)} tickers perf-enriched", file=sys.stderr)
     except Exception as _he:
         print(f"  Holdings fetch skipped: {_he}", file=sys.stderr)
         result["_holdings"] = {}
@@ -1145,11 +1152,12 @@ def fetch_etf_holdings_batch(etf_syms):
     if fallback_used:
         print(f"  Holdings fallback used for {fallback_used} ETFs", file=sys.stderr)
 
-    # Batch-fetch today's price & perf for all unique holding tickers
+    # Batch-fetch full performance (1Y history) for all unique holding tickers
     all_tickers = list({h["ticker"] for rows in result.values() for h in rows})
     if all_tickers:
         try:
-            hd = yf.download(all_tickers, period="2d", interval="1d",
+            import pandas as _pd
+            hd = yf.download(all_tickers, period="1y", interval="1d",
                              progress=False, auto_adjust=True, threads=True)
             multi = len(all_tickers) > 1
             price_map = {}
@@ -1157,16 +1165,36 @@ def fetch_etf_holdings_batch(etf_syms):
                 try:
                     col = hd["Close"][tk] if multi else hd["Close"]
                     closes = col.dropna()
-                    if len(closes) >= 2:
-                        c = float(closes.iloc[-1]); p = float(closes.iloc[-2])
-                        price_map[tk] = {"price": round(c,2),
-                                         "today": round((c-p)/p*100,2) if p else None}
+                    if len(closes) < 2:
+                        continue
+                    c = float(closes.iloc[-1])
+                    def _pchg(n, _c=c, _cl=closes):
+                        if len(_cl) > n:
+                            _p = float(_cl.iloc[-n - 1])
+                            return round((_c - _p) / _p * 100, 2) if _p else None
+                        return None
+                    yr = closes.index[-1].year
+                    ytd_sl = closes[closes.index >= _pd.Timestamp(yr, 1, 1)]
+                    ytd_v  = None
+                    if len(ytd_sl) >= 2:
+                        p0 = float(ytd_sl.iloc[0])
+                        ytd_v = round((c - p0) / p0 * 100, 2) if p0 else None
+                    price_map[tk] = {
+                        "price": round(c, 2),
+                        "today": _pchg(1),
+                        "1w":   _pchg(5),
+                        "1m":   _pchg(21),
+                        "3m":   _pchg(63),
+                        "6m":   _pchg(126),
+                        "ytd":  ytd_v,
+                    }
                 except Exception:
                     pass
             for rows in result.values():
                 for h in rows:
                     h.update(price_map.get(h["ticker"], {}))
-            print(f"  Holdings prices fetched for {len(price_map)} tickers", file=sys.stderr)
+            result["__country_perf__"] = price_map
+            print(f"  Holdings prices+perf fetched for {len(price_map)} tickers", file=sys.stderr)
         except Exception as e:
             print(f"  Holdings price fetch failed: {e}", file=sys.stderr)
 
