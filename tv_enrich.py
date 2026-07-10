@@ -195,17 +195,45 @@ SECTOR_INDUSTRY_MAP = {
               ("CLOU","Cloud Computing"), ("AIQ","AI & Big Data"),
               ("HACK","Cybersecurity"), ("BOTZ","Robotics / AI"),
               ("ARKK","Innovation"), ("ARKW","Next Gen Internet")],
-    "XLF":  [("KBE","Banks"), ("KRE","Regional Banks"), ("KIE","Insurance")],
+    "XLF":  [("KBE","Banks"), ("KRE","Regional Banks"), ("KIE","Insurance"),
+              ("IAI","Broker-Dealers"), ("FINX","FinTech")],
     "XLV":  [("IBB","Biotech (LC)"), ("XBI","Biotech (EW)"),
-              ("IHI","Medical Devices"), ("ARKG","Genomics")],
+              ("IHI","Medical Devices"), ("ARKG","Genomics"), ("PPH","Pharma")],
     "XLE":  [("XOP","Oil & Gas E&P"), ("OIH","Oil Services")],
-    "XLC":  [],
-    "XLY":  [("XRT","Retail"), ("XHB","Homebuilders")],
-    "XLP":  [],
-    "XLI":  [("XAR","Aerospace / Defense"), ("PAVE","Infrastructure")],
-    "XLB":  [("COPX","Copper Miners"), ("GDX","Gold Miners"), ("SLX","Steel")],
-    "XLRE": [],
-    "XLU":  [("TAN","Solar Energy"), ("ICLN","Clean Energy")],
+    "XLC":  [("IYZ","Telecom"), ("SOCL","Social Media"), ("PBS","Media & Entmt.")],
+    "XLY":  [("XRT","Retail"), ("XHB","Homebuilders"),
+              ("JETS","Airlines"), ("PEJ","Leisure & Entmt.")],
+    "XLP":  [("PBJ","Food & Beverage")],
+    "XLI":  [("XAR","Aero. / Defense"), ("ITA","Defense (Eq.Wt)"),
+              ("PAVE","Infrastructure"), ("ROBO","Robotics & Auto")],
+    "XLB":  [("COPX","Copper Miners"), ("GDX","Gold Miners"), ("SLX","Steel"),
+              ("LIT","Lithium & Battery"), ("REMX","Rare Earth"), ("URA","Uranium")],
+    "XLRE": [("REM","Mortgage REITs"), ("REZ","Residential REITs")],
+    "XLU":  [("TAN","Solar Energy"), ("ICLN","Clean Energy"),
+              ("FAN","Wind Energy"), ("PHO","Water Resources"), ("NLR","Nuclear")],
+}
+
+# Sub-industry ETFs NOT in THEME_ETFS — fetched for drill-down only
+SECTOR_DRILL_ETFS = {
+    "IYZ":  "Telecom",
+    "SOCL": "Social Media",
+    "PBS":  "Media & Entmt.",
+    "PBJ":  "Food & Beverage",
+    "REM":  "Mortgage REITs",
+    "REZ":  "Residential REITs",
+    "IAI":  "Broker-Dealers",
+    "FINX": "FinTech",
+    "PPH":  "Pharma",
+    "JETS": "Airlines",
+    "PEJ":  "Leisure & Entmt.",
+    "ITA":  "Defense (Eq.Wt)",
+    "ROBO": "Robotics & Auto",
+    "LIT":  "Lithium & Battery",
+    "REMX": "Rare Earth",
+    "URA":  "Uranium",
+    "FAN":  "Wind Energy",
+    "PHO":  "Water Resources",
+    "NLR":  "Nuclear Energy",
 }
 
 COUNTRY_ETFS = {
@@ -947,9 +975,10 @@ def fetch_market_pulse_data():
 
     _etf_syms = list(dict.fromkeys(
         list(THEME_ETFS.keys()) + list(SECTOR_ETFS.keys()) + list(COUNTRY_ETFS.keys())
-        + list(BREADTH_TICKERS.keys())
+        + list(BREADTH_TICKERS.keys()) + list(SECTOR_DRILL_ETFS.keys())
     ))
-    label_map = {**THEME_ETFS, **SECTOR_ETFS, **COUNTRY_ETFS, **BREADTH_TICKERS}
+    label_map = {**THEME_ETFS, **SECTOR_ETFS, **COUNTRY_ETFS,
+                 **BREADTH_TICKERS, **SECTOR_DRILL_ETFS}
     # Collect holding tickers for live sub-row data (Theme + Sector fallback dicts)
     _hold_tkrs = set()
     for _hl in list(THEME_ETF_FALLBACK_HOLDINGS.values()) + list(SECTOR_ETF_FALLBACK_HOLDINGS.values()):
