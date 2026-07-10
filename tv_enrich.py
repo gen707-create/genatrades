@@ -4374,3 +4374,87 @@ def main():
         print(f"✅ Received {len(tickers)} tickers from pipe (strategy: {args.strategy})", file=sys.stderr)
 
     # ── Multi-strategy tabs mode ─────────────────────────────────────────
+    if getattr(args, "tabs", False) and args.scan:
+        if not args.html:
+            print("❌ --tabs requires --html", file=sys.stderr); sys.exit(1)
+        all_results = []
+        for _sf in args.scan:
+            with open(_sf, encoding="utf-8") as _f:
+                try:
+                    _sd = json.load(_f)
+                except (json.JSONDecodeError, ValueError) as _e:
+                    print(f"⚠️  Invalid JSON in {_sf}: {_e}", file=sys.stderr)
+                    _sd = {"strategy": "minervini", "tickers": []}
+            _strat = _sd.get("strategy", "minervini")
+            _ticker_meta = {
+                (t["ticker"] if isinstance(t, dict) else str(t)): t
+                for t in _sd.get("tickers", []) if isinstance(t, dict)
+            }
+            _tickers = list(_ticker_meta.keys())
+            if not _tickers:
+                print(f"⚠️  No tickers in {_sf}", file=sys.stderr); continue
+            print(f"📊 Enriching {len(_tickers)} [{_strat}]...", file=sys.stderr)
+            _enriched = enrich_tickers(_tickers, _strat, args.global_markets, fv_meta=_ticker_meta)
+            all_results.extend(_enriched)
+        print("📊 Fetching market context...", file=sys.stderr)
+        _mctx = fetch_market_context()
+        _ytk = [r["ticker"] for r in all_results[:150]]
+        print(f"🌙 Pre/post + earnings for {len(_ytk)} tickers...", file=sys.stderr)
+        _yahoo = fetch_yahoo_data(_ytk)
+        print("🌐 Fetching Market Pulse data...", file=sys.stderr)
+        _mpulse = fetch_market_pulse_data()
+        print("📊 Fetching daily breadth data...", file=sys.stderr)
+        _dbreadth = fetch_daily_breadth_data()
+        _new_tickers = []
+        if getattr(args, 'new_tickers_file', None) and Path(args.new_tickers_file).exists():
+            try:
+                _new_tickers = json.loads(Path(args.new_tickers_file).read_text(encoding='utf-8'))
+            except Exception:
+                pass
+        html = build_html_dashboard(all_results, "all", _mctx, _yahoo, tabs_mode=True, new_tickers=_new_tickers, market_pulse=_mpulse, daily_breadth=_dbreadth)
+        out_path = args.output or ("watchlist_tabs_%s.html" % datetime.now().strftime("%Y-%m-%d"))
+        Path(out_path).write_text(html, encoding="utf-8")
+        print(f"✅ Tabs dashboard saved: {out_path}", file=sys.stderr)
+        return
+
+    if not tickers:
+        print("❌ No tickers provided. Use --tickers or pipe from finviz_scan.py", file=sys.stderr)
+        sys.exit(1)
+
+    results = enrich_tickers(tickers, args.strategy, args.global_markets)
+
+    if args.html:
+        print("📊 Fetching market context (SPY/QQQ/sectors)...", file=sys.stderr)
+        market_ctx = fetch_market_context()
+        yahoo_tickers = [r["ticker"] for r in results[:100]]
+        print(f"🌙 Fetching pre/post market + earnings for top {len(yahoo_tickers)} tickers...", file=sys.stderr)
+        yahoo = fetch_yahoo_data(yahoo_tickers)
+        print(f"  → {len(yahoo)} tickers enriched from Yahoo", file=sys.stderr)
+        print("🌐 Fetching Market Pulse data...", file=sys.stderr)
+        market_pulse = fetch_market_pulse_data()
+        print("📊 Fetching daily breadth data...", file=sys.stderr)
+        _dbr = fetch_daily_breadth_data()
+        _new_tickers = []
+        if getattr(args, 'new_tickers_file', None) and Path(args.new_tickers_file).exists():
+            try:
+                _new_tickers = json.loads(Path(args.new_tickers_file).read_text(encoding='utf-8'))
+            except Exception:
+                pass
+        html = build_html_dashboard(results, args.strategy, market_ctx, yahoo, new_tickers=_new_tickers, market_pulse=market_pulse, daily_breadth=_dbr)
+        out_path = args.output or ("watchlist_%s.html" % datetime.now().strftime("%Y-%m-%d"))
+        Path(out_path).write_text(html, encoding="utf-8")
+        print(f"✅ HTML dashboard saved to: {out_path}", file=sys.stderr)
+    else:
+        output = {
+            "scan_time":    datetime.now().isoformat(),
+            "strategy":     args.strategy,
+            "count":        len(results),
+            "valid_setups": sum(1 for r in results if r["valid_setup"]),
+            "results":      results,
+        }
+        indent = 2 if args.pretty else None
+        print(json.dumps(output, indent=indent, ensure_ascii=False, default=str))
+
+
+if __name__ == "__main__":
+    main()
