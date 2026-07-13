@@ -4047,6 +4047,30 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         )
 
     # ── Pre / Post Market page builder ──────────────────────────────────────
+    def _news_cell(news_items):
+        """Tooltip news cell: latest headline, truncated, with full title on hover."""
+        empty = '<td style="padding:8px 12px;color:#475569;font-size:11px">&#8212;</td>'
+        if not news_items:
+            return empty
+        item  = news_items[0]
+        title = (item.get("t") or "").strip()
+        url   = item.get("u") or "#"
+        date  = item.get("d") or ""
+        if not title:
+            return empty
+        short = title[:58] + ("&#8230;" if len(title) > 58 else "")
+        safe  = title.replace('"', '&quot;').replace("'", "&#39;")
+        dpfx  = ('<span style="color:#475569;font-size:10px">' + date + '&nbsp;</span>') if date else ""
+        return (
+            '<td style="padding:8px 12px;max-width:280px">'
+            + dpfx
+            + '<a href="' + url + '" target="_blank" rel="noopener"'
+            + ' title="' + safe + '"'
+            + ' style="color:#93c5fd;font-size:11px;text-decoration:none;'
+            + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:270px">&#128240; '
+            + short + '</a></td>'
+        )
+
     def _prepost_page(mode):
         chg_key   = "pre_chg"   if mode == "pre" else "post_chg"
         price_key = "pre_price" if mode == "pre" else "post_price"
@@ -4075,6 +4099,7 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
                 "dir": "up" if chg>0 else "down",
                 "mkt_cap": r.get("mkt_cap") or 0,
                 "rvol":    r.get("rel_volume") or 0,
+                "news":    y.get("news") or [],
             })
             src_used.add(src_v)
         movers.sort(key=lambda x: x["pm_chg"])
@@ -4120,7 +4145,8 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
                      + sgn + ("%.2f%%" % cv) + '</td>'
                      '<td style="padding:8px 12px;color:#94a3b8;font-size:12px">' + mc_str + '</td>'
                      '<td style="padding:8px 12px;color:#94a3b8;font-size:12px">' + rvol_str + '</td>'
-                     '<td style="padding:8px 12px">' + sb + '</td></tr>\n')
+                     '<td style="padding:8px 12px">' + sb + '</td>'
+                     + _news_cell(m.get('news') or []) + '</tr>\n')
         ups = sum(1 for m in movers if m["dir"] == "up"); dns = len(movers) - ups
         sel_s = ('background:#1e293b;color:#94a3b8;border:1px solid #334155;'
                  'border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer')
@@ -4167,7 +4193,8 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
                 + '<th>Ticker</th><th>Sector</th><th>Close</th>'
                 + '<th style="color:#a78bfa">' + tlbl + ' Price</th>'
                 + '<th style="color:#a78bfa;cursor:pointer;user-select:none" onclick="sortPMChg(\'' + pid + '\')" title="Sort by change">' + tlbl + ' Chg% &#8597;</th>'
-                + '<th>Mkt Cap</th><th>SVol (10d)</th><th>Source</th>\n</tr></thead><tbody>\n'
+                + '<th>Mkt Cap</th><th>SVol (10d)</th><th>Source</th>'
+                + '<th style="color:#94a3b8;min-width:220px">News</th>\n</tr></thead><tbody>\n'
                 + rows + '</tbody></table></div>\n</div>\n')
 
     _pm_page_html   = _prepost_page("pre")
