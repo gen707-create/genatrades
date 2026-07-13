@@ -2312,8 +2312,8 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
         return (
             "<th style=\"padding:6px 10px;text-align:right;%sfont-size:11px;"
             "cursor:pointer;user-select:none;white-space:nowrap\""
-            " onclick=\"mpSort(%s'%s',%s%d%s)\">%s</th>"
-        ) % (clr, SQ, pane_id, SQ, col_i, SQ[0:0], label)
+            " onclick=\"mpSort('%s',%d)\">%s</th>"
+        ) % (clr, pane_id, col_i, label)
 
     def _build_pane(sym_dict, pane_id, visible=False):
         rows = _build_rows(sym_dict)
