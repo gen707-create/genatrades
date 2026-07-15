@@ -79,18 +79,17 @@ FILTERS = {
     # before the stock gets extended. Finviz casts a broad net; Python
     # post-filter (apply_base_breakout_postfilter) refines proximity to SMA50.
     "base_breakout": (
-        # Uptrend structure (both MAs pointing up)
-        "ta_sma200_pa,"        # Price > SMA200 (primary uptrend intact)
-        "ta_sma50_pa,"         # Price just crossed above SMA50 (early breakout)
-        "ta_sma50_pa200,"      # SMA50 > SMA200 (intermediate trend healthy)
-        # Breakout day signal
-        "sh_relvol_o1p5,"      # Relative volume > 1.5× (institutional accumulation)
-        "ta_rsi_ob50,"         # RSI > 50 (momentum turning positive)
-        # Not extended — stock still has room to run
-        "ta_highlow52w_b10to60h,"  # 10-60% below 52W High (early/mid cycle)
-        # Liquidity floor
-        "cap_smallover,"       # Market cap > $300M (no micro caps)
-        "sh_avgvol_o200,"      # Avg vol > 200K shares
+        # Uptrend structure
+        "ta_sma200_pa,"        # Price > SMA200 (primary uptrend)
+        "ta_sma50_pa,"         # Just crossed above SMA50 (breakout)
+        "ta_sma50_pa200,"      # SMA50 > SMA200 (healthy structure)
+        # Volume surge — pocket pivot criterion
+        "sh_relvol_o1p5,"      # Relative volume > 1.5×
+        # Position in cycle — not extended, room to run
+        "ta_highlow52w_b15to40h,"  # 15-40% below 52W High
+        # Liquidity
+        "cap_smallover,"       # Market cap > $300M
+        "sh_avgvol_o200,"      # Avg vol > 200K
         "sh_price_o10"         # Price > $10
     ),
 }
