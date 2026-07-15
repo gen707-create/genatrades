@@ -2814,11 +2814,41 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
 
 
 
+def _make_first_seen_cell(ticker, first_seen_dict):
+    """Compact <td> showing when a ticker first appeared in any scanner."""
+    from datetime import date as _dt_
+    ds = first_seen_dict.get(ticker, "")
+    if not ds:
+        return '<td style="padding:6px 10px;color:#334155;font-size:11px;text-align:center">&#8212;</td>'
+    try:
+        d   = _dt_.fromisoformat(ds)
+        age = (_dt_.today() - d).days
+        lbl = "Today" if age == 0 else ("%s %d" % (d.strftime("%b"), d.day))
+        clr = "#10b981" if age == 0 else "#f59e0b" if age <= 3 else "#94a3b8" if age <= 7 else "#475569"
+        return (
+            '<td style="padding:6px 10px;color:%s;font-size:11px;'
+            'white-space:nowrap;text-align:center" title="First seen %s">%s</td>'
+        ) % (clr, ds, lbl)
+    except Exception:
+        return '<td style="padding:6px 10px;color:#475569;font-size:11px;text-align:center">%s</td>' % ds[5:]
+
+
 def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mode=False, new_tickers=None, market_pulse=None, **kwargs):
     """Generate self-contained HTML dashboard."""
     market_ctx = market_ctx or {}
     yahoo      = yahoo or {}
     new_tickers = set(new_tickers or [])
+
+    # Load first-seen dates {ticker: "YYYY-MM-DD"} from prev_tickers.json
+    import os as _os, json as _json
+    _first_seen = {}
+    if _os.path.exists("prev_tickers.json"):
+        try:
+            _raw_fs = _json.load(open("prev_tickers.json"))
+            if isinstance(_raw_fs, dict) and "tickers" not in _raw_fs:
+                _first_seen = _raw_fs
+        except Exception:
+            pass
     now        = datetime.now().strftime("%B %d, %Y %H:%M")
     valid_count    = sum(1 for r in results if r["valid_setup"])
     strategy_label = {
@@ -3209,6 +3239,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             '<td style="padding:8px 12px;color:%(vc)s">%(vs)s</td>'
             '%(pat)s%(ins)s'
             '%(inst)s'
+            '%(fs_cell)s'
             '<td style="padding:4px 8px;position:sticky;right:0;background:#253347;z-index:1" onclick="event.stopPropagation()">'
             '<button id="wbtn-%(t)s" onclick="toggleWatch(\'%(t)s\',%(p)s,%(e)s,%(s)s,%(t1)s,\'%(strat)s\',\'%(sec)s\')"'
             ' style="background:none;border:1px solid #475569;border-radius:5px;'
@@ -3232,6 +3263,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             "conv": conv_badge(r.get("conviction", "Low")),
             "vc": vld_col, "vs": vld_sym,
             "pat": pat_cell, "ins": ins_cell, "inst": inst_cell, "sdot": _news_sdot,
+            "fs_cell": _make_first_seen_cell(ticker, _first_seen),
         }
 
         # ── Criteria scorecard rows ───────────────────────────────────────────
@@ -4405,6 +4437,8 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         '<th title="Chart pattern (VCP/Cup/Flat)" style="color:#34d399">Pattern</th>\n'
         '<th title="Insider activity (30d)" style="color:#a78bfa">Insider</th>\n'
         '<th title="Top institutional holder" style="color:#818cf8">Inst. Top</th>\n'
+        '<th title="Date first appeared in scanner"'
+        ' style="color:#64748b;white-space:nowrap">&#128197; Seen</th>\n'
         '<th title="Watchlist"'
         ' style="position:sticky;right:0;background:#1e293b;z-index:2">&#9734;</th>\n'
         '</tr>\n</thead>\n<tbody>\n'
