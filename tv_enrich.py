@@ -2111,8 +2111,18 @@ def enrich_tickers(tickers, strategy, global_markets=False, fv_meta=None):
 
         if strategy == "minervini":
             score = score_minervini(row)
+            # ── Hard filter: Minervini requires ALL 5 MA conditions ──────
+            # Stocks below SMA150 or with SMA150<SMA200 are in DOWNTREND.
+            # Finviz has no SMA150 filter, so TV data is the real gate here.
+            if not score["core_pass"]:
+                continue  # skip — does not meet Trend Template
         elif strategy == "canslim":
             score = score_canslim(row)
+        elif strategy == "base_breakout":
+            # Base Breakout uses MA-alignment scoring (same as Minervini)
+            # but does NOT hard-filter on core_pass — early-stage stocks
+            # may not yet have SMA150 aligned, that is acceptable.
+            score = score_minervini(row)
         else:
             score = score_reversion(row)
 

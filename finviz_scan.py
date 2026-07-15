@@ -35,11 +35,11 @@ FILTERS = {
     "minervini": (
         # ── Trend structure ──────────────────────────────────────────────────
         "ta_sma200_pa,"     # Price > SMA200
-        "ta_sma150_pa,"     # Price > SMA150
         "ta_sma50_pa,"      # Price > SMA50
-        "ta_sma50_pa200,"   # SMA50 > SMA200 (Golden Cross — true uptrend)
+        "ta_sma20_pa,"      # Price > SMA20 (short-term trend confirmation)
+        "ta_sma50_pa200,"   # SMA50 > SMA200 (Golden Cross — valid Elite filter)
         # ── 52-week position ─────────────────────────────────────────────────
-        "ta_highlow52w_b0to25h,"  # Within 25% of 52W High (upper quartile)
+        "ta_highlow52w_b0to25h,"  # Within 25% of 52W High — near highs but not at the absolute top
         "ta_perf_52w_o30,"        # 30%+ above 52W Low (+30% off the bottom)
         # ── Momentum / breakout day ──────────────────────────────────────────
         "ta_perf_d_o2,"     # Today +2% or more (active breakout day)
@@ -225,6 +225,11 @@ def apply_base_breakout_postfilter(rows: list, max_sma50_pct: float = 0.20) -> l
             continue
 
         if price <= 0:
+            continue
+
+        # Daily change must be a CONTROLLED breakout (+0.3% to +8%)
+        # Excludes gap-up explosions (+49%, +28%) which are already extended
+        if not (0.3 <= chg <= 8.0):
             continue
 
         # SMA50 proximity — only filter if data is available in CSV
