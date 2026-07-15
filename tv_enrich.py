@@ -2822,9 +2822,10 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
     now        = datetime.now().strftime("%B %d, %Y %H:%M")
     valid_count    = sum(1 for r in results if r["valid_setup"])
     strategy_label = {
-        "minervini": "Minervini SEPA",
-        "canslim":   "O'Neil CANSLIM",
-        "reversion": "Mean Reversion",
+        "minervini":      "Minervini SEPA",
+        "canslim":        "O'Neil CANSLIM",
+        "reversion":      "Mean Reversion",
+        "base_breakout":  "Base Breakout",
     }.get(strategy, strategy)
 
     # ── helpers ───────────────────────────────────────────────────────────────
@@ -3042,9 +3043,10 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
     cards_html = ""
 
     _strat_labels = {
-        "minervini": "Minervini SEPA",
-        "canslim":   "O'Neil CANSLIM",
-        "reversion": "Mean Reversion",
+        "minervini":      "Minervini SEPA",
+        "canslim":        "O'Neil CANSLIM",
+        "reversion":      "Mean Reversion",
+        "base_breakout":  "Base Breakout",
     }
     for r in results:
         ticker = r["ticker"]

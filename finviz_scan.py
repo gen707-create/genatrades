@@ -72,6 +72,27 @@ FILTERS = {
         "sh_avgvol_o500,"
         "sh_price_o10"
     ),
+
+    # ── Early Base Breakout / Pocket Pivot ────────────────────────────────────
+    # Catches stocks at the BEGINNING of a move out of base consolidation.
+    # Signal: strong candle + volume surge right as price crosses SMA50 —
+    # before the stock gets extended. Finviz casts a broad net; Python
+    # post-filter (apply_base_breakout_postfilter) refines proximity to SMA50.
+    "base_breakout": (
+        # Uptrend structure (both MAs pointing up)
+        "ta_sma200_pa,"        # Price > SMA200 (primary uptrend intact)
+        "ta_sma50_pa,"         # Price just crossed above SMA50 (early breakout)
+        "ta_sma50_pa200,"      # SMA50 > SMA200 (intermediate trend healthy)
+        # Breakout day signal
+        "sh_relvol_o1p5,"      # Relative volume > 1.5× (institutional accumulation)
+        "ta_rsi_ob50,"         # RSI > 50 (momentum turning positive)
+        # Not extended — stock still has room to run
+        "ta_highlow52w_b10to60h,"  # 10-60% below 52W High (early/mid cycle)
+        # Liquidity floor
+        "cap_smallover,"       # Market cap > $300M (no micro caps)
+        "sh_avgvol_o200,"      # Avg vol > 200K shares
+        "sh_price_o10"         # Price > $10
+    ),
 }
 
 BASE_URL = "https://elite.finviz.com/export.ashx"
@@ -172,6 +193,10 @@ def format_output(raw: list, strategy: str) -> dict:
             "rel_volume": row.get("Rel Volume", "").strip(),
             "high_52w": row.get("52W High", "").strip(),
             "low_52w": row.get("52W Low", "").strip(),
+            "price": row.get("Price", "").strip(),
+            "change": row.get("Change", "").strip(),
+            "sma50": row.get("SMA50", "").strip(),
+            "sma200": row.get("SMA200", "").strip(),
         })
 
     return {
@@ -182,11 +207,55 @@ def format_output(raw: list, strategy: str) -> dict:
     }
 
 
+def apply_base_breakout_postfilter(rows: list, max_sma50_pct: float = 0.18) -> list:
+    """
+    Post-filter for base_breakout strategy.
+    Keeps only stocks where price is within max_sma50_pct (default 18%) above SMA50.
+    This ensures we catch early moves, not extended ones.
+    Also verifies today's change is meaningful (>= 0.8%).
+    """
+    import re as _re
+    kept = []
+    for r in rows:
+        try:
+            price  = float(r.get("price", "") or 0)
+            sma50  = float(r.get("sma50", "") or 0)
+            sma200 = float(r.get("sma200", "") or 0)
+            chg_s  = (r.get("change", "") or "0").replace("%","").replace("+","")
+            chg    = float(chg_s)
+        except (ValueError, TypeError):
+            continue
+
+        if price <= 0 or sma50 <= 0:
+            continue
+
+        # Distance above SMA50 (must be 0-18% above — breakout zone, not extended)
+        pct_above_sma50 = (price - sma50) / sma50
+        if not (0.0 <= pct_above_sma50 <= max_sma50_pct):
+            continue
+
+        # SMA50 must be above SMA200 (healthy uptrend structure)
+        if sma200 > 0 and sma50 < sma200:
+            continue
+
+        # Meaningful breakout candle (at least +0.8% today)
+        if chg < 0.8:
+            continue
+
+        # Annotate with proximity data for dashboard display
+        r["sma50_pct"] = f"{pct_above_sma50*100:.1f}"
+        kept.append(r)
+
+    print(f"  [base_breakout] Post-filter: {len(rows)} -> {len(kept)} (SMA50 proximity ≤{max_sma50_pct*100:.0f}%)",
+          file=__import__("sys").stderr)
+    return kept
+
+
 def main():
     parser = argparse.ArgumentParser(description="Finviz Elite swing trading scanner")
     parser.add_argument("--auth", required=False, default=None,
                         help="Finviz Elite API token. Can also set FINVIZ_TOKEN env variable.")
-    parser.add_argument("--strategy", choices=["minervini", "canslim", "reversion", "custom"],
+    parser.add_argument("--strategy", choices=["minervini", "canslim", "reversion", "base_breakout", "custom"],
                         default="minervini")
     parser.add_argument("--filters", help="Custom Finviz filter string (with --strategy custom)")
     parser.add_argument("--tickers", help="Comma-separated specific tickers (skips screener)")
@@ -211,6 +280,12 @@ def main():
         raw = run_screen(session, filter_str, max_results=args.max)
 
     output = format_output(raw, args.strategy)
+
+    # base_breakout: apply SMA50 proximity post-filter
+    if args.strategy == "base_breakout" and output["tickers"]:
+        output["tickers"] = apply_base_breakout_postfilter(output["tickers"])
+        output["count"] = len(output["tickers"])
+
     print(f"Found {output['count']} candidates", file=sys.stderr)
 
     indent = 2 if args.pretty else None

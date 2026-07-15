@@ -44,8 +44,12 @@ jobs:
           python finviz_scan.py --strategy reversion > /tmp/scan_rev.json || echo "{"strategy":"reversion","tickers":[]}" > /tmp/scan_rev.json
           echo "scan_rev: $(python3 -c 'import json;d=json.load(open("/tmp/scan_rev.json"));print(len(d.get("tickers",[])),"tickers")' 2>/dev/null || echo FAILED)"
 
-          echo "=== Step 3b: Track new tickers ==="
-          python track_new_tickers.py /tmp/scan_min.json /tmp/scan_can.json /tmp/scan_rev.json || echo '[]' > /tmp/new_tickers.json
+          echo "=== Step 3b: Base Breakout scan ==="
+          python finviz_scan.py --strategy base_breakout > /tmp/scan_bb.json || echo '{"strategy":"base_breakout","tickers":[]}' > /tmp/scan_bb.json
+          echo "scan_bb: $(python3 -c 'import json;d=json.load(open("/tmp/scan_bb.json"));print(len(d.get("tickers",[])),"tickers")' 2>/dev/null || echo FAILED)"
+
+          echo "=== Step 3c: Track new tickers ==="
+          python track_new_tickers.py /tmp/scan_min.json /tmp/scan_can.json /tmp/scan_rev.json /tmp/scan_bb.json || echo '[]' > /tmp/new_tickers.json
           echo "new tickers: $(cat /tmp/new_tickers.json)"
 
           echo "=== Step 4: Build dashboard ==="
@@ -53,6 +57,7 @@ jobs:
             --scan /tmp/scan_min.json \
             --scan /tmp/scan_can.json \
             --scan /tmp/scan_rev.json \
+            --scan /tmp/scan_bb.json \
             --new-tickers /tmp/new_tickers.json \
             --html --output index.html
           echo "index.html: $(wc -l < index.html) lines / $(wc -c < index.html) bytes"
