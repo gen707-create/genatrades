@@ -79,14 +79,14 @@ FILTERS = {
     # before the stock gets extended. Finviz casts a broad net; Python
     # post-filter (apply_base_breakout_postfilter) refines proximity to SMA50.
     "base_breakout": (
-        # Uptrend structure
-        "ta_sma200_pa,"        # Price > SMA200 (primary uptrend)
-        "ta_sma50_pa,"         # Just crossed above SMA50 (breakout)
-        "ta_sma50_pa200,"      # SMA50 > SMA200 (healthy structure)
-        # Volume surge — pocket pivot criterion
+        # Uptrend structure — all three MAs aligned
+        "ta_sma200_pa,"        # Price > SMA200
+        "ta_sma50_pa,"         # Price just crossed above SMA50 (breakout signal)
+        "ta_sma50_pa200,"      # SMA50 > SMA200 (trend healthy)
+        # Pocket pivot volume — institutional buying
         "sh_relvol_o1p5,"      # Relative volume > 1.5×
-        # Position in cycle — not extended, room to run
-        "ta_highlow52w_b15to40h,"  # 15-40% below 52W High
+        # Early in move — within 25% of 52W high (near highs, not extended)
+        "ta_highlow52w_b0to25h,"  # Within 25% of 52W High
         # Liquidity
         "cap_smallover,"       # Market cap > $300M
         "sh_avgvol_o200,"      # Avg vol > 200K
@@ -206,14 +206,13 @@ def format_output(raw: list, strategy: str) -> dict:
     }
 
 
-def apply_base_breakout_postfilter(rows: list, max_sma50_pct: float = 0.18) -> list:
+def apply_base_breakout_postfilter(rows: list, max_sma50_pct: float = 0.20) -> list:
     """
     Post-filter for base_breakout strategy.
-    Keeps only stocks where price is within max_sma50_pct (default 18%) above SMA50.
-    This ensures we catch early moves, not extended ones.
-    Also verifies today's change is meaningful (>= 0.8%).
+    When SMA50 data is available: keeps stocks 0-20% above SMA50 (early breakout zone).
+    When SMA50 is missing (not in CSV view): passes all rows through (Finviz filters already
+    guarantee price > SMA50 via ta_sma50_pa).
     """
-    import re as _re
     kept = []
     for r in rows:
         try:
@@ -225,27 +224,21 @@ def apply_base_breakout_postfilter(rows: list, max_sma50_pct: float = 0.18) -> l
         except (ValueError, TypeError):
             continue
 
-        if price <= 0 or sma50 <= 0:
+        if price <= 0:
             continue
 
-        # Distance above SMA50 (must be 0-18% above — breakout zone, not extended)
-        pct_above_sma50 = (price - sma50) / sma50
-        if not (0.0 <= pct_above_sma50 <= max_sma50_pct):
-            continue
+        # SMA50 proximity — only filter if data is available in CSV
+        if sma50 > 0:
+            pct_above_sma50 = (price - sma50) / sma50
+            if not (0.0 <= pct_above_sma50 <= max_sma50_pct):
+                continue
+            if sma200 > 0 and sma50 < sma200:
+                continue
+            r["sma50_pct"] = "%.1f" % (pct_above_sma50 * 100)
 
-        # SMA50 must be above SMA200 (healthy uptrend structure)
-        if sma200 > 0 and sma50 < sma200:
-            continue
-
-        # Meaningful breakout candle (at least +0.8% today)
-        if chg < 0.8:
-            continue
-
-        # Annotate with proximity data for dashboard display
-        r["sma50_pct"] = f"{pct_above_sma50*100:.1f}"
         kept.append(r)
 
-    print(f"  [base_breakout] Post-filter: {len(rows)} -> {len(kept)} (SMA50 proximity ≤{max_sma50_pct*100:.0f}%)",
+    print("  [base_breakout] Post-filter: %d -> %d" % (len(rows), len(kept)),
           file=__import__("sys").stderr)
     return kept
 
