@@ -3897,8 +3897,79 @@ function filterSector(sec){
     b.classList.toggle('act',b.getAttribute('data-sec')===sec);
   });
 }
+var _GH_TOK_KEY='swt_gh_token';
+var _GH_GID_KEY='swt_gist_id';
+var _GH_FNAME='swingtrader_watchlist.json';
+function _ghTok(){try{return localStorage.getItem(_GH_TOK_KEY)||'';}catch(e){return '';}}
+function _ghGid(){try{return localStorage.getItem(_GH_GID_KEY)||'';}catch(e){return '';}}
+function _setSyncStatus(msg,ok){
+  var el=document.getElementById('gist-sync-status');
+  if(!el)return;
+  el.textContent=msg;
+  el.style.color=(ok===false)?'#ef4444':(ok?'#10b981':'#94a3b8');
+}
 function getWL(){try{return JSON.parse(localStorage.getItem(WL_KEY)||'[]');}catch(e){return[];}}
-function saveWL(wl){localStorage.setItem(WL_KEY,JSON.stringify(wl));}
+function saveWL(wl){
+  localStorage.setItem(WL_KEY,JSON.stringify(wl));
+  if(_ghTok()){gistSave(wl);}
+}
+async function gistLoad(){
+  var tok=_ghTok(),gid=_ghGid();
+  if(!tok)return null;
+  _setSyncStatus('syncing...');
+  try{
+    if(!gid){
+      var lr=await fetch('https://api.github.com/gists?per_page=100',{headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}});
+      if(!lr.ok){_setSyncStatus('⚠ auth error',false);return null;}
+      var list=await lr.json();
+      var found=list.find(function(g){return g.files&&g.files[_GH_FNAME];});
+      if(found){localStorage.setItem(_GH_GID_KEY,found.id);gid=found.id;}
+      else{_setSyncStatus('● new gist will be created');return null;}
+    }
+    var resp=await fetch('https://api.github.com/gists/'+gid,{headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}});
+    if(resp.status===404){localStorage.removeItem(_GH_GID_KEY);_setSyncStatus('⚠ gist not found',false);return null;}
+    if(!resp.ok){_setSyncStatus('⚠ error '+resp.status,false);return null;}
+    var data=await resp.json();
+    var fc=data.files&&data.files[_GH_FNAME]&&data.files[_GH_FNAME].content;
+    if(fc){var wl=JSON.parse(fc);localStorage.setItem(WL_KEY,JSON.stringify(wl));_setSyncStatus('✓ synced',true);return wl;}
+  }catch(e){_setSyncStatus('⚠ offline',false);}
+  return null;
+}
+async function gistSave(wl){
+  var tok=_ghTok();if(!tok)return;
+  var gid=_ghGid();
+  var body={files:{}};body.files[_GH_FNAME]={content:JSON.stringify(wl,null,2)};
+  if(!gid){body.description='SwingTrader Dashboard Watchlist';body.public=false;}
+  _setSyncStatus('saving...');
+  try{
+    var resp=await fetch(gid?'https://api.github.com/gists/'+gid:'https://api.github.com/gists',{
+      method:gid?'PATCH':'POST',
+      headers:{'Authorization':'token '+tok,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
+      body:JSON.stringify(body)
+    });
+    if(resp.ok){var d=await resp.json();if(!gid)localStorage.setItem(_GH_GID_KEY,d.id);_setSyncStatus('✓ synced',true);}
+    else{_setSyncStatus('⚠ save error '+resp.status,false);}
+  }catch(e){_setSyncStatus('⚠ offline',false);}
+}
+function openGistSettings(){
+  var ti=document.getElementById('gist-tok-input'),gi=document.getElementById('gist-id-input');
+  if(ti)ti.value=_ghTok();if(gi)gi.value=_ghGid();
+  document.getElementById('gist-modal').style.display='flex';
+}
+function closeGistSettings(){document.getElementById('gist-modal').style.display='none';}
+function saveGistSettings(){
+  var tok=(document.getElementById('gist-tok-input').value||'').trim();
+  var gid=(document.getElementById('gist-id-input').value||'').trim();
+  if(tok)localStorage.setItem(_GH_TOK_KEY,tok);else localStorage.removeItem(_GH_TOK_KEY);
+  if(gid)localStorage.setItem(_GH_GID_KEY,gid);else localStorage.removeItem(_GH_GID_KEY);
+  closeGistSettings();
+  if(tok){gistLoad().then(function(wl){if(wl){saveWL(wl);renderWatchlist();}});}
+}
+function clearGistSettings(){
+  if(!confirm('Отключить Gist sync? Watchlist останется только в этом браузере.'))return;
+  localStorage.removeItem(_GH_TOK_KEY);localStorage.removeItem(_GH_GID_KEY);
+  closeGistSettings();_setSyncStatus('');
+}
 function isWatched(t){return getWL().some(function(x){return x.ticker===t;});}
 function toggleWatch(ticker,price,entry,stop,t1,strategy,sector){
   var wl=getWL(),idx=wl.findIndex(function(x){return x.ticker===ticker;});
@@ -4067,7 +4138,7 @@ function copyJournal(ticker){
   var el=document.getElementById('journal-'+ticker);
   if(el){navigator.clipboard.writeText(el.value);}
 }
-document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
+document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().then(function(wl){if(wl)saveWL(wl);renderWatchlist();});}else{renderWatchlist();}});
 """
 
     # ── Tabs bar HTML ─────────────────────────────────────────────────────
@@ -4433,6 +4504,12 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         '<span>&#9790;&#65039;</span><span>Post-Market</span>'
         '</a>\n'
         '  <div style="margin-top:auto;padding:10px 16px;border-top:1px solid #1e293b">\n'
+        '<button onclick="openGistSettings()" style="width:100%;background:#1e293b;'
+        'border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#94a3b8;'
+        'font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:8px">'
+        '<span>&#9729;&#65039;</span><span>Sync Watchlist</span>'
+        '<span id="gist-sync-status" style="margin-left:auto;font-size:10px;color:#64748b"></span>'
+        '</button>\n'
         '    <div style="font-size:11px;color:#3d5166">'
         'Valid: <span style="color:#10b981">' + str(valid_count) + '</span>'
         '&nbsp;&nbsp;'
@@ -4521,7 +4598,49 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         + _post_page_html
 
         + '</div>\n'  # end #main-content
-        '<script>' + js + _page_js + '</script>\n'
+        '<div id="gist-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);'
+        'z-index:9999;align-items:center;justify-content:center" '
+        'onclick="if(event.target===this)closeGistSettings()">'
+        '<div style="background:#1e293b;border:1px solid #334155;border-radius:14px;'
+        'padding:28px 32px;width:440px;max-width:95vw">'
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">'
+        '<h3 style="font-size:15px;font-weight:600;color:#e2e8f0">&#9729;&#65039; Watchlist Cloud Sync</h3>'
+        '<button onclick="closeGistSettings()" style="background:none;border:none;color:#64748b;font-size:20px;cursor:pointer;line-height:1">&#10005;</button>'
+        '</div>'
+        '<p style="font-size:12px;color:#64748b;margin-bottom:18px;line-height:1.6">'
+        'Сохраняет watchlist в приватный GitHub Gist. '
+        'Один и тот же список на всех устройствах.'
+        '</p>'
+        '<label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:5px;font-weight:600">'
+        'GitHub Personal Access Token'
+        '</label>'
+        '<input id="gist-tok-input" type="password" '
+        'placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" '
+        'style="width:100%;background:#0f172a;border:1px solid #475569;border-radius:7px;'
+        'padding:9px 13px;color:#e2e8f0;font-size:13px;outline:none;margin-bottom:14px">'
+        '<label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:5px;font-weight:600">'
+        'Gist ID <span style="font-weight:400;color:#475569">(оставь пустым — создастся автоматически)</span>'
+        '</label>'
+        '<input id="gist-id-input" type="text" placeholder="автоматически" '
+        'style="width:100%;background:#0f172a;border:1px solid #475569;border-radius:7px;'
+        'padding:9px 13px;color:#e2e8f0;font-size:13px;outline:none;margin-bottom:22px">'
+        '<div style="display:flex;gap:8px">'
+        '<button onclick="saveGistSettings()" '
+        'style="flex:1;background:#3b82f6;border:none;border-radius:8px;padding:10px;'
+        'color:#fff;font-size:13px;font-weight:600;cursor:pointer">'
+        '&#9729;&#65039; Сохранить и синхронизировать'
+        '</button>'
+        '<button onclick="clearGistSettings()" '
+        'style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 14px;'
+        'color:#ef4444;font-size:12px;cursor:pointer">Отключить</button>'
+        '</div>'
+        '<p style="font-size:10px;color:#475569;margin-top:14px;line-height:1.5">'
+        'Токен хранится только в браузере этого устройства. '
+        '<a href="https://github.com/settings/tokens/new?scopes=gist&amp;'
+        'description=SwingTrader+Dashboard" target="_blank" '
+        'style="color:#60a5fa;text-decoration:none">Создать токен &#8599;</a>'
+        '</p></div></div>\n'
+        + '<script>' + js + _page_js + '</script>\n'
         '</body></html>'
     )
 
