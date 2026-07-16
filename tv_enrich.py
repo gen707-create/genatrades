@@ -4504,6 +4504,11 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         '<div id="watchlist-panel"></div>\n'
         '</div>\n'
 
+        # ── Page: Sectors heatmap ──────────────────────────────────────────────
+        + '<div class="swt-page" id="pg-sectors" style="display:none">\n'
+        + sector_html + '\n'
+        + '</div>\n'
+
         # ── Page: Market Pulse (auto-expanded) ────────────────────────────────
         + ('<div class="swt-page" id="pg-pulse" style="display:none">\n'
            + pulse_page_html + '\n</div>\n'
@@ -4511,11 +4516,6 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
            '<div class="swt-page" id="pg-pulse" style="display:none">'
            '<p style="color:#64748b;padding:40px;text-align:center">'
            'Market Pulse data unavailable</p></div>\n')
-
-        # ── Page: Sectors heatmap ──────────────────────────────────────────────
-        + '<div class="swt-page" id="pg-sectors" style="display:none">\n'
-        + sector_html + '\n'
-        + '</div>\n'
 
         + _pm_page_html
         + _post_page_html
