@@ -2147,7 +2147,15 @@ def enrich_tickers(tickers, strategy, global_markets=False, fv_meta=None):
             "score":       score,
             "setup":       setup,
             "conviction":  conviction,
-            "valid_setup": score["core_pass"] and setup.get("rr_ok", False),
+            # base_breakout: valid if SMA50 > SMA200 + good R/R (not full Minervini)
+            "valid_setup": (
+                (score["core_pass"] if strategy != "base_breakout"
+                 else (
+                     bool(row.get("SMA50") and row.get("SMA200") and
+                          float(row.get("SMA50",0) or 0) > float(row.get("SMA200",0) or 0))
+                 ))
+                and setup.get("rr_ok", False)
+            ),
             "strategy":   strategy,
         })
 
@@ -4565,7 +4573,7 @@ def main():
         all_results = _deduped
         print("📊 Fetching market context...", file=sys.stderr)
         _mctx = fetch_market_context()
-        _ytk = [r["ticker"] for r in all_results[:150]]
+        _ytk = [r["ticker"] for r in all_results[:300]]
         print(f"🌙 Pre/post + earnings for {len(_ytk)} tickers...", file=sys.stderr)
         _yahoo = fetch_yahoo_data(_ytk)
         print("🌐 Fetching Market Pulse data...", file=sys.stderr)
