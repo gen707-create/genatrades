@@ -3119,6 +3119,10 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             return ('<td style="padding:8px 10px;font-size:11px;color:%s">%s%.2f%%</td>'
                     % (color, arrow, abs(chg)))
 
+        # Skip tickers with earnings ≤7 days (gap risk)
+        if 0 <= days_earn <= 7:
+            continue
+
         if earn_date:
             if days_earn <= 7:
                 earn_cell = ('<td style="padding:8px 10px;font-size:11px;color:#ef4444;'
@@ -3242,7 +3246,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             '<tr id="row-%(t)s" style="background:%(bg)s;cursor:pointer"'
             ' data-ticker="%(t)s" data-price="%(p)s" data-entry="%(e)s"'
             ' data-stop="%(s)s" data-t1="%(t1)s" data-strategy="%(strat)s"'
-            ' data-sector="%(sec)s" data-chg="%(chg_raw)s"'
+            ' data-sector="%(sec)s" data-chg="%(chg_raw)s" data-perf1w="%(perf1w)s" data-perf1m="%(perf1m)s"'
             ' onclick="showDetail(\'%(t)s\')">'
             '<td style="padding:8px 12px;font-weight:600;color:#e2e8f0">%(t)s%(new_badge)s%(sdot)s</td>'
             '<td style="padding:8px 12px;color:#94a3b8;font-size:12px">%(sec)s</td>'
@@ -3282,6 +3286,8 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             "vc": vld_col, "vs": vld_sym,
             "pat": pat_cell, "ins": ins_cell, "inst": inst_cell, "sdot": _news_sdot,
             "fs_cell": _make_first_seen_cell(ticker, _first_seen),
+            "perf1w": ("%.2f" % r["perf_1w"]) if r.get("perf_1w") is not None else "",
+            "perf1m": ("%.2f" % r["perf_1m"]) if r.get("perf_1m") is not None else "",
         }
 
         # ── Criteria scorecard rows ───────────────────────────────────────────
@@ -3856,12 +3862,17 @@ var _curStrat='all';
 var _curSect='all';
 function _applyFilters(){
   var s=_curStrat,sec=_curSect,shown=0;
+  var _srchEl=document.getElementById('ticker-search');
+  var _q=_srchEl?_srchEl.value.toLowerCase().trim():'';
   var rows=document.querySelectorAll('#scanner-table tbody tr');
   rows.forEach(function(r){
     var ok=(s==='all'||r.getAttribute('data-strategy')===s)&&(sec==='all'||r.getAttribute('data-sector')===sec);
+    if(ok&&_q){var tk=(r.getAttribute('data-ticker')||'').toLowerCase();ok=tk.indexOf(_q)!==-1;}
     r.style.display=ok?'':'none';
     if(ok)shown++;
   });
+  var _rcnt=document.getElementById('scan-result-count');
+  if(_rcnt)_rcnt.textContent=_q?shown+' result'+(shown!==1?'s':'')+' for "'+(_srchEl?_srchEl.value:_q)+'"':'';
   var lbl=document.getElementById('scan-count');
   if(lbl)lbl.textContent=shown;
   document.querySelectorAll('.tab-btn').forEach(function(btn){
@@ -3892,7 +3903,12 @@ function isWatched(t){return getWL().some(function(x){return x.ticker===t;});}
 function toggleWatch(ticker,price,entry,stop,t1,strategy,sector){
   var wl=getWL(),idx=wl.findIndex(function(x){return x.ticker===ticker;});
   if(idx>=0){wl.splice(idx,1);}
-  else{wl.push({ticker:ticker,price:price,entry:entry,stop:stop,t1:t1,strategy:strategy,sector:sector,added:new Date().toISOString().slice(0,10)});}
+  else{
+    var _wR=document.querySelector('[data-ticker="'+ticker+'"]');
+    wl.push({ticker:ticker,price:price,entry:entry,stop:stop,t1:t1,strategy:strategy,sector:sector,
+             added:new Date().toISOString().slice(0,10),price_at_add:parseFloat(price)||0,
+             pw0:_wR?(_wR.getAttribute('data-perf1w')||''):'',pm0:_wR?(_wR.getAttribute('data-perf1m')||''):''
+    });}
   saveWL(wl);renderWatchlist();updateWatchBtn(ticker);
 }
 function updateWatchBtn(ticker){
@@ -3952,11 +3968,16 @@ function renderWatchlist(){
   if(!wl.length){panel.innerHTML='';return;}
   var rows=wl.map(function(item){
     var st=alertStatus(item),bar=distBar(item);
+    var _cR=document.querySelector('[data-ticker="'+item.ticker+'"]');
+    var _fpc=function(v){if(v===null||v===undefined||v==='')return '<td style="padding:5px 8px;text-align:right;color:#475569;font-size:11px">\u2014</td>';var n=parseFloat(v);var c=n>=0?'#10b981':'#ef4444';return '<td style="padding:5px 8px;text-align:right;font-size:12px;font-weight:600;color:'+c+'">'+(n>=0?'\u25b2':'\u25bc')+Math.abs(n).toFixed(1)+'%</td>';};
+    var _sa='';
+    if(item.price_at_add&&item.price_at_add>0&&item.price){_sa=((parseFloat(item.price)-item.price_at_add)/item.price_at_add*100).toFixed(1);}
     return '<tr style="background:'+st.bg+';cursor:pointer" onclick="showDetail(this.cells[0].textContent.trim())">'
       +'<td style="padding:8px 12px;font-weight:600;color:#e2e8f0">'+item.ticker+'</td>'
       +'<td style="padding:8px 12px;color:#94a3b8;font-size:11px">'+(item.sector||'')+'</td>'
       +'<td style="padding:8px 10px"><span style="background:#1e3a5f;color:#60a5fa;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;text-transform:uppercase">'+(item.strategy||'--')+'</span></td>'
       +'<td style="padding:8px 12px;color:#e2e8f0">$'+(item.price||'--')+'</td>'
+      +_fpc(_cR?_cR.getAttribute('data-chg'):'')+_fpc(_cR?_cR.getAttribute('data-perf1w'):'')+_fpc(_cR?_cR.getAttribute('data-perf1m'):'')+_fpc(_sa)
       +'<td style="padding:8px 12px;min-width:180px">'+bar+'</td>'
       +'<td style="padding:8px 12px;font-size:12px;font-weight:600;color:'+st.color+'">'+st.label+'</td>'
       +'<td style="padding:8px 12px;color:#64748b;font-size:11px">'+(item.added||'')+'</td>'
@@ -3977,7 +3998,11 @@ function renderWatchlist(){
     +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">Sector</th>'
     +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">Strategy</th>'
     +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">Price</th>'
-    +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">Distance to Entry</th>'
+    +'<th style="padding:6px 8px;text-align:right;color:#94a3b8;font-size:11px">Day%</th>'
+    +'<th style="padding:6px 8px;text-align:right;color:#94a3b8;font-size:11px">Week%</th>'
+    +'<th style="padding:6px 8px;text-align:right;color:#94a3b8;font-size:11px">Month%</th>'
+    +'<th style="padding:6px 8px;text-align:right;color:#f59e0b;font-size:11px">Since Added</th>'
+    +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">to Entry</th>'
     +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">Status</th>'
     +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">Added</th>'
     +'<th></th></tr></thead>'
@@ -4440,7 +4465,13 @@ document.addEventListener('DOMContentLoaded',function(){renderWatchlist();});
         '<div class="swt-page" id="pg-scanner" style="display:block">\n'
         + (_tabs_html + '\n' if _tabs_html else '')
         + (_sectors_html + '\n' if _sectors_html else '')
-        + '<div style="background:#1e293b;border:1px solid #334155;'
+        + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'
+        '<input id="ticker-search" type="text" placeholder="Search ticker..." '
+        'oninput="_applyFilters()" '
+        'style="background:#1e293b;border:1px solid #475569;border-radius:7px;padding:7px 14px;color:#e2e8f0;font-size:13px;width:200px;outline:none">'
+        '<span id="scan-result-count" style="color:#64748b;font-size:12px"></span>'
+        '</div>\n'
+        '<div style="background:#1e293b;border:1px solid #334155;'
         'border-radius:12px;overflow-x:auto;margin-bottom:20px">\n'
         '<table id="scanner-table">\n<thead>\n<tr>\n'
         '<th onclick="sortTable(0,\'str\')">Ticker <span class="sh"></span></th>'
