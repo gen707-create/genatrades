@@ -1,6 +1,12 @@
 name: Update Trading Dashboard
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "tv_enrich.py"
+      - "finviz_scan.py"
+      - "track_new_tickers.py"
   schedule:
     - cron: "*/30 9-22 * * 1-5"
   workflow_dispatch:
