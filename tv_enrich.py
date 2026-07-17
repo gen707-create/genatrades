@@ -4792,13 +4792,15 @@ def main():
         market_pulse = fetch_market_pulse_data()
         print("📊 Fetching daily breadth data...", file=sys.stderr)
         _dbr = fetch_daily_breadth_data()
+        print('\U0001f5fa  Fetching heatmap data...', file=sys.stderr)
+        _hm_data = fetch_heatmap_data()
         _new_tickers = []
         if getattr(args, 'new_tickers_file', None) and Path(args.new_tickers_file).exists():
             try:
                 _new_tickers = json.loads(Path(args.new_tickers_file).read_text(encoding='utf-8'))
             except Exception:
                 pass
-        html = build_html_dashboard(results, args.strategy, market_ctx, yahoo, new_tickers=_new_tickers, market_pulse=market_pulse, daily_breadth=_dbr)
+        html = build_html_dashboard(results, args.strategy, market_ctx, yahoo, new_tickers=_new_tickers, market_pulse=market_pulse, daily_breadth=_dbr, heatmap_data=_hm_data)
         out_path = args.output or ("watchlist_%s.html" % datetime.now().strftime("%Y-%m-%d"))
         Path(out_path).write_text(html, encoding="utf-8")
         print(f"✅ HTML dashboard saved to: {out_path}", file=sys.stderr)
