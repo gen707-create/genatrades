@@ -3068,20 +3068,33 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         "</script>"
     )
 
-    # Use plain concatenation — avoids "%" in _djson/_djs being misinterpreted
-    # as format specifiers if we used % operator on sector_html.
-    sector_html = (
+    # Sector page = ETF quick-strip (top) + TradingView full heatmap widget
+    _etf_strip = (
         '<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;'
-        'padding:12px 16px;margin-bottom:12px">'
-        '<div style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;'
-        'letter-spacing:.5px;margin-bottom:10px">Sector Heatmap &#8212; today</div>'
-        '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+        'padding:10px 14px;margin-bottom:10px">'
+        '<div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;'
+        'letter-spacing:.5px;margin-bottom:8px">Sector ETFs &#8212; 1D</div>'
+        '<div style="display:flex;gap:5px;flex-wrap:wrap">'
         + "".join(sector_cells)
         + '</div>'
         + _dpanel
         + _djs
         + '</div>'
     )
+    _tv_heatmap = (
+        '<div style="height:calc(100vh - 220px);min-height:500px;border-radius:10px;overflow:hidden">'
+        '<!-- TradingView Stock Heatmap Widget -->'
+        '<div class="tradingview-widget-container" style="height:100%">'
+        '<div class="tradingview-widget-container__widget" style="height:100%"></div>'
+        '<script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>'
+        '{"exchanges":[],"dataSource":"SPX500","grouping":"sector",'
+        '"blockSize":"market_cap_basic","blockColor":"change","locale":"en",'
+        '"colorTheme":"dark","hasTopBar":true,"isDataSetEnabled":true,'
+        '"isZoomEnabled":true,"hasSymbolTooltip":true,"isMonoSize":false,'
+        '"width":"100%%","height":"100%%"}'
+        '</script></div></div>'
+    )
+    sector_html = _etf_strip + _tv_heatmap
 
     # Market Pulse panel (Theme Tracker / S&P Sectors / Country ETFs / Highs-Lows)
     pulse_panel_html = build_pulse_panel_html(market_pulse, results, daily_breadth=kwargs.get("daily_breadth")) if market_pulse else ""
