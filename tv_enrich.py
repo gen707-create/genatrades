@@ -2268,6 +2268,30 @@ def fetch_daily_breadth_data(history_file="breadth_history.json"):
         return {}, []
 
 
+def fetch_heatmap_data():
+    try:
+        from tradingview_screener import Query, Column
+        _, df = (Query()
+            .select("name", "close", "change", "market_cap_basic", "sector", "description")
+            .set_markets("america")
+            .where(Column("market_cap_basic") > 500_000_000)
+            .order_by("market_cap_basic", ascending=False)
+            .limit(500)
+            .get_scanner_data()
+        )
+        out = []
+        for _, row in df.iterrows():
+            mc = row.get("market_cap_basic") or 0
+            if mc <= 0: continue
+            out.append({"t": str(row.get("name","") or ""), "n": str(row.get("description","") or ""),
+                "s": str(row.get("sector","Other") or "Other"), "mc": float(mc), "c": float(row.get("change",0) or 0)})
+        print(f"  Heatmap: {len(out)} stocks", file=__import__("sys").stderr)
+        return out
+    except Exception as e:
+        print(f"  WARNING fetch_heatmap_data: {e}", file=__import__("sys").stderr)
+        return []
+
+
 def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
     """
     Collapsible Market Pulse panel:
@@ -4390,7 +4414,9 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'var pg=document.getElementById("pg-"+pid);if(pg)pg.style.display="block";'
         'if(el){el.classList.add("active");}'
         'else{var nv=document.getElementById("nav-"+pid);if(nv)nv.classList.add("active");}'
-        'try{localStorage.setItem("swt_page",pid);}catch(e){}}'
+        'try{localStorage.setItem("swt_page",pid);}catch(e){}'
+        'if(pid==="sectors"){setTimeout(function(){if(typeof _hmInit==="function")_hmInit();},50);}'
+        '}'
         '\nfunction goToPulsePane(pane,el){'
         'showPage("pulse");'
         'if(el){document.querySelectorAll(".nav-item").forEach(function(n){n.classList.remove("active");});el.classList.add("active");}'
@@ -4431,6 +4457,80 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'if(cnt)cnt.textContent=vis+" / "+tot+" stocks";}'
         '\nfunction filterPM(pid,dir,btn){setPMDir(pid,dir,btn);}'
         '\nfunction sortPMChg(pid){''var tbl=document.getElementById("tbl-"+pid);if(!tbl)return;''var tbody=tbl.querySelector("tbody");''var rows=Array.from(tbody.querySelectorAll("tr"));''var cur=tbl.getAttribute("data-chg-sort")||"none";''var asc=cur!=="asc";''tbl.setAttribute("data-chg-sort",asc?"asc":"desc");''rows.sort(function(a,b){''var av=parseFloat(a.getAttribute("data-chg")||"0");''var bv=parseFloat(b.getAttribute("data-chg")||"0");''return asc?av-bv:bv-av;});''rows.forEach(function(r){tbody.appendChild(r);});''var th=tbl.querySelector("th[onclick*=\'sortPMChg\']");''if(th){var b=th.innerHTML.replace(/[\u25b2\u25bc\u2195]/g,"").trim();''th.innerHTML=b+" "+(asc?"&#9650;":"&#9660;");}}'
+        '\nfunction _hmColor(c){'
+        'if(c>=4)return"#16a34a";if(c>=2)return"#22c55e";if(c>=0.5)return"#4ade80";'
+        'if(c>=-0.5)return"#64748b";if(c>=-2)return"#f87171";if(c>=-4)return"#ef4444";'
+        'return"#b91c1c";}'
+        '\nfunction _hmInit(){'
+        'var wrap=document.getElementById("hm-svg-wrap");'
+        'if(!wrap||!window.HM_DATA||HM_DATA.length===0)return;'
+        'if(wrap.querySelector("svg"))return;'
+        'if(!window.d3){var s=document.createElement("script");'
+        's.src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js";'
+        's.onload=function(){_hmBuild();};document.head.appendChild(s);return;}'
+        '_hmBuild();}'
+        '\nfunction _hmBuild(){'
+        'var wrap=document.getElementById("hm-svg-wrap");'
+        'if(!wrap||!window.d3||!window.HM_DATA)return;'
+        'if(wrap.querySelector("svg"))return;'
+        'var W=wrap.clientWidth||800,H=wrap.clientHeight||500;'
+        'var tip=document.getElementById("hm-tooltip");'
+        'var sectors={};HM_DATA.forEach(function(d){'
+        'var sec=d.s||"Other";'
+        'if(!sectors[sec])sectors[sec]={name:sec,children:[]};'
+        'sectors[sec].children.push(d);});'
+        'var root=d3.hierarchy({name:"root",children:Object.values(sectors)})'
+        '.sum(function(d){return d.mc||0;})'
+        '.sort(function(a,b){return b.value-a.value;});'
+        'd3.treemap().size([W,H]).padding(2).paddingOuter(4)(root);'
+        'var svg=d3.select(wrap).append("svg")'
+        '.attr("width",W).attr("height",H).style("background","#0b1120");'
+        '(root.children||[]).forEach(function(sn){'
+        'svg.append("rect").attr("x",sn.x0).attr("y",sn.y0)'
+        '.attr("width",sn.x1-sn.x0).attr("height",sn.y1-sn.y0)'
+        '.attr("fill","none").attr("stroke","#1e293b").attr("stroke-width",1);'
+        'var sw=sn.x1-sn.x0,sh=sn.y1-sn.y0;'
+        'if(sw>60&&sh>16)svg.append("text")'
+        '.attr("x",sn.x0+4).attr("y",sn.y0+12)'
+        '.attr("fill","#94a3b8").attr("font-size","10px")'
+        '.attr("font-family","sans-serif").attr("font-weight","700")'
+        '.text(sn.data.name.replace("Technology","Tech")'
+        '.replace("Consumer","Con.").replace("Communication","Comm."));'
+        '});'
+        'var leaf=svg.selectAll("g.leaf").data(root.leaves()).enter().append("g")'
+        '.attr("class","leaf")'
+        '.attr("transform",function(d){return"translate("+d.x0+","+d.y0+")";});'
+        'leaf.append("rect")'
+        '.attr("width",function(d){return Math.max(0,d.x1-d.x0-1);})'
+        '.attr("height",function(d){return Math.max(0,d.y1-d.y0-1);})'
+        '.attr("fill",function(d){return _hmColor(d.data.c);})'
+        '.attr("rx",2).style("cursor","pointer")'
+        '.on("mouseover",function(event,d){'
+        'if(tip){tip.style.display="block";'
+        'var sign=d.data.c>=0?"+":"";'
+        'tip.innerHTML="<b>"+d.data.t+"</b><br>"+d.data.n+"<br>"'
+        '+sign+d.data.c.toFixed(2)+"% &nbsp;$"'
+        '+(d.data.mc>=1e12?(d.data.mc/1e12).toFixed(2)+"T":'
+        'd.data.mc>=1e9?(d.data.mc/1e9).toFixed(1)+"B":(d.data.mc/1e6).toFixed(0)+"M");}})'
+        '.on("mousemove",function(event){'
+        'if(tip){tip.style.left=(event.clientX+12)+"px";tip.style.top=(event.clientY-10)+"px";}})'
+        '.on("mouseout",function(){if(tip)tip.style.display="none";})'
+        '.on("click",function(event,d){window.open("https://finviz.com/quote.ashx?t="+d.data.t,"_blank");});'
+        'leaf.each(function(d){'
+        'var w=d.x1-d.x0,h=d.y1-d.y0;'
+        'if(w>28&&h>14)d3.select(this).append("text")'
+        '.attr("x",3).attr("y",11)'
+        '.attr("fill","#fff").attr("font-size",Math.min(11,w/5)+"px")'
+        '.attr("font-family","sans-serif").attr("font-weight","700")'
+        '.style("pointer-events","none").text(d.data.t);'
+        'if(w>40&&h>24)d3.select(this).append("text")'
+        '.attr("x",3).attr("y",22)'
+        '.attr("fill","rgba(255,255,255,.7)").attr("font-size","9px")'
+        '.attr("font-family","sans-serif").style("pointer-events","none")'
+        '.text((d.data.c>=0?"+":"")+d.data.c.toFixed(2)+"%");'
+        '});'
+        '}'
+
         '\ndocument.addEventListener("DOMContentLoaded",function(){'
         'try{var s=localStorage.getItem("swt_page");'
         'if(s&&document.getElementById("pg-"+s)){showPage(s);return;}'
@@ -4793,7 +4893,11 @@ def main():
         print("📊 Fetching daily breadth data...", file=sys.stderr)
         _dbr = fetch_daily_breadth_data()
         print('\U0001f5fa  Fetching heatmap data...', file=sys.stderr)
-        _hm_data = fetch_heatmap_data()
+        try:
+            _hm_data = fetch_heatmap_data()
+        except Exception as _hme:
+            print(f'  WARNING heatmap: {_hme}', file=sys.stderr)
+            _hm_data = []
         _new_tickers = []
         if getattr(args, 'new_tickers_file', None) and Path(args.new_tickers_file).exists():
             try:
