@@ -3105,20 +3105,19 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         + _djs
         + '</div>'
     )
-    _tv_heatmap = (
-        '<div style="height:calc(100vh - 220px);min-height:500px;border-radius:10px;overflow:hidden">'
-        '<!-- TradingView Stock Heatmap Widget -->'
-        '<div class="tradingview-widget-container" style="height:100%">'
-        '<div class="tradingview-widget-container__widget" style="height:100%"></div>'
-        '<script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>'
-        '{"exchanges":[],"dataSource":"SPX500","grouping":"sector",'
-        '"blockSize":"market_cap_basic","blockColor":"change","locale":"en",'
-        '"colorTheme":"dark","hasTopBar":true,"isDataSetEnabled":true,'
-        '"isZoomEnabled":true,"hasSymbolTooltip":true,"isMonoSize":false,'
-        '"width":"100%%","height":"100%%"}'
-        '</script></div></div>'
+    import json as _hjson
+    _hm_data = kwargs.get('heatmap_data') or []
+    _hm_json = _hjson.dumps(_hm_data)
+    _hm_html = (
+        '<div id="hm-wrap" style="position:relative;height:calc(100vh - 230px);min-height:500px">'
+        '<div id="hm-svg-wrap" style="width:100%;height:100%;border-radius:8px;overflow:hidden"></div>'
+        '<div id="hm-tooltip" style="display:none;position:fixed;background:#0f172a;'
+        'border:1px solid #334155;border-radius:6px;padding:8px 12px;font-size:12px;'
+        'color:#e2e8f0;pointer-events:none;z-index:9999"></div>'
+        '</div>'
+        '<script>var HM_DATA=' + _hm_json + ';</script>'
     )
-    sector_html = _etf_strip + _tv_heatmap
+    sector_html = _etf_strip + _hm_html
 
     # Market Pulse panel (Theme Tracker / S&P Sectors / Country ETFs / Highs-Lows)
     pulse_panel_html = build_pulse_panel_html(market_pulse, results, daily_breadth=kwargs.get("daily_breadth")) if market_pulse else ""
