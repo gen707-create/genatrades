@@ -3957,6 +3957,21 @@ function openGistSettings(){
   document.getElementById('gist-modal').style.display='flex';
 }
 function closeGistSettings(){document.getElementById('gist-modal').style.display='none';}
+async function testGistToken(){
+  var tok=(document.getElementById('gist-tok-input').value||'').trim();
+  var btn=document.getElementById('gist-test-btn');
+  if(!tok){alert('Введи токен');return;}
+  if(btn)btn.textContent='...';
+  try{
+    var r=await fetch('https://api.github.com/user',{
+      headers:{'Authorization':'Bearer '+tok,'Accept':'application/vnd.github.v3+json'},
+      mode:'cors',credentials:'omit'
+    });
+    if(r.ok){var u=await r.json();alert('✓ Токен рабочий! GitHub: '+u.login);}
+    else{alert('✗ Ошибка '+r.status+' — токен неверный или нет прав gist');}
+  }catch(e){alert('✗ Сеть недоступна: '+e.message);}
+  if(btn)btn.textContent='Тест';
+}
 function saveGistSettings(){
   var tok=(document.getElementById('gist-tok-input').value||'').trim();
   var gid=(document.getElementById('gist-id-input').value||'').trim();
@@ -4614,10 +4629,12 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         '<label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:5px;font-weight:600">'
         'GitHub Personal Access Token'
         '</label>'
-        '<input id="gist-tok-input" type="password" '
+        '<input id="gist-tok-input" type="text" '
         'placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" '
+        'autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" '
         'style="width:100%;background:#0f172a;border:1px solid #475569;border-radius:7px;'
-        'padding:9px 13px;color:#e2e8f0;font-size:13px;outline:none;margin-bottom:14px">'
+        'padding:9px 13px;color:#e2e8f0;font-size:13px;outline:none;margin-bottom:14px;'
+        'font-family:monospace;letter-spacing:.5px">'
         '<label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:5px;font-weight:600">'
         'Gist ID <span style="font-weight:400;color:#475569">(оставь пустым — создастся автоматически)</span>'
         '</label>'
@@ -4630,6 +4647,9 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'color:#fff;font-size:13px;font-weight:600;cursor:pointer">'
         '&#9729;&#65039; Сохранить и синхронизировать'
         '</button>'
+        '<button onclick="testGistToken()" '
+        'style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 12px;'
+        'color:#94a3b8;font-size:12px;cursor:pointer" id="gist-test-btn">Тест</button>'
         '<button onclick="clearGistSettings()" '
         'style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 14px;'
         'color:#ef4444;font-size:12px;cursor:pointer">Отключить</button>'
