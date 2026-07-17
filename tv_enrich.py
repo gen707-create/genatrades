@@ -3919,14 +3919,14 @@ async function gistLoad(){
   _setSyncStatus('syncing...');
   try{
     if(!gid){
-      var lr=await fetch('https://api.github.com/gists?per_page=100',{headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}});
-      if(!lr.ok){_setSyncStatus('⚠ auth error',false);return null;}
+      var lr=await fetch('https://api.github.com/gists?per_page=100',{headers:{'Authorization':'Bearer '+tok,'Accept':'application/vnd.github.v3+json'},mode:'cors',credentials:'omit'});
+      if(!lr.ok){_setSyncStatus('⚠ auth error '+lr.status,false);return null;}
       var list=await lr.json();
       var found=list.find(function(g){return g.files&&g.files[_GH_FNAME];});
       if(found){localStorage.setItem(_GH_GID_KEY,found.id);gid=found.id;}
       else{_setSyncStatus('● new gist will be created');return null;}
     }
-    var resp=await fetch('https://api.github.com/gists/'+gid,{headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}});
+    var resp=await fetch('https://api.github.com/gists/'+gid,{headers:{'Authorization':'Bearer '+tok,'Accept':'application/vnd.github.v3+json'},mode:'cors',credentials:'omit'});
     if(resp.status===404){localStorage.removeItem(_GH_GID_KEY);_setSyncStatus('⚠ gist not found',false);return null;}
     if(!resp.ok){_setSyncStatus('⚠ error '+resp.status,false);return null;}
     var data=await resp.json();
@@ -3944,8 +3944,8 @@ async function gistSave(wl){
   try{
     var resp=await fetch(gid?'https://api.github.com/gists/'+gid:'https://api.github.com/gists',{
       method:gid?'PATCH':'POST',
-      headers:{'Authorization':'token '+tok,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
-      body:JSON.stringify(body)
+      headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
+      mode:'cors',credentials:'omit',body:JSON.stringify(body)
     });
     if(resp.ok){var d=await resp.json();if(!gid)localStorage.setItem(_GH_GID_KEY,d.id);_setSyncStatus('✓ synced',true);}
     else{_setSyncStatus('⚠ save error '+resp.status,false);}
