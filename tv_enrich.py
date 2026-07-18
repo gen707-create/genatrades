@@ -2269,7 +2269,7 @@ def fetch_daily_breadth_data(history_file="breadth_history.json"):
 
 
 def fetch_heatmap_data():
-    """Fetch up to 600 US stocks for D3 treemap. Source: Finviz Elite (v111), fallback TradingView."""
+    """Fetch stocks for D3 treemap. Source: Finviz Elite v152, fallback TradingView."""
     import os as _os, sys as _sys
 
     token = _os.environ.get("FINVIZ_TOKEN", "")
@@ -2281,16 +2281,10 @@ def fetch_heatmap_data():
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
                 "Accept": "text/csv,text/plain,*/*",
             })
-            session.params = {"auth": token}          # same pattern as finviz_scan.py
-            params = {
-                "v": "111",           # Overview: Ticker,Company,Sector,Market Cap,Price,Change,Volume
-                "o": "-marketcap",    # sort by market cap desc
-                "f": "cap_smallover", # market cap > ~300M
-            }
-            resp = session.get(
-                "https://elite.finviz.com/export.ashx",
-                params=params, timeout=30
-            )
+            session.params = {"auth": token}   # same as finviz_scan.py
+            # v=152 Financial view — same view finviz_scan.py uses successfully
+            params = {"v": "152", "f": "cap_smallover"}
+            resp = session.get("https://elite.finviz.com/export.ashx", params=params, timeout=30)
             if resp.status_code == 401:
                 print("  Finviz heatmap: 401 AUTH ERROR", file=_sys.stderr)
             elif resp.status_code == 200:
@@ -2299,41 +2293,50 @@ def fetch_heatmap_data():
                     reader = _csv.DictReader(_io.StringIO(text))
                     rows = list(reader)
                     if rows:
-                        print(f"  [finviz heatmap] cols: {list(rows[0].keys())[:12]}", file=_sys.stderr)
-                        def _mc(s):
-                            s = (s or "").strip()
-                            if not s or s == "-": return 0.0
-                            m = 1.0
-                            if s.endswith("B"): s, m = s[:-1], 1e9
-                            elif s.endswith("M"): s, m = s[:-1], 1e6
-                            elif s.endswith("T"): s, m = s[:-1], 1e12
-                            try: return float(s) * m
-                            except: return 0.0
-                        def _chg(s):
-                            try: return float((s or "0").strip().replace("%","").replace("+",""))
-                            except: return 0.0
-                        out = []
-                        for row in rows:
-                            mc = _mc(row.get("Market Cap", ""))
-                            if mc < 100_000_000: continue
-                            out.append({
-                                "t": str(row.get("Ticker", "") or ""),
-                                "n": str(row.get("Company", "") or ""),
-                                "s": str(row.get("Sector", "Other") or "Other"),
-                                "mc": float(mc),
-                                "c": _chg(row.get("Change", "0")),
-                            })
-                        out.sort(key=lambda x: x["mc"], reverse=True)
-                        print(f"  Heatmap (Finviz v111): {len(out)} stocks", file=_sys.stderr)
-                        if out:
-                            return out[:600]
-                        print("  Finviz heatmap: 0 stocks after filter", file=_sys.stderr)
+                        cols = list(rows[0].keys())
+                        print(f"  [finviz heatmap] {len(rows)} rows, cols[:10]={cols[:10]}", file=_sys.stderr)
+                        # Динамически ищем нужные колонки
+                        mc_col  = next((c for c in cols if "cap" in c.lower() and c.lower() != "market cap basic"), None) or                                   next((c for c in cols if "cap" in c.lower()), None)
+                        chg_col = next((c for c in cols if c.lower() in ("change","chg","%change")), None)
+                        sec_col = next((c for c in cols if "sector" in c.lower()), None)
+                        print(f"  mc_col={mc_col!r}, chg_col={chg_col!r}, sec_col={sec_col!r}", file=_sys.stderr)
+                        if not mc_col:
+                            print("  Finviz: market cap column not found!", file=_sys.stderr)
+                        else:
+                            def _mc(s):
+                                s = (s or "").strip()
+                                if not s or s == "-": return 0.0
+                                for suf, mult in [("T",1e12),("B",1e9),("M",1e6),("K",1e3)]:
+                                    if s.endswith(suf):
+                                        try: return float(s[:-1]) * mult
+                                        except: return 0.0
+                                try: return float(s)
+                                except: return 0.0
+                            def _chg(s):
+                                try: return float((s or "0").replace("%","").replace("+","").strip())
+                                except: return 0.0
+                            out = []
+                            for row in rows:
+                                mc = _mc(row.get(mc_col, ""))
+                                if mc <= 0: continue
+                                out.append({
+                                    "t": (row.get("Ticker","") or "").strip(),
+                                    "n": (row.get("Company","") or "").strip(),
+                                    "s": (row.get(sec_col or "Sector","Other") or "Other").strip(),
+                                    "mc": float(mc),
+                                    "c": _chg(row.get(chg_col or "Change","0")),
+                                })
+                            out.sort(key=lambda x: x["mc"], reverse=True)
+                            print(f"  Heatmap (Finviz v152): {len(out)} stocks", file=_sys.stderr)
+                            if out:
+                                return out[:600]
+                            print("  Finviz heatmap: 0 stocks after parse", file=_sys.stderr)
                     else:
-                        print("  Finviz heatmap: empty CSV", file=_sys.stderr)
+                        print("  Finviz heatmap: empty CSV (0 rows)", file=_sys.stderr)
                 else:
-                    print(f"  Finviz heatmap: bad response ({len(text)} chars)", file=_sys.stderr)
+                    print(f"  Finviz heatmap: no data ({len(text)} chars)", file=_sys.stderr)
             else:
-                print(f"  Finviz heatmap HTTP {resp.status_code}: {resp.text[:120]}", file=_sys.stderr)
+                print(f"  Finviz heatmap HTTP {resp.status_code}: {resp.text[:100]}", file=_sys.stderr)
         except Exception as e:
             print(f"  WARNING heatmap Finviz: {e}", file=_sys.stderr)
 
@@ -2341,7 +2344,7 @@ def fetch_heatmap_data():
     try:
         from tradingview_screener import Query, Column
         _, df = (Query()
-            .select("name", "close", "change", "market_cap_basic", "sector", "description")
+            .select("name","close","change","market_cap_basic","sector","description")
             .set_markets("america")
             .where(Column("market_cap_basic") > 500_000_000)
             .order_by("market_cap_basic", ascending=False)
@@ -2352,7 +2355,7 @@ def fetch_heatmap_data():
             if mc <= 0: continue
             out.append({"t": str(row.get("name","") or ""), "n": str(row.get("description","") or ""),
                 "s": str(row.get("sector","Other") or "Other"), "mc": float(mc),
-                "c": float(row.get("change", 0) or 0)})
+                "c": float(row.get("change",0) or 0)})
         print(f"  Heatmap (TradingView): {len(out)} stocks", file=_sys.stderr)
         return out
     except Exception as e:
@@ -3179,7 +3182,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
     _hm_html = (
         '<div id="hm-wrap" style="position:relative;height:calc(100vh - 230px);min-height:500px">'
         '<div id="hm-svg-wrap" style="width:100%;height:100%;border-radius:8px;overflow:hidden"></div>'
-        '<div id="hm-tv-fallback" style="display:none;height:100%;border-radius:10px;overflow:hidden">'
+        '<div id="hm-tv-fallback" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;overflow:hidden">'
         '<div class="tradingview-widget-container" style="height:100%%">'
         '<div class="tradingview-widget-container__widget" style="height:100%%"></div>'
         '<script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>'
