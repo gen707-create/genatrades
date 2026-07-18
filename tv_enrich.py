@@ -2269,78 +2269,94 @@ def fetch_daily_breadth_data(history_file="breadth_history.json"):
 
 
 def fetch_heatmap_data():
-    """Fetch ~500 US stocks for D3 treemap from Finviz Elite (fallback: TradingView screener)."""
-    import os as _os, requests as _req, csv as _csv, io as _io
+    """Fetch up to 600 US stocks for D3 treemap. Source: Finviz Elite (v111), fallback TradingView."""
+    import os as _os, sys as _sys
 
     token = _os.environ.get("FINVIZ_TOKEN", "")
     if token:
         try:
-            # Finviz Elite screener: all stocks, sorted by market cap desc
-            # cols: Ticker, Company, Sector, Market Cap, Change
-            url = "https://elite.finviz.com/export.ashx"
-            params = {
-                "auth": token,
-                "v": "152",
-                "f": "cap_smallover",          # market cap > ~300M
-                "o": "-marketcap",             # sort by market cap desc
-                "c": "0,1,2,7,14",            # Ticker,Company,Sector,Mkt Cap,Change
-            }
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            import requests as _req, csv as _csv, io as _io
+            session = _req.Session()
+            session.headers.update({
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
                 "Accept": "text/csv,text/plain,*/*",
+            })
+            session.params = {"auth": token}          # same pattern as finviz_scan.py
+            params = {
+                "v": "111",           # Overview: Ticker,Company,Sector,Market Cap,Price,Change,Volume
+                "o": "-marketcap",    # sort by market cap desc
+                "f": "cap_smallover", # market cap > ~300M
             }
-            resp = _req.get(url, params=params, headers=headers, timeout=30)
-            resp.raise_for_status()
-            reader = _csv.DictReader(_io.StringIO(resp.text))
-            out = []
-            def _parse_mc(s):
-                if not s or s == "-": return 0.0
-                s = s.strip()
-                mult = 1
-                if s.endswith("B"): mult = 1e9;  s = s[:-1]
-                elif s.endswith("M"): mult = 1e6; s = s[:-1]
-                elif s.endswith("T"): mult = 1e12; s = s[:-1]
-                try: return float(s) * mult
-                except: return 0.0
-            def _parse_chg(s):
-                if not s or s == "-": return 0.0
-                try: return float(s.strip().replace("%","").replace("+",""))
-                except: return 0.0
-            for row in reader:
-                mc = _parse_mc(row.get("Market Cap",""))
-                if mc < 200_000_000: continue
-                out.append({
-                    "t": str(row.get("Ticker","") or ""),
-                    "n": str(row.get("Company","") or ""),
-                    "s": str(row.get("Sector","Other") or "Other"),
-                    "mc": float(mc),
-                    "c": _parse_chg(row.get("Change","")),
-                })
-            out.sort(key=lambda x: x["mc"], reverse=True)
-            print(f"  Heatmap (Finviz): {len(out)} stocks", file=__import__("sys").stderr)
-            return out[:500]
+            resp = session.get(
+                "https://elite.finviz.com/export.ashx",
+                params=params, timeout=30
+            )
+            if resp.status_code == 401:
+                print("  Finviz heatmap: 401 AUTH ERROR", file=_sys.stderr)
+            elif resp.status_code == 200:
+                text = resp.text.strip()
+                if text and "\n" in text:
+                    reader = _csv.DictReader(_io.StringIO(text))
+                    rows = list(reader)
+                    if rows:
+                        print(f"  [finviz heatmap] cols: {list(rows[0].keys())[:12]}", file=_sys.stderr)
+                        def _mc(s):
+                            s = (s or "").strip()
+                            if not s or s == "-": return 0.0
+                            m = 1.0
+                            if s.endswith("B"): s, m = s[:-1], 1e9
+                            elif s.endswith("M"): s, m = s[:-1], 1e6
+                            elif s.endswith("T"): s, m = s[:-1], 1e12
+                            try: return float(s) * m
+                            except: return 0.0
+                        def _chg(s):
+                            try: return float((s or "0").strip().replace("%","").replace("+",""))
+                            except: return 0.0
+                        out = []
+                        for row in rows:
+                            mc = _mc(row.get("Market Cap", ""))
+                            if mc < 100_000_000: continue
+                            out.append({
+                                "t": str(row.get("Ticker", "") or ""),
+                                "n": str(row.get("Company", "") or ""),
+                                "s": str(row.get("Sector", "Other") or "Other"),
+                                "mc": float(mc),
+                                "c": _chg(row.get("Change", "0")),
+                            })
+                        out.sort(key=lambda x: x["mc"], reverse=True)
+                        print(f"  Heatmap (Finviz v111): {len(out)} stocks", file=_sys.stderr)
+                        if out:
+                            return out[:600]
+                        print("  Finviz heatmap: 0 stocks after filter", file=_sys.stderr)
+                    else:
+                        print("  Finviz heatmap: empty CSV", file=_sys.stderr)
+                else:
+                    print(f"  Finviz heatmap: bad response ({len(text)} chars)", file=_sys.stderr)
+            else:
+                print(f"  Finviz heatmap HTTP {resp.status_code}: {resp.text[:120]}", file=_sys.stderr)
         except Exception as e:
-            print(f"  WARNING heatmap Finviz: {e}", file=__import__("sys").stderr)
+            print(f"  WARNING heatmap Finviz: {e}", file=_sys.stderr)
 
     # Fallback: TradingView screener
     try:
         from tradingview_screener import Query, Column
         _, df = (Query()
-            .select("name","close","change","market_cap_basic","sector","description")
+            .select("name", "close", "change", "market_cap_basic", "sector", "description")
             .set_markets("america")
             .where(Column("market_cap_basic") > 500_000_000)
             .order_by("market_cap_basic", ascending=False)
             .limit(500).get_scanner_data())
-        out=[]
-        for _,row in df.iterrows():
-            mc=row.get("market_cap_basic") or 0
-            if mc<=0: continue
-            out.append({"t":str(row.get("name","") or ""),"n":str(row.get("description","") or ""),
-                "s":str(row.get("sector","Other") or "Other"),"mc":float(mc),"c":float(row.get("change",0) or 0)})
-        print(f"  Heatmap (TradingView): {len(out)} stocks",file=__import__("sys").stderr)
+        out = []
+        for _, row in df.iterrows():
+            mc = row.get("market_cap_basic") or 0
+            if mc <= 0: continue
+            out.append({"t": str(row.get("name","") or ""), "n": str(row.get("description","") or ""),
+                "s": str(row.get("sector","Other") or "Other"), "mc": float(mc),
+                "c": float(row.get("change", 0) or 0)})
+        print(f"  Heatmap (TradingView): {len(out)} stocks", file=_sys.stderr)
         return out
     except Exception as e:
-        print(f"  WARNING heatmap TV: {e}",file=__import__("sys").stderr)
+        print(f"  WARNING heatmap TV: {e}", file=_sys.stderr)
         return []
 
 
@@ -4526,7 +4542,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'var wrap=document.getElementById("hm-svg-wrap");'
         'if(!window.HM_DATA||HM_DATA.length===0){'
         'var fb=document.getElementById("hm-tv-fallback");'
-        'if(fb)fb.style.display="block";return;}'
+        'if(fb&&!fb.dataset.loaded){fb.dataset.loaded="1";fb.style.display="block";var ifr=document.createElement("iframe");ifr.src="https://www.tradingview.com/heatmap/stock/?color=change&dataset=SPX500&group=sector&size=market_cap_basic";ifr.style.cssText="width:100%;height:100%;border:none;border-radius:8px";ifr.allowFullscreen=true;fb.appendChild(ifr);}else if(fb){fb.style.display="block";}return;}'
         'if(wrap.querySelector("svg"))return;'
         'if(!window.d3){var s=document.createElement("script");'
         's.src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js";'
