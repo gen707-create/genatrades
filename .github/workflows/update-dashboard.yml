@@ -38,6 +38,60 @@ jobs:
         env:
           FINVIZ_TOKEN: ${{ secrets.FINVIZ_TOKEN }}
         run: |
+          echo "=== Step 0: Pre-fetch heatmap data (before scans to avoid rate limit) ==="
+          python3 -c "
+import os, sys, requests, csv, io, json
+token = os.environ.get('FINVIZ_TOKEN','')
+if not token:
+    print('No FINVIZ_TOKEN', file=sys.stderr)
+    json.dump([], open('/tmp/heatmap.json','w'))
+    sys.exit(0)
+session = requests.Session()
+session.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+session.params = {'auth': token}
+try:
+    resp = session.get('https://elite.finviz.com/export.ashx',
+        params={'v':'152','f':'cap_mid,cap_large,cap_mega'}, timeout=30)
+    print(f'HTTP {resp.status_code}, {len(resp.text)} chars', file=sys.stderr)
+    if resp.status_code == 200 and not resp.text.strip().startswith('<'):
+        rows = list(csv.DictReader(io.StringIO(resp.text)))
+        if rows:
+            cols = list(rows[0].keys())
+            print(f'Cols: {cols[:12]}', file=sys.stderr)
+            mc_col = next((c for c in cols if 'cap' in c.lower()), None)
+            chg_col = next((c for c in cols if c.lower() in ('change','chg')), None)
+            sec_col = next((c for c in cols if 'sector' in c.lower()), None)
+            print(f'mc={mc_col} chg={chg_col} sec={sec_col}', file=sys.stderr)
+            out = []
+            for row in rows:
+                s = (row.get(mc_col,'') or '').strip()
+                mc = 0.0
+                for suf,mult in [('T',1e12),('B',1e9),('M',1e6)]:
+                    if s.endswith(suf):
+                        try: mc = float(s[:-1])*mult; break
+                        except: pass
+                if mc <= 0: continue
+                try: chg = float((row.get(chg_col,'0') or '0').replace('%','').replace('+','').strip())
+                except: chg = 0
+                out.append({'t':(row.get('Ticker','') or '').strip(),
+                    'n':(row.get('Company','') or '').strip(),
+                    's':(row.get(sec_col or 'Sector','Other') or 'Other').strip(),
+                    'mc':mc,'c':chg})
+            out.sort(key=lambda x:-x['mc'])
+            json.dump(out[:600], open('/tmp/heatmap.json','w'))
+            print(f'Saved {len(out)} stocks', file=sys.stderr)
+        else:
+            print('Empty CSV', file=sys.stderr)
+            json.dump([], open('/tmp/heatmap.json','w'))
+    else:
+        print(f'Bad response: {repr(resp.text[:200])}', file=sys.stderr)
+        json.dump([], open('/tmp/heatmap.json','w'))
+except Exception as e:
+    print(f'ERROR: {e}', file=sys.stderr)
+    json.dump([], open('/tmp/heatmap.json','w'))
+" 2>&1 || echo '[]' > /tmp/heatmap.json
+          echo "heatmap: $(python3 -c 'import json;d=json.load(open("/tmp/heatmap.json"));print(len(d),"stocks")' 2>/dev/null || echo FAILED)"
+
           echo "=== Step 1: Minervini scan ==="
           python finviz_scan.py --strategy minervini > /tmp/scan_min.json || echo "{"strategy":"minervini","tickers":[]}" > /tmp/scan_min.json
           echo "scan_min: $(python3 -c 'import json;d=json.load(open("/tmp/scan_min.json"));print(len(d.get("tickers",[])),"tickers")' 2>/dev/null || echo FAILED)"

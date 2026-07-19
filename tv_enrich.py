@@ -2269,9 +2269,26 @@ def fetch_daily_breadth_data(history_file="breadth_history.json"):
 
 
 def fetch_heatmap_data():
-    """Fetch stocks for D3 treemap. Source: Finviz Elite v152, fallback TradingView."""
-    import os as _os, sys as _sys
+    """Fetch stocks for D3 treemap.
+    Priority: 1) /tmp/heatmap.json (pre-fetched in workflow Step 0)
+              2) Finviz Elite API live  3) TradingView screener
+    """
+    import os as _os, sys as _sys, json as _json
 
+    # 1. Pre-fetched cache from workflow Step 0 (avoids rate limit)
+    _cache = "/tmp/heatmap.json"
+    if _os.path.exists(_cache):
+        try:
+            with open(_cache) as _f:
+                _data = _json.load(_f)
+            if _data:
+                print(f"  Heatmap (cache): {len(_data)} stocks", file=_sys.stderr)
+                return _data
+            print("  Heatmap cache empty, trying live fetch", file=_sys.stderr)
+        except Exception as _e:
+            print(f"  WARNING cache: {_e}", file=_sys.stderr)
+
+    # 2. Live Finviz Elite API
     token = _os.environ.get("FINVIZ_TOKEN", "")
     if token:
         try:
@@ -2279,33 +2296,28 @@ def fetch_heatmap_data():
             session = _req.Session()
             session.headers.update({
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                "Accept": "text/csv,text/plain,*/*",
             })
-            session.params = {"auth": token}   # same as finviz_scan.py
-            # v=152 Financial view — same view finviz_scan.py uses successfully
-            params = {"v": "152", "f": "cap_smallover"}
+            session.params = {"auth": token}
+            params = {"v": "152", "f": "cap_mid,cap_large,cap_mega"}
             resp = session.get("https://elite.finviz.com/export.ashx", params=params, timeout=30)
+            print(f"  Finviz heatmap: HTTP {resp.status_code}, {len(resp.text)} chars", file=_sys.stderr)
             if resp.status_code == 401:
                 print("  Finviz heatmap: 401 AUTH ERROR", file=_sys.stderr)
             elif resp.status_code == 200:
                 text = resp.text.strip()
-                if text and "\n" in text:
+                if text and "\n" in text and not text.startswith("<"):
                     reader = _csv.DictReader(_io.StringIO(text))
                     rows = list(reader)
                     if rows:
                         cols = list(rows[0].keys())
-                        print(f"  [finviz heatmap] {len(rows)} rows, cols[:10]={cols[:10]}", file=_sys.stderr)
-                        # Динамически ищем нужные колонки
-                        mc_col  = next((c for c in cols if "cap" in c.lower() and c.lower() != "market cap basic"), None) or                                   next((c for c in cols if "cap" in c.lower()), None)
-                        chg_col = next((c for c in cols if c.lower() in ("change","chg","%change")), None)
+                        print(f"  [finviz heatmap] {len(rows)} rows, cols: {cols[:12]}", file=_sys.stderr)
+                        mc_col  = next((c for c in cols if "cap" in c.lower()), None)
+                        chg_col = next((c for c in cols if c.lower() in ("change","chg")), None)
                         sec_col = next((c for c in cols if "sector" in c.lower()), None)
-                        print(f"  mc_col={mc_col!r}, chg_col={chg_col!r}, sec_col={sec_col!r}", file=_sys.stderr)
-                        if not mc_col:
-                            print("  Finviz: market cap column not found!", file=_sys.stderr)
-                        else:
+                        print(f"  mc={mc_col!r} chg={chg_col!r} sec={sec_col!r}", file=_sys.stderr)
+                        if mc_col:
                             def _mc(s):
                                 s = (s or "").strip()
-                                if not s or s == "-": return 0.0
                                 for suf, mult in [("T",1e12),("B",1e9),("M",1e6),("K",1e3)]:
                                     if s.endswith(suf):
                                         try: return float(s[:-1]) * mult
@@ -2327,20 +2339,17 @@ def fetch_heatmap_data():
                                     "c": _chg(row.get(chg_col or "Change","0")),
                                 })
                             out.sort(key=lambda x: x["mc"], reverse=True)
-                            print(f"  Heatmap (Finviz v152): {len(out)} stocks", file=_sys.stderr)
+                            print(f"  Heatmap (Finviz live): {len(out)} stocks", file=_sys.stderr)
                             if out:
                                 return out[:600]
-                            print("  Finviz heatmap: 0 stocks after parse", file=_sys.stderr)
-                    else:
-                        print("  Finviz heatmap: empty CSV (0 rows)", file=_sys.stderr)
                 else:
-                    print(f"  Finviz heatmap: no data ({len(text)} chars)", file=_sys.stderr)
+                    print(f"  Finviz heatmap: unexpected response: {repr(text[:100])}", file=_sys.stderr)
             else:
-                print(f"  Finviz heatmap HTTP {resp.status_code}: {resp.text[:100]}", file=_sys.stderr)
+                print(f"  Finviz heatmap HTTP {resp.status_code}", file=_sys.stderr)
         except Exception as e:
             print(f"  WARNING heatmap Finviz: {e}", file=_sys.stderr)
 
-    # Fallback: TradingView screener
+    # 3. Fallback: TradingView screener
     try:
         from tradingview_screener import Query, Column
         _, df = (Query()
@@ -4545,7 +4554,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'var wrap=document.getElementById("hm-svg-wrap");'
         'if(!window.HM_DATA||HM_DATA.length===0){'
         'var fb=document.getElementById("hm-tv-fallback");'
-        'if(fb&&!fb.dataset.loaded){fb.dataset.loaded="1";fb.style.display="block";var ifr=document.createElement("iframe");ifr.src="https://www.tradingview.com/heatmap/stock/?color=change&dataset=SPX500&group=sector&size=market_cap_basic";ifr.style.cssText="width:100%;height:100%;border:none;border-radius:8px";ifr.allowFullscreen=true;fb.appendChild(ifr);}else if(fb){fb.style.display="block";}return;}'
+        'if(fb&&!fb.dataset.loaded){fb.dataset.loaded="1";fb.style.display="block";var ifr=document.createElement("iframe");ifr.style.cssText="width:100%;height:100%;border:none";ifr.scrolling="no";ifr.srcdoc="<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>*{margin:0;padding:0}</style></head>"+"<body style=\"background:#0b1120;width:100vw;height:100vh\">"+"<div class=\"tradingview-widget-container\" style=\"width:100%;height:100%\">"+"<div class=\"tradingview-widget-container__widget\" style=\"width:100%;height:100%\"></div>"+"<script type=\"text\/javascript\" src=\"https:\/\/s3.tradingview.com\/external-embedding\/embed-widget-stock-heatmap.js\" async>"+"{"exchanges":[],"dataSource":"SPX500","grouping":"sector","blockSize":"market_cap_basic","blockColor":"change","locale":"en","colorTheme":"dark","hasTopBar":true,"isDataSetEnabled":true,"isZoomEnabled":true,"hasSymbolTooltip":true,"isMonoSize":false,"width":"100%","height":"100%"}"+"<\/script><\/div><\/body><\/html>";fb.appendChild(ifr);}else if(fb){fb.style.display="block";}return;}'
         'if(wrap.querySelector("svg"))return;'
         'if(!window.d3){var s=document.createElement("script");'
         's.src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js";'
