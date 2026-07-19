@@ -4625,7 +4625,6 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'd3.treemap().size([W,H]).padding(2).paddingTop(18).paddingOuter(3)(root);'
         'var svg=d3.select(wrap).append("svg")'
         '.attr("width",W).attr("height",H).style("background","#0b1120");'
-        // Sector group backgrounds + labels
         '(root.children||[]).forEach(function(sn){'
         'var sw=sn.x1-sn.x0,sh=sn.y1-sn.y0;'
         'svg.append("rect")'
@@ -4645,7 +4644,6 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         '.style("pointer-events","none")'
         '.text(sn.data.name);}'
         '});'
-        // Leaf nodes
         'var leaf=svg.selectAll("g.leaf").data(root.leaves()).enter().append("g")'
         '.attr("class","leaf")'
         '.attr("transform",function(d){return"translate("+d.x0+","+d.y0+")";});'
@@ -4673,12 +4671,10 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         '.on("mouseout",function(){if(tip)tip.style.display="none";})'
         '.on("click",function(event,d){'
         'window.open("https://finviz.com/quote.ashx?t="+d.data.t,"_blank");});'
-        // Text labels inside each cell
         'leaf.each(function(d){'
         'var w=d.x1-d.x0,h=d.y1-d.y0;'
         'var val=+(d.data[period]||0);'
         'var sign=val>=0?"+":"";'
-        // Ticker symbol — centred
         'if(w>22&&h>12){'
         'var fs=Math.min(Math.floor(Math.min(w/3,h/2)),18);'
         'fs=Math.max(fs,9);'
@@ -4688,7 +4684,6 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         '.attr("fill","#fff").attr("font-size",fs+"px")'
         '.attr("font-family","sans-serif").attr("font-weight","700")'
         '.style("pointer-events","none").text(d.data.t);}'
-        // Change % — below ticker
         'if(w>34&&h>28){'
         'd3.select(this).append("text")'
         '.attr("x",w/2).attr("y",h/2+Math.floor(h/5))'
