@@ -1,5 +1,6 @@
 """Pre-fetch Finviz heatmap data BEFORE scanners to avoid rate limiting.
 Saves up to 600 stocks to /tmp/heatmap.json for tv_enrich.py to consume.
+v=111 = Overview: Ticker, Company, Sector, Market Cap, Change — all needed for heatmap.
 """
 import os, sys, requests, csv, io, json
 
@@ -10,25 +11,31 @@ if not token:
     sys.exit(0)
 
 session = requests.Session()
-session.headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-session.params = {"auth": token}
+session.headers["User-Agent"] = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+)
 
 try:
-    resp = session.get(
-        "https://elite.finviz.com/export.ashx",
-        params={"v": "152", "f": "cap_mid,cap_large,cap_mega"},
-        timeout=30,
-    )
+    # v=111 = Overview view — contains Market Cap, Change %, Sector (needed for heatmap)
+    # auth passed explicitly in params (most reliable method)
+    params = {
+        "v": "111",
+        "f": "cap_mid,cap_large,cap_mega",
+        "auth": token,
+    }
+    resp = session.get("https://elite.finviz.com/export.ashx", params=params, timeout=30)
     print(f"HTTP {resp.status_code}, {len(resp.text)} chars", file=sys.stderr)
+    print(f"First 300 chars: {repr(resp.text[:300])}", file=sys.stderr)
 
     if resp.status_code != 200:
-        print(f"Non-200 response: {repr(resp.text[:200])}", file=sys.stderr)
+        print(f"Non-200 — auth failed or rate limited", file=sys.stderr)
         json.dump([], open("/tmp/heatmap.json", "w"))
         sys.exit(0)
 
     text = resp.text.strip()
     if not text or text.startswith("<"):
-        print(f"HTML/empty response: {repr(text[:200])}", file=sys.stderr)
+        print(f"Got HTML instead of CSV — auth token may be wrong", file=sys.stderr)
         json.dump([], open("/tmp/heatmap.json", "w"))
         sys.exit(0)
 
@@ -39,15 +46,23 @@ try:
         sys.exit(0)
 
     cols = list(rows[0].keys())
-    print(f"Cols ({len(cols)}): {cols[:15]}", file=sys.stderr)
+    print(f"ALL cols ({len(cols)}): {cols}", file=sys.stderr)
 
-    mc_col  = next((c for c in cols if "cap" in c.lower()), None)
-    chg_col = next((c for c in cols if c.lower() in ("change", "chg")), None)
+    # Market Cap column
+    mc_col = next((c for c in cols if c.lower() == "market cap"), None)
+    if not mc_col:
+        mc_col = next((c for c in cols if "cap" in c.lower()), None)
+
+    # Change % column
+    chg_col = next((c for c in cols if c.lower() in ("change", "chg", "change %", "chg %")), None)
+
+    # Sector column
     sec_col = next((c for c in cols if "sector" in c.lower()), None)
+
     print(f"mc={mc_col!r}  chg={chg_col!r}  sec={sec_col!r}", file=sys.stderr)
 
     if not mc_col:
-        print("ERROR: no market-cap column found", file=sys.stderr)
+        print("ERROR: no market-cap column found — check v= param", file=sys.stderr)
         json.dump([], open("/tmp/heatmap.json", "w"))
         sys.exit(0)
 
@@ -70,8 +85,10 @@ try:
         if mc <= 0:
             continue
         try:
-            chg = float((row.get(chg_col or "Change", "0") or "0")
-                        .replace("%", "").replace("+", "").strip())
+            chg = float(
+                (row.get(chg_col or "Change", "0") or "0")
+                .replace("%", "").replace("+", "").strip()
+            )
         except ValueError:
             chg = 0.0
         out.append({
@@ -83,8 +100,11 @@ try:
         })
 
     out.sort(key=lambda x: -x["mc"])
-    json.dump(out[:600], open("/tmp/heatmap.json", "w"))
-    print(f"Saved {len(out)} stocks to /tmp/heatmap.json", file=sys.stderr)
+    result = out[:600]
+    json.dump(result, open("/tmp/heatmap.json", "w"))
+    print(f"Saved {len(result)} stocks to /tmp/heatmap.json", file=sys.stderr)
+    if result:
+        print(f"Sample: {result[0]}", file=sys.stderr)
 
 except Exception as e:
     print(f"ERROR: {e}", file=sys.stderr)
