@@ -3186,7 +3186,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         + '</div>'
     )
     import json as _hjson
-    _hm_data = kwargs.get('heatmap_data') or []
+    _hm_data = kwargs.get('heatmap_data') or fetch_heatmap_data()
     _hm_json = _hjson.dumps(_hm_data)
     _hm_html = (
         '<div id="hm-wrap" style="position:relative;height:calc(100vh - 230px);min-height:500px">'
