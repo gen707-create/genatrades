@@ -89,6 +89,8 @@ try:
     mc_col111  = find_col(cols111, "market cap", "cap")
     chg_col111 = find_col(cols111, "change", "chg")
     sec_col111 = find_col(cols111, "sector")
+    ind_col111 = find_col(cols111, "industry")
+    pr_col111  = find_col(cols111, "price")
 
     base = {}
     for row in rows111:
@@ -102,7 +104,9 @@ try:
             "t": ticker,
             "n": (row.get("Company", "") or "").strip(),
             "s": (row.get(sec_col111 or "Sector", "Other") or "Other").strip(),
+            "ind": (row.get(ind_col111 or "Industry", "") or "").strip(),
             "mc": mc,
+            "pr": parse_pct(row.get(pr_col111 or "Price", "0")),
             "c": parse_pct(row.get(chg_col111 or "Change", "0")),
             "w": 0.0, "m": 0.0, "q": 0.0, "h": 0.0, "y": 0.0, "ytd": 0.0,
             "p15": 0.0, "p30": 0.0, "p1h": 0.0, "rv": 1.0, "it": 0.0,
@@ -144,7 +148,9 @@ try:
                         "t": ticker,
                         "n": (row.get("Company", "") or "").strip(),
                         "s": (row.get(sec_col161 or "Sector", "Other") or "Other").strip(),
+                        "ind": "",
                         "mc": mc,
+                        "pr": 0.0,
                         "c": parse_pct(row.get(chg_col161 or "Change", "0")),
                         "w": 0.0, "m": 0.0, "q": 0.0, "h": 0.0, "y": 0.0, "ytd": 0.0,
                         "p15": 0.0, "p30": 0.0, "p1h": 0.0, "rv": 1.0, "it": 0.0,
