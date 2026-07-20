@@ -80,8 +80,9 @@ try:
     rows111, cols111 = finviz_fetch("111")
     time.sleep(1.5)  # polite pause between requests
 
-    # Step 2: v=161 (Performance) -- weekly / monthly / quarterly ...
-    rows161, cols161 = finviz_fetch("161")
+    # Step 2: v=151 (Performance view) -- weekly / monthly / quarterly ...
+    # NOTE: v=151 = Performance, v=161 = Technical (RSI/SMA) -- do NOT confuse them
+    rows161, cols161 = finviz_fetch("151")
 
     # Build base dict from v=111
     mc_col111  = find_col(cols111, "market cap", "cap")
@@ -107,20 +108,21 @@ try:
 
     print(f"v=111 base: {len(base)} stocks with Market Cap", file=sys.stderr)
 
-    # Merge v=161 performance columns
+    # Merge v=151 performance columns
     if rows161:
-        # Flexible detection -- Finviz may use different naming conventions
-        week_col   = find_col(cols161, "perf week",  "1 week",  "week",  "wk")
-        month_col  = find_col(cols161, "perf month", "1 month", "month", "mo")
-        quart_col  = find_col(cols161, "perf quart", "3 month", "quart", "3m")
-        half_col   = find_col(cols161, "perf half",  "6 month", "half",  "6m")
-        year_col   = find_col(cols161, "perf year",  "52 week", "1 year","year","yr")
-        ytd_col    = find_col(cols161, "perf ytd",   "ytd")
+        # Finviz v=151 uses "Performance (Week)", "Performance (Month)" etc.
+        # Also try "Perf Week" / "perf week" for older API responses
+        week_col   = find_col(cols161, "performance (week)",  "perf week",  "week",  "wk")
+        month_col  = find_col(cols161, "performance (month)", "perf month", "month", "mo")
+        quart_col  = find_col(cols161, "performance (quarter)","perf quart","quart", "3 month")
+        half_col   = find_col(cols161, "performance (half)",  "perf half",  "half",  "6 month")
+        year_col   = find_col(cols161, "performance (year)",  "perf year",  "52-week","1 year","yr")
+        ytd_col    = find_col(cols161, "performance (ytd)",   "perf ytd",   "ytd")
         chg_col161 = find_col(cols161, "change", "chg")
         mc_col161  = find_col(cols161, "market cap", "cap")
 
         print(
-            f"v=161 perf cols -> week={week_col!r} month={month_col!r} "
+            f"v=151 perf cols -> week={week_col!r} month={month_col!r} "
             f"quart={quart_col!r} half={half_col!r} year={year_col!r} ytd={ytd_col!r}",
             file=sys.stderr,
         )
@@ -158,7 +160,7 @@ try:
                     entry["c"] = parse_pct(row.get(chg_col161, "0"))
                 merged += 1
 
-        print(f"v=161 merged performance into {merged} stocks", file=sys.stderr)
+        print(f"v=151 merged performance into {merged} stocks", file=sys.stderr)
 
     # Finalise and save
     result = sorted(base.values(), key=lambda x: -x["mc"])[:600]
