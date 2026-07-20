@@ -1,8 +1,9 @@
 """Pre-fetch Finviz heatmap data BEFORE scanners.
 Dual-fetch strategy:
   Step 1 - v=111 (Overview): Ticker, Company, Sector, Market Cap, Change (1D)
-  Step 2 - v=161 (Performance): weekly / monthly / quarterly / half / yearly / YTD
-  Merged on Ticker for a complete dataset with all period data.
+  Step 2 - v=141 (Performance): Perf Week/Month/Quart/Half/Year/YTD
+  Finviz view map: 111=Overview 121=Valuation 131=Ownership 141=Performance
+                   151=Financial 161=Technical
 """
 import os, sys, requests, csv, io, json, time
 
@@ -80,9 +81,9 @@ try:
     rows111, cols111 = finviz_fetch("111")
     time.sleep(1.5)  # polite pause between requests
 
-    # Step 2: v=151 (Performance view) -- weekly / monthly / quarterly ...
-    # NOTE: v=151 = Performance, v=161 = Technical (RSI/SMA) -- do NOT confuse them
-    rows161, cols161 = finviz_fetch("151")
+    # Step 2: v=141 (Performance view) -- Perf Week/Month/Quart/Half/Year/YTD
+    # NOTE: v=141=Performance  v=151=Financial  v=161=Technical -- do NOT confuse them
+    rows161, cols161 = finviz_fetch("141")
 
     # Build base dict from v=111
     mc_col111  = find_col(cols111, "market cap", "cap")
@@ -108,16 +109,16 @@ try:
 
     print(f"v=111 base: {len(base)} stocks with Market Cap", file=sys.stderr)
 
-    # Merge v=151 performance columns
+    # Merge v=141 performance columns
     if rows161:
-        # Finviz v=151 uses "Performance (Week)", "Performance (Month)" etc.
-        # Also try "Perf Week" / "perf week" for older API responses
-        week_col   = find_col(cols161, "performance (week)",  "perf week",  "week",  "wk")
-        month_col  = find_col(cols161, "performance (month)", "perf month", "month", "mo")
-        quart_col  = find_col(cols161, "performance (quarter)","perf quart","quart", "3 month")
-        half_col   = find_col(cols161, "performance (half)",  "perf half",  "half",  "6 month")
-        year_col   = find_col(cols161, "performance (year)",  "perf year",  "52-week","1 year","yr")
-        ytd_col    = find_col(cols161, "performance (ytd)",   "perf ytd",   "ytd")
+        # Finviz v=141 Performance view columns: "Perf Week","Perf Month","Perf Quart",
+        # "Perf Half","Perf Year","Perf YTD"  (confirmed from Elite export)
+        week_col   = find_col(cols161, "perf week",   "performance (week)",  "week")
+        month_col  = find_col(cols161, "perf month",  "performance (month)", "month")
+        quart_col  = find_col(cols161, "perf quart",  "performance (quarter)","quart")
+        half_col   = find_col(cols161, "perf half",   "performance (half)",  "half")
+        year_col   = find_col(cols161, "perf year",   "performance (year)",  "perf yr", "52-week")
+        ytd_col    = find_col(cols161, "perf ytd",    "performance (ytd)",   "ytd")
         chg_col161 = find_col(cols161, "change", "chg")
         mc_col161  = find_col(cols161, "market cap", "cap")
 

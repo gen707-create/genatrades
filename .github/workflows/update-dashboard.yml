@@ -7,6 +7,8 @@ on:
       - "tv_enrich.py"
       - "finviz_scan.py"
       - "track_new_tickers.py"
+      - ".github/scripts/prefetch_heatmap.py"
+      - ".github/workflows/update-dashboard.yml"
   schedule:
     - cron: "*/30 9-22 * * 1-5"
   workflow_dispatch:
