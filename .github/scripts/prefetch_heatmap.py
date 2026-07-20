@@ -105,6 +105,7 @@ try:
             "mc": mc,
             "c": parse_pct(row.get(chg_col111 or "Change", "0")),
             "w": 0.0, "m": 0.0, "q": 0.0, "h": 0.0, "y": 0.0, "ytd": 0.0,
+            "p15": 0.0, "p30": 0.0, "p1h": 0.0, "rv": 1.0, "it": 0.0,
         }
 
     print(f"v=111 base: {len(base)} stocks with Market Cap", file=sys.stderr)
@@ -146,6 +147,7 @@ try:
                         "mc": mc,
                         "c": parse_pct(row.get(chg_col161 or "Change", "0")),
                         "w": 0.0, "m": 0.0, "q": 0.0, "h": 0.0, "y": 0.0, "ytd": 0.0,
+                        "p15": 0.0, "p30": 0.0, "p1h": 0.0, "rv": 1.0, "it": 0.0,
                     }
 
             if ticker in base:
@@ -161,7 +163,69 @@ try:
                     entry["c"] = parse_pct(row.get(chg_col161, "0"))
                 merged += 1
 
-        print(f"v=151 merged performance into {merged} stocks", file=sys.stderr)
+        print(f"v=141 merged performance into {merged} stocks", file=sys.stderr)
+
+    # Step 3: v=151 -- intraday perf (15-min, 1-hour) + Relative Volume + Institutional Trans
+    time.sleep(1.5)
+    rows151, cols151 = finviz_fetch("151")
+    min30_col = None  # will try to find in v=151 or v=152
+    if rows151:
+        min15_col = find_col(cols151, "performance (15 min", "15 min", "15min")
+        min30_col = find_col(cols151, "performance (30 min", "30 min", "30min")
+        hour1_col = find_col(cols151, "performance (1 hour", "1 hour", "hour")
+        rv_col    = find_col(cols151, "relative volume", "rel vol", "relv")
+        it_col    = find_col(cols151, "institutional transactions", "insider transactions",
+                             "inst trans", "insider")
+        print(
+            f"v=151 intraday cols -> 15min={min15_col!r} 30min={min30_col!r} "
+            f"1hr={hour1_col!r} rv={rv_col!r} it={it_col!r}",
+            file=sys.stderr,
+        )
+        merged151 = 0
+        for row in rows151:
+            ticker = (row.get("Ticker", "") or "").strip()
+            if ticker not in base:
+                continue
+            entry = base[ticker]
+            if min15_col:
+                entry["p15"] = parse_pct(row.get(min15_col, "0"))
+            if min30_col:
+                entry["p30"] = parse_pct(row.get(min30_col, "0"))
+            if hour1_col:
+                entry["p1h"] = parse_pct(row.get(hour1_col, "0"))
+            if rv_col:
+                try:
+                    entry["rv"] = float(
+                        (row.get(rv_col, "1") or "1").replace(",", "").strip()
+                    )
+                except ValueError:
+                    entry["rv"] = 1.0
+            if it_col:
+                entry["it"] = parse_pct(row.get(it_col, "0"))
+            merged151 += 1
+        nonzero_15 = sum(1 for x in base.values() if x.get("p15", 0) != 0.0)
+        nonzero_1h = sum(1 for x in base.values() if x.get("p1h", 0) != 0.0)
+        print(
+            f"v=151 merged {merged151} stocks | non-zero 15m={nonzero_15} 1h={nonzero_1h}",
+            file=sys.stderr,
+        )
+
+    # Step 4: v=152 -- try to find 30-min performance if not found in v=151
+    if not min30_col:
+        time.sleep(1.5)
+        rows152, cols152 = finviz_fetch("152")
+        if rows152:
+            min30_col2 = find_col(cols152, "performance (30 min", "30 min", "30min")
+            print(f"v=152 30min col -> {min30_col2!r}", file=sys.stderr)
+            if min30_col2:
+                for row in rows152:
+                    ticker = (row.get("Ticker", "") or "").strip()
+                    if ticker in base:
+                        base[ticker]["p30"] = parse_pct(row.get(min30_col2, "0"))
+                nonzero_30 = sum(1 for x in base.values() if x.get("p30", 0) != 0.0)
+                print(f"v=152 30min merged | non-zero={nonzero_30}", file=sys.stderr)
+            else:
+                print(f"v=152 cols: {cols152}", file=sys.stderr)
 
     # Finalise and save
     result = sorted(base.values(), key=lambda x: -x["mc"])[:600]

@@ -3191,7 +3191,13 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
     _hm_period_btns = "".join(
         '<button onclick="hmSetPeriod(\'%s\')" id="hm-btn-%s" class="hm-pbtn%s">%s</button>' % (
             k, k, ' hm-pactive' if k == 'c' else '', lb)
-        for k, lb in [('c','1D'),('w','1W'),('m','1M'),('q','3M'),('h','6M'),('y','1Y'),('ytd','YTD')]
+        for k, lb in [
+            ('p15','15m'),('p30','30m'),('p1h','1H'),('c','1D'),('w','1W'),
+        ]
+    )
+    _hm_extra_btns = "".join(
+        '<button onclick="hmSetPeriod(\'%s\')" id="hm-btn-%s" class="hm-pbtn hm-pbtn-alt">%s</button>' % (k, k, lb)
+        for k, lb in [('m','1M'),('q','3M'),('h','6M'),('y','1Y'),('ytd','YTD'),('rv','RVol'),('it','Inst')]
     )
     _hm_html = (
         '<style>'
@@ -3199,12 +3205,17 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         'padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;transition:background .15s}'
         '.hm-pbtn:hover{background:#334155;color:#e2e8f0}'
         '.hm-pbtn.hm-pactive{background:#3b82f6;color:#fff;border-color:#2563eb}'
+        '.hm-pbtn-alt{color:#7dd3fc;border-color:#1e3a5f}'
+        '.hm-pbtn-alt.hm-pactive{background:#0369a1;border-color:#0284c7}'
         '</style>'
         # ── Toolbar ──────────────────────────────────────────────────────────
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">'
         '<span style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;'
-        'letter-spacing:.6px">Period</span>'
+        'letter-spacing:.6px">Perf</span>'
         '<div style="display:flex;gap:3px">' + _hm_period_btns + '</div>'
+        '<span style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;'
+        'letter-spacing:.6px;margin-left:6px">Extra</span>'
+        '<div style="display:flex;gap:3px">' + _hm_extra_btns + '</div>'
         '</div>'
         # ── Map wrap ─────────────────────────────────────────────────────────
         '<div id="hm-wrap" style="position:relative;height:calc(100vh - 270px);min-height:480px">'
@@ -4593,6 +4604,13 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'if(r>-0.7)return"#f87171";'
         'if(r>-1.3)return"#dc2626";'
         'return"#7f1d1d";}'
+        '\nfunction _hmColorRV(rv){'
+        'if(rv>=4)return"#1e3a8a";'
+        'if(rv>=2.5)return"#1d4ed8";'
+        'if(rv>=1.5)return"#3b82f6";'
+        'if(rv>=0.8)return"#475569";'
+        'if(rv>=0.4)return"#1e293b";'
+        'return"#0f172a";}'
         '\nfunction hmSetPeriod(f){'
         'HM_PERIOD=f;'
         'document.querySelectorAll(".hm-pbtn").forEach(function(b){b.classList.remove("hm-pactive");});'
@@ -4600,13 +4618,15 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'if(ab)ab.classList.add("hm-pactive");'
         'var svg=document.querySelector("#hm-svg-wrap svg");'
         'if(!svg||!window.d3)return;'
-        'var sc=(f==="c"||f==="w")?3:(f==="m"?6:15);'
+        'var sc=f==="p15"||f==="p30"||f==="p1h"||f==="c"?3:f==="w"?5:f==="m"?10:f==="q"||f==="h"?20:f==="it"?15:30;'
         'd3.select(svg).selectAll("g.leaf").each(function(d){'
         'var val=+(d.data[f]||0);'
-        'd3.select(this).select("rect").attr("fill",_hmColor(val,sc));'
+        'var col=f==="rv"?_hmColorRV(val):_hmColor(val,sc);'
+        'd3.select(this).select("rect").attr("fill",col);'
         'var txts=d3.select(this).selectAll("text");'
         'var sign=val>=0?"+":"";'
-        'txts.each(function(_,i){if(i===1)d3.select(this).text(sign+val.toFixed(2)+"%");});'
+        'var lbl=f==="rv"?val.toFixed(2)+"x":sign+val.toFixed(2)+"%";'
+        'txts.each(function(_,i){if(i===1)d3.select(this).text(lbl);});'
         '});}'
         '\nfunction _hmInit(){'
         'var wrap=document.getElementById("hm-svg-wrap");'
