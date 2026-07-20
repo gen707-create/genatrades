@@ -1,9 +1,10 @@
-"""Pre-fetch Finviz heatmap data BEFORE scanners to avoid rate limiting.
-Saves up to 600 stocks to /tmp/heatmap.json for tv_enrich.py to consume.
-v=161 = Performance view: Change (1D), Perf Week, Perf Month, Perf Quart, Perf Half, Perf Year, Perf YTD
-f=idx_sp500 = S&P 500 index stocks (~500 stocks)
+"""Pre-fetch Finviz heatmap data BEFORE scanners.
+Dual-fetch strategy:
+  Step 1 - v=111 (Overview): Ticker, Company, Sector, Market Cap, Change (1D)
+  Step 2 - v=161 (Performance): weekly / monthly / quarterly / half / yearly / YTD
+  Merged on Ticker for a complete dataset with all period data.
 """
-import os, sys, requests, csv, io, json
+import os, sys, requests, csv, io, json, time
 
 token = os.environ.get("FINVIZ_TOKEN", "")
 if not token:
@@ -19,110 +20,158 @@ session.headers["User-Agent"] = (
 
 
 def parse_pct(s):
-    """Parse '−2.21%' or '+0.14%' → float."""
+    """Parse '-2.21%' or '+0.14%' or '5.32' -> float."""
     try:
-        return float((s or "0").replace("%", "").replace("+", "").strip())
+        return float((s or "0").replace("%", "").replace("+", "").replace(",", "").strip())
     except ValueError:
         return 0.0
 
 
 def parse_mc(s):
-    """Parse '3.5T' / '450B' / '2500M' or raw number → float (USD)."""
+    """Parse '3.5T' / '450B' / '2500M' or raw number -> float (USD)."""
     s = (s or "").strip()
     for suf, mult in [("T", 1e12), ("B", 1e9), ("M", 1e6)]:
-        if s.endswith(suf):
+        if s.upper().endswith(suf):
             try:
                 return float(s[:-1]) * mult
             except ValueError:
                 return 0.0
     try:
-        return float(s)          # finviz v=161 returns raw millions
+        return float(s)  # raw millions from some Finviz views
     except ValueError:
         return 0.0
 
 
+def finviz_fetch(view, filters="idx_sp500"):
+    """Fetch CSV from Finviz Elite export. Returns (rows, cols) or ([], []) on error."""
+    params = {"v": str(view), "f": filters, "auth": token}
+    try:
+        resp = session.get(
+            "https://elite.finviz.com/export.ashx", params=params, timeout=30
+        )
+        print(f"v={view}: HTTP {resp.status_code}, {len(resp.text)} chars", file=sys.stderr)
+        if resp.status_code != 200:
+            print(f"v={view}: non-200 -- auth failed or rate limited", file=sys.stderr)
+            return [], []
+        text = resp.text.strip()
+        if not text or text.startswith("<"):
+            print(f"v={view}: got HTML instead of CSV", file=sys.stderr)
+            return [], []
+        rows = list(csv.DictReader(io.StringIO(text)))
+        cols = list(rows[0].keys()) if rows else []
+        print(f"v={view}: {len(rows)} rows | cols: {cols}", file=sys.stderr)
+        return rows, cols
+    except Exception as exc:
+        print(f"v={view}: ERROR {exc}", file=sys.stderr)
+        return [], []
+
+
+def find_col(cols, *patterns):
+    """Find first column whose lowercased name contains any of the given patterns."""
+    for pat in patterns:
+        c = next((x for x in cols if pat in x.lower()), None)
+        if c:
+            return c
+    return None
+
+
 try:
-    # v=161 = Performance view (1D + weekly/monthly/quarterly... changes)
-    # f=idx_sp500 = S&P 500 universe (~500 stocks)
-    params = {"v": "161", "f": "idx_sp500", "auth": token}
-    resp = session.get("https://elite.finviz.com/export.ashx", params=params, timeout=30)
-    print(f"HTTP {resp.status_code}, {len(resp.text)} chars", file=sys.stderr)
-    print(f"First 400 chars: {repr(resp.text[:400])}", file=sys.stderr)
+    # Step 1: v=111 (Overview) -- Market Cap + 1D Change + Sector
+    rows111, cols111 = finviz_fetch("111")
+    time.sleep(1.5)  # polite pause between requests
 
-    if resp.status_code != 200:
-        print("Non-200 — auth failed or rate limited", file=sys.stderr)
-        json.dump([], open("/tmp/heatmap.json", "w"))
-        sys.exit(0)
+    # Step 2: v=161 (Performance) -- weekly / monthly / quarterly ...
+    rows161, cols161 = finviz_fetch("161")
 
-    text = resp.text.strip()
-    if not text or text.startswith("<"):
-        print("Got HTML instead of CSV — auth token may be wrong", file=sys.stderr)
-        json.dump([], open("/tmp/heatmap.json", "w"))
-        sys.exit(0)
+    # Build base dict from v=111
+    mc_col111  = find_col(cols111, "market cap", "cap")
+    chg_col111 = find_col(cols111, "change", "chg")
+    sec_col111 = find_col(cols111, "sector")
 
-    rows = list(csv.DictReader(io.StringIO(text)))
-    if not rows:
-        print("Empty CSV", file=sys.stderr)
-        json.dump([], open("/tmp/heatmap.json", "w"))
-        sys.exit(0)
-
-    cols = list(rows[0].keys())
-    print(f"ALL cols ({len(cols)}): {cols}", file=sys.stderr)
-
-    # ── Detect columns ─────────────────────────────────────────────────────
-    mc_col    = next((c for c in cols if c.lower() == "market cap"), None) or \
-                next((c for c in cols if "cap" in c.lower()), None)
-
-    chg_col   = next((c for c in cols if c.lower() in ("change", "chg")), None)
-    week_col  = next((c for c in cols if "perf week"  in c.lower()), None)
-    month_col = next((c for c in cols if "perf month" in c.lower()), None)
-    quart_col = next((c for c in cols if "perf quart" in c.lower()), None)
-    half_col  = next((c for c in cols if "perf half"  in c.lower()), None)
-    year_col  = next((c for c in cols if "perf year"  in c.lower()), None)
-    ytd_col   = next((c for c in cols if "perf ytd"   in c.lower()), None)
-    sec_col   = next((c for c in cols if "sector"      in c.lower()), None)
-
-    print(f"mc={mc_col!r}  chg={chg_col!r}  sec={sec_col!r}", file=sys.stderr)
-    print(f"week={week_col!r}  month={month_col!r}  quart={quart_col!r}  "
-          f"half={half_col!r}  year={year_col!r}  ytd={ytd_col!r}", file=sys.stderr)
-
-    if not mc_col:
-        print("ERROR: no market-cap column found", file=sys.stderr)
-        json.dump([], open("/tmp/heatmap.json", "w"))
-        sys.exit(0)
-
-    # ── Build output ───────────────────────────────────────────────────────
-    out = []
-    for row in rows:
-        mc = parse_mc(row.get(mc_col, ""))
-        if mc <= 0:
-            continue
+    base = {}
+    for row in rows111:
         ticker = (row.get("Ticker", "") or "").strip()
         if not ticker:
             continue
-        out.append({
-            "t":   ticker,
-            "n":   (row.get("Company", "") or "").strip(),
-            "s":   (row.get(sec_col or "Sector", "Other") or "Other").strip(),
-            "mc":  mc,
-            "c":   parse_pct(row.get(chg_col   or "Change",     "0")),
-            "w":   parse_pct(row.get(week_col  or "",            "0")) if week_col  else 0.0,
-            "m":   parse_pct(row.get(month_col or "",            "0")) if month_col else 0.0,
-            "q":   parse_pct(row.get(quart_col or "",            "0")) if quart_col else 0.0,
-            "h":   parse_pct(row.get(half_col  or "",            "0")) if half_col  else 0.0,
-            "y":   parse_pct(row.get(year_col  or "",            "0")) if year_col  else 0.0,
-            "ytd": parse_pct(row.get(ytd_col   or "",            "0")) if ytd_col   else 0.0,
-        })
+        mc = parse_mc(row.get(mc_col111 or "", "") or "")
+        if mc <= 0:
+            continue
+        base[ticker] = {
+            "t": ticker,
+            "n": (row.get("Company", "") or "").strip(),
+            "s": (row.get(sec_col111 or "Sector", "Other") or "Other").strip(),
+            "mc": mc,
+            "c": parse_pct(row.get(chg_col111 or "Change", "0")),
+            "w": 0.0, "m": 0.0, "q": 0.0, "h": 0.0, "y": 0.0, "ytd": 0.0,
+        }
 
-    out.sort(key=lambda x: -x["mc"])
-    result = out[:600]
+    print(f"v=111 base: {len(base)} stocks with Market Cap", file=sys.stderr)
+
+    # Merge v=161 performance columns
+    if rows161:
+        # Flexible detection -- Finviz may use different naming conventions
+        week_col   = find_col(cols161, "perf week",  "1 week",  "week",  "wk")
+        month_col  = find_col(cols161, "perf month", "1 month", "month", "mo")
+        quart_col  = find_col(cols161, "perf quart", "3 month", "quart", "3m")
+        half_col   = find_col(cols161, "perf half",  "6 month", "half",  "6m")
+        year_col   = find_col(cols161, "perf year",  "52 week", "1 year","year","yr")
+        ytd_col    = find_col(cols161, "perf ytd",   "ytd")
+        chg_col161 = find_col(cols161, "change", "chg")
+        mc_col161  = find_col(cols161, "market cap", "cap")
+
+        print(
+            f"v=161 perf cols -> week={week_col!r} month={month_col!r} "
+            f"quart={quart_col!r} half={half_col!r} year={year_col!r} ytd={ytd_col!r}",
+            file=sys.stderr,
+        )
+
+        merged = 0
+        for row in rows161:
+            ticker = (row.get("Ticker", "") or "").strip()
+            if not ticker:
+                continue
+
+            # If ticker not in base (missing from v=111), try to add via v=161
+            if ticker not in base and mc_col161:
+                mc = parse_mc(row.get(mc_col161, "") or "")
+                if mc > 0:
+                    sec_col161 = find_col(cols161, "sector")
+                    base[ticker] = {
+                        "t": ticker,
+                        "n": (row.get("Company", "") or "").strip(),
+                        "s": (row.get(sec_col161 or "Sector", "Other") or "Other").strip(),
+                        "mc": mc,
+                        "c": parse_pct(row.get(chg_col161 or "Change", "0")),
+                        "w": 0.0, "m": 0.0, "q": 0.0, "h": 0.0, "y": 0.0, "ytd": 0.0,
+                    }
+
+            if ticker in base:
+                entry = base[ticker]
+                if week_col:   entry["w"]   = parse_pct(row.get(week_col,  "0"))
+                if month_col:  entry["m"]   = parse_pct(row.get(month_col, "0"))
+                if quart_col:  entry["q"]   = parse_pct(row.get(quart_col, "0"))
+                if half_col:   entry["h"]   = parse_pct(row.get(half_col,  "0"))
+                if year_col:   entry["y"]   = parse_pct(row.get(year_col,  "0"))
+                if ytd_col:    entry["ytd"] = parse_pct(row.get(ytd_col,   "0"))
+                # Refresh 1D change from v=161 if v=111 had 0
+                if chg_col161 and entry["c"] == 0.0:
+                    entry["c"] = parse_pct(row.get(chg_col161, "0"))
+                merged += 1
+
+        print(f"v=161 merged performance into {merged} stocks", file=sys.stderr)
+
+    # Finalise and save
+    result = sorted(base.values(), key=lambda x: -x["mc"])[:600]
     json.dump(result, open("/tmp/heatmap.json", "w"))
     print(f"Saved {len(result)} stocks to /tmp/heatmap.json", file=sys.stderr)
     if result:
         print(f"Sample[0]: {result[0]}", file=sys.stderr)
+        nonzero_w = sum(1 for x in result if x["w"] != 0.0)
+        nonzero_m = sum(1 for x in result if x["m"] != 0.0)
+        print(f"Stocks with non-zero 1W: {nonzero_w}, 1M: {nonzero_m} (out of {len(result)})", file=sys.stderr)
 
-except Exception as e:
-    print(f"ERROR: {e}", file=sys.stderr)
+except Exception as exc:
+    print(f"ERROR: {exc}", file=sys.stderr)
     import traceback
     traceback.print_exc(file=sys.stderr)
     json.dump([], open("/tmp/heatmap.json", "w"))
