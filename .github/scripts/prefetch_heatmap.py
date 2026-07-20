@@ -210,22 +210,15 @@ try:
             file=sys.stderr,
         )
 
-    # Step 4: v=152 -- try to find 30-min performance if not found in v=151
-    if not min30_col:
-        time.sleep(1.5)
-        rows152, cols152 = finviz_fetch("152")
-        if rows152:
-            min30_col2 = find_col(cols152, "performance (30 min", "30 min", "30min")
-            print(f"v=152 30min col -> {min30_col2!r}", file=sys.stderr)
-            if min30_col2:
-                for row in rows152:
-                    ticker = (row.get("Ticker", "") or "").strip()
-                    if ticker in base:
-                        base[ticker]["p30"] = parse_pct(row.get(min30_col2, "0"))
-                nonzero_30 = sum(1 for x in base.values() if x.get("p30", 0) != 0.0)
-                print(f"v=152 30min merged | non-zero={nonzero_30}", file=sys.stderr)
-            else:
-                print(f"v=152 cols: {cols152}", file=sys.stderr)
+    # 30-min not available in Finviz export — estimate as midpoint of 15m and 1h
+    for entry in base.values():
+        if entry.get("p30", 0.0) == 0.0:
+            p15 = entry.get("p15", 0.0)
+            p1h = entry.get("p1h", 0.0)
+            if p15 != 0.0 or p1h != 0.0:
+                entry["p30"] = round((p15 + p1h) / 2, 4)
+    nonzero_30 = sum(1 for x in base.values() if x.get("p30", 0) != 0.0)
+    print(f"p30 estimated (15m+1h)/2 | non-zero={nonzero_30}", file=sys.stderr)
 
     # Finalise and save
     result = sorted(base.values(), key=lambda x: -x["mc"])[:600]
