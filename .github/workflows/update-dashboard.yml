@@ -10,7 +10,7 @@ on:
       - ".github/scripts/prefetch_heatmap.py"
       - ".github/workflows/update-dashboard.yml"
   schedule:
-    - cron: "*/30 9-22 * * 1-5"
+    - cron: "*/10 9-22 * * 1-5"
   workflow_dispatch:
 
 permissions:
