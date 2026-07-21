@@ -3218,8 +3218,9 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         '<div style="display:flex;gap:3px">' + _hm_extra_btns + '</div>'
         '</div>'
         # ── Map wrap ─────────────────────────────────────────────────────────
-        '<div id="hm-wrap" style="position:relative;height:calc(100vh - 270px);min-height:480px">'
-        # Colour scale bar — bottom-right, interactive (click segment to filter tiles)
+        '<div id="hm-wrap" style="position:relative;height:calc(100vh - 270px);min-height:480px;overflow:auto">'
+        '<div id="hm-inner" style="position:relative;min-width:2400px;height:max(100%,1400px)">'
+        # Colour scale bar — bottom-right inside hm-inner so it scrolls with the map
         '<div id="hm-scale-bar" style="position:absolute;bottom:10px;right:14px;z-index:100;'
         'background:rgba(9,14,27,.92);border:1px solid #1e293b;border-radius:7px;padding:7px 10px 5px;">'
         '<div style="font-size:9px;color:#64748b;font-weight:700;letter-spacing:.5px;'
@@ -3264,6 +3265,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         '"isZoomEnabled":true,"hasSymbolTooltip":true,"isMonoSize":false,'
         '"width":"100%%%%","height":"100%%%%"}'
         '</script></div></div>'
+        '</div>'
         '<div id="hm-tooltip" style="display:none;position:fixed;background:#0f172a;'
         'border:1px solid #334155;border-radius:6px;padding:8px 12px;font-size:12px;'
         'color:#e2e8f0;pointer-events:none;z-index:9999"></div>'
@@ -4700,7 +4702,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'var wrap=document.getElementById("hm-svg-wrap");'
         'if(!wrap||!window.d3||!window.HM_DATA)return;'
         'if(wrap.querySelector("svg"))return;'
-        'var W=wrap.clientWidth||900,H=wrap.clientHeight||520;'
+        'var W=wrap.clientWidth||2400,H=wrap.clientHeight||1400;'
         'var period=window.HM_PERIOD||"c";'
         # 3-level hierarchy: root → sector → industry → stock
         'var smap={};'
