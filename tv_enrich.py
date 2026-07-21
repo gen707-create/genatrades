@@ -4248,6 +4248,7 @@ function renderWatchlist(){
   var rows=wl.map(function(item){
     var st=alertStatus(item),bar=distBar(item);
     var _cR=document.querySelector('[data-ticker="'+item.ticker+'"]');
+    var _hmE=window.HM_DATA?HM_DATA.find(function(x){return x.t===item.ticker;}):null;
     var _fpc=function(v){if(v===null||v===undefined||v==='')return '<td style="padding:5px 8px;text-align:right;color:#475569;font-size:11px">\u2014</td>';var n=parseFloat(v);var c=n>=0?'#10b981':'#ef4444';return '<td style="padding:5px 8px;text-align:right;font-size:12px;font-weight:600;color:'+c+'">'+(n>=0?'\u25b2':'\u25bc')+Math.abs(n).toFixed(1)+'%</td>';};
     var _sa='';
     if(item.price_at_add&&item.price_at_add>0&&item.price){_sa=((parseFloat(item.price)-item.price_at_add)/item.price_at_add*100).toFixed(1);}
@@ -4256,7 +4257,7 @@ function renderWatchlist(){
       +'<td style="padding:8px 12px;color:#94a3b8;font-size:11px">'+(item.sector||'')+'</td>'
       +'<td style="padding:8px 10px"><span style="background:#1e3a5f;color:#60a5fa;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;text-transform:uppercase">'+(item.strategy||'--')+'</span></td>'
       +'<td style="padding:8px 12px;color:#e2e8f0">$'+(item.price||'--')+'</td>'
-      +_fpc(_cR?_cR.getAttribute('data-chg'):'')+_fpc(_cR?_cR.getAttribute('data-perf1w'):'')+_fpc(_cR?_cR.getAttribute('data-perf1m'):'')+_fpc(_sa)
+      +_fpc(_cR?_cR.getAttribute('data-chg'):(_hmE?String(_hmE.c):''))+_fpc(_cR?_cR.getAttribute('data-perf1w'):(_hmE?String(_hmE.w):''))+_fpc(_cR?_cR.getAttribute('data-perf1m'):(_hmE?String(_hmE.m):''))+_fpc(_sa)
       +'<td style="padding:8px 12px;min-width:180px">'+bar+'</td>'
       +'<td style="padding:8px 12px;font-size:12px;font-weight:600;color:'+st.color+'">'+st.label+'</td>'
       +'<td style="padding:8px 12px;color:#64748b;font-size:11px">'+(item.added||'')+'</td>'
