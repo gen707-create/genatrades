@@ -4234,16 +4234,23 @@ function removeWatch(btn){
 function renderWatchlist(){
   var wl=getWL(),panel=document.getElementById('watchlist-panel');
   if(!panel)return;
+  var _needSave=false;
   wl=wl.map(function(item){
+    if((!item.price_at_add||item.price_at_add<=0)&&item.price){
+      item.price_at_add=parseFloat(item.price)||0;_needSave=true;}
     var row=document.querySelector('[data-ticker="'+item.ticker+'"]');
     if(row){
       var lp=parseFloat(row.getAttribute('data-price')); if(lp) item.price=lp;
       var le=parseFloat(row.getAttribute('data-entry')); if(le) item.entry=le;
       var ls=parseFloat(row.getAttribute('data-stop'));  if(ls) item.stop=ls;
       var lt=parseFloat(row.getAttribute('data-t1'));    if(lt) item.t1=lt;
+    } else if(window.HM_DATA){
+      var _hm=HM_DATA.find(function(x){return x.t===item.ticker;});
+      if(_hm&&_hm.pr>0) item.price=_hm.pr;
     }
     return item;
   });
+  if(_needSave)saveWL(wl);
   if(!wl.length){panel.innerHTML='';return;}
   var rows=wl.map(function(item){
     var st=alertStatus(item),bar=distBar(item);
