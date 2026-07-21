@@ -43,7 +43,7 @@ def parse_mc(s):
         return 0.0
 
 
-def finviz_fetch(view, filters="idx_sp500"):
+def finviz_fetch(view, filters="idx_sp1500"):
     """Fetch CSV from Finviz Elite export. Returns (rows, cols) or ([], []) on error."""
     params = {"v": str(view), "f": filters, "auth": token}
     try:
@@ -227,7 +227,7 @@ try:
     print(f"p30 estimated (15m+1h)/2 | non-zero={nonzero_30}", file=sys.stderr)
 
     # Finalise and save
-    result = sorted(base.values(), key=lambda x: -x["mc"])[:600]
+    result = sorted(base.values(), key=lambda x: -x["mc"])[:1500]
     json.dump(result, open("/tmp/heatmap.json", "w"))
     print(f"Saved {len(result)} stocks to /tmp/heatmap.json", file=sys.stderr)
     if result:
