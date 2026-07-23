@@ -4599,7 +4599,17 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
     _post_page_html = _prepost_page("post")
 
     # ── Market Movers page (client-side, from HM_DATA) ───────────────────────
+    # Build earnings-today set from yahoo data (scanner tickers only)
+    _today_fmt = __import__('datetime').datetime.now().strftime("%b %d")
+    _earn_today_d = {
+        sym: 1 for sym, y in (yahoo or {}).items()
+        if y.get("days_to_earn", 999) in (0, 1)
+        or (y.get("earnings_date") or "") == _today_fmt
+    }
+    _earn_json = json.dumps(_earn_today_d)
+
     _movers_page_html = (
+        '<script>var EARN_TICKERS=' + _earn_json + ';</script>'
         '<div class="swt-page" id="pg-movers" style="display:none;padding:20px 24px">'
         # Header
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">'
@@ -4663,22 +4673,32 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         '+\'<th style="text-align:right;padding:5px 8px;color:#475569;font-weight:600">Price</th>\''
         '+\'<th style="text-align:right;padding:5px 8px;color:#475569;font-weight:600">Chg%</th>\''
         '+\'<th style="text-align:right;padding:5px 8px;color:#475569;font-weight:600">MCap</th>\''
+        '+\'<th style="text-align:right;padding:5px 8px;color:#475569;font-weight:600">RVol</th>\''
         '+\'</tr>\';'
         'rows.forEach(function(x,i){'
         'var chg=x[f]||0;'
         'var col=chg>=0?"#4ade80":"#f87171";'
         'var pr=x.pr>0?"$"+x.pr.toFixed(2):"—";'
-        'var mc=x.mc>=1e12?(x.mc/1e12).toFixed(1)+"T":x.mc>=1e9?(x.mc/1e9).toFixed(1)+"B":x.mc>=1e6?(x.mc/1e6).toFixed(0)+"M":"—";'
+        # MCap: Finviz exports can return raw millions (e.g. 131240 for $131B)
+        # Detect: SP1500 stocks are always >$300M; raw-USD values for these are >3e8 >> 1e7
+        # Raw-millions values are 300..3000000 (all <1e7). Multiply by 1e6 to get USD.
+        'var _mc=x.mc||0;if(_mc>0&&_mc<1e7)_mc=_mc*1e6;'
+        'var mc=_mc>=1e12?(_mc/1e12).toFixed(1)+"T":_mc>=1e9?(_mc/1e9).toFixed(1)+"B":_mc>=1e6?(_mc/1e6).toFixed(0)+"M":"—";'
+        'var rv=x.rv||1;'
+        'var rvStr=rv>=2?"<span style=\'color:#f59e0b;font-weight:700\'>"+rv.toFixed(1)+"x</span>":rv.toFixed(1)+"x";'
         'var nm=(x.n||"").length>22?(x.n||"").slice(0,22)+"…":(x.n||"");'
         'var bg=i%2===0?"transparent":"rgba(255,255,255,.02)";'
+        # Earnings badge: 📅 if in EARN_TICKERS (scanner), ⚡ if high rvol
+        'var eBadge=window.EARN_TICKERS&&EARN_TICKERS[x.t]?"<span style=\'font-size:11px\' title=\'Earnings today\'>&#128197;</span> ":"";'
         'h+=\'<tr style="border-bottom:1px solid rgba(30,41,59,.5);background:\'+bg+\'">\''
-        '+\'<td style="padding:6px 8px;font-weight:700;color:#7dd3fc">\'+x.t+\'</td>\''
+        '+\'<td style="padding:6px 8px;font-weight:700;color:#7dd3fc">\'+eBadge+x.t+\'</td>\''
         '+\'<td style="padding:6px 8px;color:#94a3b8;font-size:11px" title="\'+( x.n||"")+\'">\'+nm+\'</td>\''
         '+\'<td style="padding:6px 8px;color:#64748b;font-size:11px">\'+( x.s||"")+\'</td>\''
         '+\'<td style="padding:6px 8px;text-align:right;color:#e2e8f0">\'+pr+\'</td>\''
         '+\'<td style="padding:6px 8px;text-align:right;font-weight:700;color:\'+col+\'">\''
         '+(chg>=0?"+":"")+chg.toFixed(2)+"%" + "</td>"'
         '+\'<td style="padding:6px 8px;text-align:right;color:#64748b;font-size:11px">\'+mc+\'</td>\''
+        '+\'<td style="padding:6px 8px;text-align:right;font-size:11px">\'+rvStr+\'</td>\''
         '+\'</tr>\';'
         '});'
         't.innerHTML=h;'
