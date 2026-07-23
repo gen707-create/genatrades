@@ -4598,6 +4598,104 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
     _pm_page_html   = _prepost_page("pre")
     _post_page_html = _prepost_page("post")
 
+    # ── Market Movers page (client-side, from HM_DATA) ───────────────────────
+    _movers_page_html = (
+        '<div class="swt-page" id="pg-movers" style="display:none;padding:20px 24px">'
+        # Header
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">'
+        '<div style="font-size:18px;font-weight:700;color:#e2e8f0">&#128200;&nbsp;Market Movers</div>'
+        '<div style="font-size:11px;color:#475569">SP1500 · based on HM_DATA</div>'
+        '</div>'
+        # Period filter buttons
+        '<div id="mm-period-bar" style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap">'
+        + ''.join(
+            '<button id="mm-btn-{k}" onclick="mmShow(\'{k}\')" '
+            'style="padding:5px 14px;border-radius:20px;border:1px solid #1e293b;'
+            'background:{bg};color:{col};font-size:12px;cursor:pointer;font-weight:600">{lbl}</button>'.format(
+                k=k, lbl=lbl,
+                bg='#1e40af' if k == 'c' else '#0f172a',
+                col='#fff' if k == 'c' else '#94a3b8'
+            )
+            for k, lbl in [('p15','15m'),('p1h','1H'),('c','1D'),('w','Week'),('m','Month'),('q','3M'),('h','6M')]
+        )
+        + '</div>'
+        # Two-column layout
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'
+        # Gainers
+        '<div>'
+        '<div style="font-size:13px;font-weight:700;color:#4ade80;margin-bottom:10px">'
+        '&#9650; Top Gainers</div>'
+        '<table id="mm-gainers" style="width:100%;border-collapse:collapse;font-size:12px"></table>'
+        '</div>'
+        # Losers
+        '<div>'
+        '<div style="font-size:13px;font-weight:700;color:#f87171;margin-bottom:10px">'
+        '&#9660; Top Losers</div>'
+        '<table id="mm-losers" style="width:100%;border-collapse:collapse;font-size:12px"></table>'
+        '</div>'
+        '</div>'
+        # JS
+        '<script>'
+        'var MM_FIELD="c";'
+        'function mmShow(f){'
+        'MM_FIELD=f;'
+        # update button styles
+        'document.querySelectorAll("#mm-period-bar button").forEach(function(b){'
+        'var active=b.id==="mm-btn-"+f;'
+        'b.style.background=active?"#1e40af":"#0f172a";'
+        'b.style.color=active?"#fff":"#94a3b8";'
+        'b.style.borderColor=active?"#3b82f6":"#1e293b";'
+        '});'
+        'if(!window.HM_DATA||!HM_DATA.length){return;}'
+        'var data=HM_DATA.filter(function(x){return typeof x[f]==="number"&&x[f]!==0;});'
+        'data.sort(function(a,b){return b[f]-a[f];});'
+        'var gainers=data.slice(0,15);'
+        'var losers=data.slice(-15).reverse();'
+        '_mmRender("mm-gainers",gainers,f);'
+        '_mmRender("mm-losers",losers,f);'
+        '}'
+        'function _mmRender(id,rows,f){'
+        'var t=document.getElementById(id);if(!t)return;'
+        'var h=\'<tr style="border-bottom:1px solid #1e293b">\''
+        '+\'<th style="text-align:left;padding:5px 8px;color:#475569;font-weight:600">Ticker</th>\''
+        '+\'<th style="text-align:left;padding:5px 8px;color:#475569;font-weight:600">Name</th>\''
+        '+\'<th style="text-align:left;padding:5px 8px;color:#475569;font-weight:600">Sector</th>\''
+        '+\'<th style="text-align:right;padding:5px 8px;color:#475569;font-weight:600">Price</th>\''
+        '+\'<th style="text-align:right;padding:5px 8px;color:#475569;font-weight:600">Chg%</th>\''
+        '+\'<th style="text-align:right;padding:5px 8px;color:#475569;font-weight:600">MCap</th>\''
+        '+\'</tr>\';'
+        'rows.forEach(function(x,i){'
+        'var chg=x[f]||0;'
+        'var col=chg>=0?"#4ade80":"#f87171";'
+        'var pr=x.pr>0?"$"+x.pr.toFixed(2):"—";'
+        'var mc=x.mc>=1e12?(x.mc/1e12).toFixed(1)+"T":x.mc>=1e9?(x.mc/1e9).toFixed(1)+"B":x.mc>=1e6?(x.mc/1e6).toFixed(0)+"M":"—";'
+        'var nm=(x.n||"").length>22?(x.n||"").slice(0,22)+"…":(x.n||"");'
+        'var bg=i%2===0?"transparent":"rgba(255,255,255,.02)";'
+        'h+=\'<tr style="border-bottom:1px solid rgba(30,41,59,.5);background:\'+bg+\'">\''
+        '+\'<td style="padding:6px 8px;font-weight:700;color:#7dd3fc">\'+x.t+\'</td>\''
+        '+\'<td style="padding:6px 8px;color:#94a3b8;font-size:11px" title="\'+( x.n||"")+\'">\'+nm+\'</td>\''
+        '+\'<td style="padding:6px 8px;color:#64748b;font-size:11px">\'+( x.s||"")+\'</td>\''
+        '+\'<td style="padding:6px 8px;text-align:right;color:#e2e8f0">\'+pr+\'</td>\''
+        '+\'<td style="padding:6px 8px;text-align:right;font-weight:700;color:\'+col+\'">\''
+        '+(chg>=0?"+":"")+chg.toFixed(2)+"%" + "</td>"'
+        '+\'<td style="padding:6px 8px;text-align:right;color:#64748b;font-size:11px">\'+mc+\'</td>\''
+        '+\'</tr>\';'
+        '});'
+        't.innerHTML=h;'
+        '}'
+        # Auto-run when page becomes visible
+        'var _mmObs=new MutationObserver(function(ms){'
+        'ms.forEach(function(m){'
+        'if(m.type==="attributes"&&m.attributeName==="style"){'
+        'var pg=document.getElementById("pg-movers");'
+        'if(pg&&pg.style.display!=="none")mmShow(MM_FIELD);'
+        '}});});'
+        'var _mmPg=document.getElementById("pg-movers");'
+        'if(_mmPg)_mmObs.observe(_mmPg,{attributes:true});'
+        '</script>'
+        '</div>'
+    )
+
     # ── Page-switching JS ───────────────────────────────────────────────────
     _page_js = (
         'function showPage(pid,el){'
@@ -4956,6 +5054,10 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         ' onclick="showPage(\'postmarket\',this);return false">'
         '<span>&#9790;&#65039;</span><span>Post-Market</span>'
         '</a>\n'
+        '  <a class="nav-item" id="nav-movers" href="#"'
+        ' onclick="showPage(\'movers\',this);return false">'
+        '<span>&#128200;</span><span>Market Movers</span>'
+        '</a>\n'
         '  <div style="margin-top:auto;padding:10px 16px;border-top:1px solid #1e293b">\n'
         '<button onclick="openGistSettings()" style="width:100%;background:#1e293b;'
         'border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#94a3b8;'
@@ -5049,6 +5151,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
 
         + _pm_page_html
         + _post_page_html
+        + _movers_page_html
 
         + '</div>\n'  # end #main-content
         '<div id="gist-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);'
