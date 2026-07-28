@@ -1480,7 +1480,13 @@ def fetch_yahoo_data(tickers):
             # ── Pre/post market ─────────────────────────────────────────
             def pct(new, base):
                 try:
-                    return round((new - base) / base * 100, 2) if new and base else None
+                    import math as _math
+                    if new is None or base is None:
+                        return None
+                    new = float(new); base = float(base)
+                    if _math.isnan(new) or _math.isnan(base) or base == 0:
+                        return None
+                    return round((new - base) / base * 100, 2)
                 except Exception:
                     return None
 
@@ -4486,6 +4492,12 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
             y   = ydata.get(sym, {})
             chg = y.get(chg_key); px = y.get(price_key)
             if chg is None or px is None:
+                continue
+            try:
+                import math as _math2
+                if _math2.isnan(float(chg)) or _math2.isnan(float(px)):
+                    continue
+            except Exception:
                 continue
             if abs(chg) < 1.0:   # skip tickers with < 1% pre/post-market move
                 continue
