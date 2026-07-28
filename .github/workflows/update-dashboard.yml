@@ -16,6 +16,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: dashboard-build
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -86,5 +90,8 @@ jobs:
           else
             git commit -m "Dashboard update $(date -u '+%Y-%m-%d %H:%M UTC')"
           fi
-          git pull --rebase origin main || true
-          git push origin main
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push origin main && break
+            echo "Push attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
