@@ -41,6 +41,7 @@ jobs:
           pip install ib_insync || echo "ib_insync optional"
 
       - name: Run scanners and build dashboard
+        timeout-minutes: 10
         env:
           FINVIZ_TOKEN: ${{ secrets.FINVIZ_TOKEN }}
         run: |

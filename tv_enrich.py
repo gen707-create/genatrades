@@ -1395,8 +1395,10 @@ def _try_ibkr_prepost(tickers, host="127.0.0.1", ports=(7497, 7496, 4002, 4001))
 def fetch_yahoo_data(tickers):
     """Fetch pre/post-market %, earnings, RS Line (3M vs SPY), analyst ratings, news."""
     import yfinance as yf
-    import logging, warnings
+    import logging, warnings, socket
     from datetime import datetime as _dt
+    # Hard timeout on all network sockets — prevents yfinance from hanging
+    socket.setdefaulttimeout(15)
     # Suppress yfinance / urllib3 noise
     logging.getLogger("yfinance").setLevel(logging.CRITICAL)
     logging.getLogger("urllib3").setLevel(logging.CRITICAL)
@@ -1506,19 +1508,20 @@ def fetch_yahoo_data(tickers):
                 pre_price  = getattr(info, "pre_market_price",  None)
                 post_price = getattr(info, "post_market_price", None)
 
-            # Fallback: t.info dict (camelCase keys)
+            # Fallback: t.info dict (camelCase keys) — fetch once and cache
+            _full_info = {}
             if pre_price is None or post_price is None:
                 try:
-                    _full = t.info or {}
+                    _full_info = t.info or {}
                     if pre_price is None:
-                        pre_price = (_full.get("preMarketPrice")
-                                     or _full.get("pre_market_price"))
+                        pre_price = (_full_info.get("preMarketPrice")
+                                     or _full_info.get("pre_market_price"))
                     if post_price is None:
-                        post_price = (_full.get("postMarketPrice")
-                                      or _full.get("post_market_price"))
+                        post_price = (_full_info.get("postMarketPrice")
+                                      or _full_info.get("post_market_price"))
                     if reg_close is None:
-                        reg_close = (_full.get("regularMarketPreviousClose")
-                                     or _full.get("previousClose"))
+                        reg_close = (_full_info.get("regularMarketPreviousClose")
+                                     or _full_info.get("previousClose"))
                 except Exception:
                     pass
 
@@ -1616,13 +1619,14 @@ def fetch_yahoo_data(tickers):
             except Exception:
                 pass
 
-            # ── Analyst ratings ──────────────────────────────────────────────
+            # ── Analyst ratings (reuse cached _full_info — no extra API call) ──
             analyst_target = analyst_rec = analyst_n = None
             try:
-                full_info   = t.info
-                analyst_target = full_info.get("targetMeanPrice")
-                analyst_rec    = (full_info.get("recommendationKey") or "").lower()
-                analyst_n      = full_info.get("numberOfAnalystOpinions")
+                if not _full_info:
+                    _full_info = t.info or {}
+                analyst_target = _full_info.get("targetMeanPrice")
+                analyst_rec    = (_full_info.get("recommendationKey") or "").lower()
+                analyst_n      = _full_info.get("numberOfAnalystOpinions")
             except Exception:
                 pass
 
