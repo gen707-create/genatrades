@@ -3326,6 +3326,8 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         "canslim":        "O'Neil CANSLIM",
         "reversion":      "Mean Reversion",
         "base_breakout":  "Base Breakout",
+        "day_trading":    "Day Trading",
+        "swing_gap":      "Swing Gap",
     }
     for r in results:
         ticker = r["ticker"]
@@ -4402,7 +4404,8 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
             _s = _r.get('strategy', strategy)
             _sc[_s] = _sc.get(_s, 0) + 1
         _tl = [('minervini','&#9889; Minervini'),('canslim','&#128200; CANSLIM'),
-               ('reversion','&#8635; Reversion'),('base_breakout','&#128269; Base Break')]
+               ('reversion','&#8635; Reversion'),('base_breakout','&#128269; Base Break'),
+               ('day_trading','&#9650; Day Trade'),('swing_gap','&#128640; Swing Gap')]
         _tabs_html = '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
         _tabs_html += ('<button class="tab-btn act" data-s="all"'
                        ' onclick="filterStrategy(&quot;all&quot;)">All (%d)</button>' % len(results))

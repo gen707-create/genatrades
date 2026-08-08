@@ -92,6 +92,31 @@ FILTERS = {
         "sh_avgvol_o200,"      # Avg vol > 200K
         "sh_price_o10"         # Price > $10
     ),
+
+    # ── Day Trading — "Trend Join Long" ──────────────────────────────────────
+    # Premarket criteria: gap > 3%, price > $3, mcap > $1B, RVOL > 1.5,
+    # price breaking above yesterday's high.
+    # During RTH, day% approximates the gap; RVOL is regular session.
+    # Python post-filter enforces the $1B mcap floor.
+    "day_trading": (
+        "ta_perf_d_o3,"        # Day change > 3% (gap > 3% proxy)
+        "sh_relvol_o1p5,"      # Relative volume > 1.5x
+        "sh_price_o3,"         # Price > $3
+        "cap_smallover,"       # Market cap > $300M (post-filtered to $1B in Python)
+        "sh_avgvol_o300"       # Avg volume > 300K — intraday liquidity floor
+    ),
+
+    # ── Swing Gap ────────────────────────────────────────────────────────────
+    # Premarket criteria: gap >= 8%, price > $3, open > yesterday's high,
+    # open > 200 SMA, mcap >= $800M, real catalyst (manual check).
+    # Python post-filter enforces the $800M mcap floor.
+    # Catalyst verification is manual — dashboard shows starters only.
+    "swing_gap": (
+        "ta_perf_d_o8,"        # Day change >= 8% (gap >= 8% proxy)
+        "sh_price_o3,"         # Price > $3
+        "ta_sma200_pa,"        # Price > 200-day SMA
+        "cap_smallover"        # Market cap > $300M (post-filtered to $800M in Python)
+    ),
 }
 
 BASE_URL = "https://elite.finviz.com/export.ashx"
@@ -206,6 +231,39 @@ def format_output(raw: list, strategy: str) -> dict:
     }
 
 
+def _parse_mcap(s: str) -> float:
+    """Parse Finviz market cap string like '$1.23B', '456.78M' to float in USD."""
+    if not s or s in ("-", "N/A", ""):
+        return 0.0
+    s = s.replace("$", "").replace(",", "").strip()
+    try:
+        if s.endswith("T"):
+            return float(s[:-1]) * 1e12
+        elif s.endswith("B"):
+            return float(s[:-1]) * 1e9
+        elif s.endswith("M"):
+            return float(s[:-1]) * 1e6
+        elif s.endswith("K"):
+            return float(s[:-1]) * 1e3
+        return float(s)
+    except ValueError:
+        return 0.0
+
+
+def apply_day_trading_postfilter(rows: list, min_mcap: float = 1e9) -> list:
+    """Keep only stocks with market cap > $1B (day trading liquidity requirement)."""
+    kept = [r for r in rows if _parse_mcap(r.get("market_cap", "")) >= min_mcap]
+    print(f"  [day_trading] mcap>${min_mcap/1e9:.0f}B filter: {len(rows)} -> {len(kept)}", file=sys.stderr)
+    return kept
+
+
+def apply_swing_gap_postfilter(rows: list, min_mcap: float = 8e8) -> list:
+    """Keep only stocks with market cap >= $800M (swing gap liquidity requirement)."""
+    kept = [r for r in rows if _parse_mcap(r.get("market_cap", "")) >= min_mcap]
+    print(f"  [swing_gap] mcap>=${min_mcap/1e6:.0f}M filter: {len(rows)} -> {len(kept)}", file=sys.stderr)
+    return kept
+
+
 def apply_base_breakout_postfilter(rows: list, max_sma50_pct: float = 0.20) -> list:
     """
     Post-filter for base_breakout strategy.
@@ -252,7 +310,8 @@ def main():
     parser = argparse.ArgumentParser(description="Finviz Elite swing trading scanner")
     parser.add_argument("--auth", required=False, default=None,
                         help="Finviz Elite API token. Can also set FINVIZ_TOKEN env variable.")
-    parser.add_argument("--strategy", choices=["minervini", "canslim", "reversion", "base_breakout", "custom"],
+    parser.add_argument("--strategy", choices=["minervini", "canslim", "reversion", "base_breakout",
+                                               "day_trading", "swing_gap", "custom"],
                         default="minervini")
     parser.add_argument("--filters", help="Custom Finviz filter string (with --strategy custom)")
     parser.add_argument("--tickers", help="Comma-separated specific tickers (skips screener)")
@@ -278,9 +337,15 @@ def main():
 
     output = format_output(raw, args.strategy)
 
-    # base_breakout: apply SMA50 proximity post-filter
+    # post-filters by strategy
     if args.strategy == "base_breakout" and output["tickers"]:
         output["tickers"] = apply_base_breakout_postfilter(output["tickers"])
+        output["count"] = len(output["tickers"])
+    elif args.strategy == "day_trading" and output["tickers"]:
+        output["tickers"] = apply_day_trading_postfilter(output["tickers"])
+        output["count"] = len(output["tickers"])
+    elif args.strategy == "swing_gap" and output["tickers"]:
+        output["tickers"] = apply_swing_gap_postfilter(output["tickers"])
         output["count"] = len(output["tickers"])
 
     print(f"Found {output['count']} candidates", file=sys.stderr)

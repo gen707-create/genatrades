@@ -65,7 +65,15 @@ jobs:
           python finviz_scan.py --strategy base_breakout > /tmp/scan_bb.json || echo '{"strategy":"base_breakout","tickers":[]}' > /tmp/scan_bb.json
           echo "scan_bb: $(python3 -c 'import json;d=json.load(open("/tmp/scan_bb.json"));print(len(d.get("tickers",[])),"tickers")' 2>/dev/null || echo FAILED)"
 
-          echo "=== Step 3c: Track new tickers ==="
+          echo "=== Step 3d: Day Trading scan ==="
+          python finviz_scan.py --strategy day_trading > /tmp/scan_dt.json || echo '{"strategy":"day_trading","tickers":[]}' > /tmp/scan_dt.json
+          echo "scan_dt: $(python3 -c 'import json;d=json.load(open("/tmp/scan_dt.json"));print(len(d.get("tickers",[])),"tickers")' 2>/dev/null || echo FAILED)"
+
+          echo "=== Step 3e: Swing Gap scan ==="
+          python finviz_scan.py --strategy swing_gap > /tmp/scan_sg.json || echo '{"strategy":"swing_gap","tickers":[]}' > /tmp/scan_sg.json
+          echo "scan_sg: $(python3 -c 'import json;d=json.load(open("/tmp/scan_sg.json"));print(len(d.get("tickers",[])),"tickers")' 2>/dev/null || echo FAILED)"
+
+          echo "=== Step 3f: Track new tickers ==="
           python track_new_tickers.py /tmp/scan_min.json /tmp/scan_can.json /tmp/scan_rev.json /tmp/scan_bb.json || echo '[]' > /tmp/new_tickers.json
           echo "new tickers: $(cat /tmp/new_tickers.json)"
 
@@ -75,6 +83,8 @@ jobs:
             --scan /tmp/scan_can.json \
             --scan /tmp/scan_rev.json \
             --scan /tmp/scan_bb.json \
+            --scan /tmp/scan_dt.json \
+            --scan /tmp/scan_sg.json \
             --new-tickers /tmp/new_tickers.json \
             --html --output index.html
           echo "index.html: $(wc -l < index.html) lines / $(wc -c < index.html) bytes"
