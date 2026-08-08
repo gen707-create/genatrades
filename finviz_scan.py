@@ -209,7 +209,8 @@ def format_output(raw: list, strategy: str) -> dict:
             "eps_qoq": row.get("EPS Growth Quarter Over Quarter", "").strip(),
             "sales_qoq": row.get("Sales Growth Quarter Over Quarter", "").strip(),
             "rsi": row.get("RSI (14)", "").strip(),
-            "rel_volume": row.get("Rel Volume", "").strip(),
+            "rel_volume": (row.get("Rel Volume", "")
+                           or row.get("Relative Volume", "")).strip(),
             "high_52w": row.get("52W High", "").strip(),
             "low_52w": row.get("52W Low", "").strip(),
             "price": row.get("Price", "").strip(),
