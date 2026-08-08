@@ -227,7 +227,11 @@ def format_output(raw: list, strategy: str) -> dict:
 
 
 def _parse_mcap(s: str) -> float:
-    """Parse Finviz market cap string like '$1.23B', '456.78M' to float in USD."""
+    """Parse Finviz market cap string to float in USD.
+
+    Handles both formatted ('131.24B', '456.78M') and raw-millions format
+    ('131240' = $131.24B) — Finviz screener CSV sometimes exports the latter.
+    """
     if not s or s in ("-", "N/A", ""):
         return 0.0
     s = s.replace("$", "").replace(",", "").strip()
@@ -240,7 +244,11 @@ def _parse_mcap(s: str) -> float:
             return float(s[:-1]) * 1e6
         elif s.endswith("K"):
             return float(s[:-1]) * 1e3
-        return float(s)
+        # No suffix: Finviz may return raw millions (e.g. "131240" = $131.24B).
+        # Screener cap_smallover guarantees values >= 300 (i.e. $300M+),
+        # so anything < 1e7 is safely treated as millions.
+        v = float(s)
+        return v * 1e6 if 0 < v < 1e7 else v
     except ValueError:
         return 0.0
 
@@ -366,12 +374,25 @@ def main():
     if args.strategy == "base_breakout" and output["tickers"]:
         output["tickers"] = apply_base_breakout_postfilter(output["tickers"])
         output["count"] = len(output["tickers"])
-    elif args.strategy == "day_trading" and output["tickers"]:
-        output["tickers"] = apply_day_trading_postfilter(output["tickers"])
-        output["count"] = len(output["tickers"])
-    elif args.strategy == "swing_gap" and output["tickers"]:
-        output["tickers"] = apply_swing_gap_postfilter(output["tickers"])
-        output["count"] = len(output["tickers"])
+    elif args.strategy in ("day_trading", "swing_gap"):
+        # Diagnostic: show first raw row so we can verify field formats in CI logs
+        if output["tickers"]:
+            s0 = output["tickers"][0]
+            print(
+                f"  [{args.strategy}] Pre-filter count={len(output['tickers'])}  "
+                f"sample: change={s0.get('change')!r} "
+                f"price={s0.get('price')!r} "
+                f"market_cap={s0.get('market_cap')!r}",
+                file=sys.stderr,
+            )
+        else:
+            print(f"  [{args.strategy}] Finviz returned 0 rows (empty scan)", file=sys.stderr)
+        if args.strategy == "day_trading" and output["tickers"]:
+            output["tickers"] = apply_day_trading_postfilter(output["tickers"])
+            output["count"] = len(output["tickers"])
+        elif args.strategy == "swing_gap" and output["tickers"]:
+            output["tickers"] = apply_swing_gap_postfilter(output["tickers"])
+            output["count"] = len(output["tickers"])
 
     print(f"Found {output['count']} candidates", file=sys.stderr)
 
