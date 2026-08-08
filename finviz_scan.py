@@ -138,11 +138,18 @@ def parse_csv(text: str) -> list:
     return rows
 
 
-def run_screen(session: requests.Session, filter_str: str, max_results: int = 200) -> list:
-    """Fetch screener results. export.ashx returns all matches in one CSV — no pagination needed."""
+def run_screen(session: requests.Session, filter_str: str, max_results: int = 200,
+               sort: str = "-relativevolume") -> list:
+    """Fetch screener results. export.ashx returns all matches in one CSV — no pagination needed.
+
+    `sort` controls the Finviz ordering, which matters because results are trimmed to
+    max_results BEFORE the Python post-filter runs. Strategies whose defining criterion is
+    the size of the daily move must sort by '-change', or high-gap names outside the top
+    RVOL slice get discarded before they are ever evaluated.
+    """
     params = {
         "f": filter_str,
-        "o": "-relativevolume",  # Sort: highest relative volume first
+        "o": sort,
         "v": "152",              # Financial view — includes EPS Q/Q, Sales Q/Q, ROE, etc.
     }
     try:
@@ -167,9 +174,9 @@ def run_screen(session: requests.Session, filter_str: str, max_results: int = 20
     rows = parse_csv(text)
     print(f"  Finviz returned {len(rows)} total matches", file=sys.stderr)
 
-    # Truncate to max_results (highest rel-volume first, already sorted)
+    # Truncate to max_results (Finviz already returned them in `sort` order)
     if len(rows) > max_results:
-        print(f"  Trimming to top {max_results} by relative volume", file=sys.stderr)
+        print(f"  Trimming to top {max_results} by {sort}", file=sys.stderr)
         rows = rows[:max_results]
 
     return rows
@@ -366,8 +373,11 @@ def main():
         raw = analyze_specific_tickers(session, ticker_list)
     else:
         filter_str = args.filters if args.strategy == "custom" else FILTERS[args.strategy]
-        print(f"Running {args.strategy.upper()} screen...", file=sys.stderr)
-        raw = run_screen(session, filter_str, max_results=args.max)
+        # Gap-driven strategies must rank by size of the daily move, not RVOL —
+        # the trim to max_results happens before the Python post-filter.
+        sort_by = "-change" if args.strategy in ("day_trading", "swing_gap") else "-relativevolume"
+        print(f"Running {args.strategy.upper()} screen (sort={sort_by})...", file=sys.stderr)
+        raw = run_screen(session, filter_str, max_results=args.max, sort=sort_by)
 
     output = format_output(raw, args.strategy)
 
