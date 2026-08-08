@@ -94,27 +94,22 @@ FILTERS = {
     ),
 
     # ── Day Trading — "Trend Join Long" ──────────────────────────────────────
-    # Premarket criteria: gap > 3%, price > $3, mcap > $1B, RVOL > 1.5,
-    # price breaking above yesterday's high.
-    # During RTH, day% approximates the gap; RVOL is regular session.
-    # Python post-filter enforces the $1B mcap floor.
+    # Premarket criteria: gap > 3%, price > $3, mcap > $1B, RVOL > 1.5.
+    # Finviz filters are broad (confirmed-valid codes only); Python post-filter
+    # enforces exact thresholds: change > 3%, price > $3, mcap > $1B.
     "day_trading": (
-        "ta_perf_d_o3,"        # Day change > 3% (gap > 3% proxy)
-        "sh_relvol_o1p5,"      # Relative volume > 1.5x
-        "sh_price_o3,"         # Price > $3
+        "ta_perf_d_o2,"        # Day change > 2% (broad net; post-filter tightens to 3%)
+        "sh_relvol_o1p5,"      # Relative volume > 1.5x (confirmed working)
         "cap_smallover,"       # Market cap > $300M (post-filtered to $1B in Python)
         "sh_avgvol_o300"       # Avg volume > 300K — intraday liquidity floor
     ),
 
     # ── Swing Gap ────────────────────────────────────────────────────────────
-    # Premarket criteria: gap >= 8%, price > $3, open > yesterday's high,
-    # open > 200 SMA, mcap >= $800M, real catalyst (manual check).
-    # Python post-filter enforces the $800M mcap floor.
-    # Catalyst verification is manual — dashboard shows starters only.
+    # Premarket criteria: gap >= 8%, price > $3, open > 200 SMA, mcap >= $800M.
+    # Python post-filter enforces exact thresholds: change >= 8%, price > $3, mcap >= $800M.
     "swing_gap": (
-        "ta_perf_d_o8,"        # Day change >= 8% (gap >= 8% proxy)
-        "sh_price_o3,"         # Price > $3
-        "ta_sma200_pa,"        # Price > 200-day SMA
+        "ta_perf_d_o2,"        # Day change > 2% (broad net; post-filter tightens to 8%)
+        "ta_sma200_pa,"        # Price > 200-day SMA (confirmed working)
         "cap_smallover"        # Market cap > $300M (post-filtered to $800M in Python)
     ),
 }
@@ -250,17 +245,47 @@ def _parse_mcap(s: str) -> float:
         return 0.0
 
 
-def apply_day_trading_postfilter(rows: list, min_mcap: float = 1e9) -> list:
-    """Keep only stocks with market cap > $1B (day trading liquidity requirement)."""
-    kept = [r for r in rows if _parse_mcap(r.get("market_cap", "")) >= min_mcap]
-    print(f"  [day_trading] mcap>${min_mcap/1e9:.0f}B filter: {len(rows)} -> {len(kept)}", file=sys.stderr)
+def _parse_pct(s: str) -> float:
+    """Parse Finviz percent string like '+17.44%', '-2.30%' to float."""
+    if not s or s in ("-", "N/A", ""):
+        return 0.0
+    try:
+        return float(s.replace("%", "").replace("+", "").strip())
+    except ValueError:
+        return 0.0
+
+
+def _parse_price(s: str) -> float:
+    """Parse Finviz price string like '$178.07' to float."""
+    if not s or s in ("-", "N/A", ""):
+        return 0.0
+    try:
+        return float(s.replace("$", "").replace(",", "").strip())
+    except ValueError:
+        return 0.0
+
+
+def apply_day_trading_postfilter(rows: list) -> list:
+    """Post-filter: day change > 3%, price > $3, market cap > $1B."""
+    kept = []
+    for r in rows:
+        if (_parse_pct(r.get("change", "")) > 3.0
+                and _parse_price(r.get("price", "")) > 3.0
+                and _parse_mcap(r.get("market_cap", "")) >= 1e9):
+            kept.append(r)
+    print(f"  [day_trading] Post-filter (chg>3%, px>$3, mcap>$1B): {len(rows)} -> {len(kept)}", file=sys.stderr)
     return kept
 
 
-def apply_swing_gap_postfilter(rows: list, min_mcap: float = 8e8) -> list:
-    """Keep only stocks with market cap >= $800M (swing gap liquidity requirement)."""
-    kept = [r for r in rows if _parse_mcap(r.get("market_cap", "")) >= min_mcap]
-    print(f"  [swing_gap] mcap>=${min_mcap/1e6:.0f}M filter: {len(rows)} -> {len(kept)}", file=sys.stderr)
+def apply_swing_gap_postfilter(rows: list) -> list:
+    """Post-filter: day change >= 8%, price > $3, market cap >= $800M."""
+    kept = []
+    for r in rows:
+        if (_parse_pct(r.get("change", "")) >= 8.0
+                and _parse_price(r.get("price", "")) > 3.0
+                and _parse_mcap(r.get("market_cap", "")) >= 8e8):
+            kept.append(r)
+    print(f"  [swing_gap] Post-filter (chg>=8%, px>$3, mcap>=$800M): {len(rows)} -> {len(kept)}", file=sys.stderr)
     return kept
 
 
