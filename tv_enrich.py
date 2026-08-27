@@ -2064,6 +2064,32 @@ def calculate_trade_setup(row, strategy):
         t1    = round(entry + risk * 2.5, 2)   # 2.5:1 R/R
         t2    = round(entry + risk * 4.0, 2)   # 4:1 R/R
 
+    elif strategy == "day_trading":
+        # WATCHLIST_CRITERIA "Trend Join Long": entry on a break above the
+        # session high (proxy for premarket high / HOD), stop 1% below that
+        # level or below the day low — whichever is lower — then 1R / 2R scales.
+        # apply_premarket_setup() re-bases this off the live premarket price.
+        base  = max(day_high, price) if day_high else price
+        entry = round(base * 1.002, 2)
+        stop_1pct = entry * 0.99
+        stop_lod  = day_low * 0.999 if (day_low and day_low < entry) else None
+        raw_stop  = min(stop_1pct, stop_lod) if stop_lod else stop_1pct
+        stop  = clamp_stop(raw_stop, entry, 0.01, 0.05)
+        risk  = entry - stop
+        t1    = round(entry + risk * 1.0, 2)   # scale 1/3 at +1R
+        t2    = round(entry + risk * 2.0, 2)   # scale 1/3 at +2R, trail the rest
+
+    elif strategy == "swing_gap":
+        # WATCHLIST_CRITERIA swing setup: enter above yesterday's high on the
+        # gap day. Exit management is explicitly still manual, so stop/targets
+        # here are wide orientation levels, not a mechanical plan.
+        base  = max(day_high, price) if day_high else price
+        entry = round(base * 1.002, 2)
+        stop  = clamp_stop(entry - 1.5 * atr, entry, 0.03, 0.10)
+        risk  = entry - stop
+        t1    = round(entry + risk * 2.0, 2)
+        t2    = round(entry + risk * 3.5, 2)
+
     else:  # reversion
         entry = round(price * 1.005, 2)
         # Stop: just below the day low OR 1.5×ATR — whichever is tighter
@@ -2076,7 +2102,9 @@ def calculate_trade_setup(row, strategy):
         t2   = round(sma200, 2) if (sma200 and sma200 > t1)    else round(t1 * 1.05, 2)
 
     risk   = entry - stop
-    reward = t1 - entry
+    # Day trade scales out 1/3 at +1R, so T1 alone understates the plan's payoff —
+    # judge it on the full T2 objective instead, or every setup screens as rr<2.
+    reward = (t2 - entry) if strategy == "day_trading" else (t1 - entry)
     rr     = round(reward / risk, 1) if risk > 0 else 0
 
     return {
@@ -2088,8 +2116,95 @@ def calculate_trade_setup(row, strategy):
         "reward_pct": round((t1 - entry) / entry * 100, 1),
         "rr":         rr,
         "rr_ok":      rr >= 2.0,
+        "atr":        round(atr, 4),   # kept so premarket re-basing reuses the same volatility
+        "base_price": price,           # RTH close the setup was originally derived from
         "note":       "⚠ Entry/stop are estimates. Adjust to actual chart pivot/support before trading.",
     }
+
+
+def apply_premarket_setup(results, yahoo, strategies=("day_trading", "swing_gap")):
+    """Re-base gap-strategy setups onto the live pre/post-market price.
+
+    The Finviz/TradingView row only carries the RTH close, so a stock that
+    reported earnings and gapped overnight would otherwise show an entry
+    derived from yesterday's price — unusable by the open. For the gap
+    strategies we recompute entry/stop/targets from the live premarket
+    print and record how far the stock has already travelled.
+
+    Mutates `results` in place. Returns the number of setups re-based.
+    """
+    if not yahoo:
+        return 0
+
+    changed = 0
+    for r in results:
+        if r.get("strategy") not in strategies:
+            continue
+        setup = r.get("setup") or {}
+        if not setup.get("entry"):
+            continue
+
+        y = yahoo.get(r.get("ticker")) or {}
+        live = y.get("pre_price") or y.get("post_price")
+        try:
+            live = float(live) if live else 0.0
+        except (TypeError, ValueError):
+            live = 0.0
+        if live <= 0:
+            continue
+
+        base = setup.get("base_price") or r.get("price") or 0
+        try:
+            base = float(base)
+        except (TypeError, ValueError):
+            base = 0.0
+        if base <= 0:
+            continue
+
+        gap_pct = (live - base) / base * 100.0
+        r["pre_live_price"] = round(live, 2)
+        r["gap_pct"] = round(gap_pct, 2)
+
+        # Only re-base on a move that actually invalidates the printed levels.
+        # Small drifts leave the original chart-derived numbers alone.
+        if abs(gap_pct) < 1.0:
+            continue
+
+        atr = setup.get("atr") or (live * 0.015)
+        entry = round(live * 1.002, 2)
+
+        if r["strategy"] == "day_trading":
+            stop = round(entry * 0.99, 2)          # 1% below the break level = 1R
+            risk = entry - stop
+            t1, t2 = round(entry + risk, 2), round(entry + risk * 2.0, 2)
+        else:                                       # swing_gap
+            stop = round(entry - 1.5 * atr, 2)
+            risk = entry - stop
+            t1, t2 = round(entry + risk * 2.0, 2), round(entry + risk * 3.5, 2)
+
+        if risk <= 0:
+            continue
+
+        # Mirror calculate_trade_setup: day trade is judged on its full T2 target
+        _reward = (t2 - entry) if r["strategy"] == "day_trading" else (t1 - entry)
+        rr = round(_reward / risk, 1)
+        setup.update({
+            "entry": entry, "stop": stop, "t1": t1, "t2": t2,
+            "risk_pct":   round(risk / entry * 100, 1),
+            "reward_pct": round(_reward / entry * 100, 1),
+            "rr": rr, "rr_ok": rr >= 2.0,
+            "rebased_from": round(base, 2),
+            "note": ("⚠ Re-based on premarket %.2f (%+.1f%% vs close %.2f). "
+                     "Chase risk — confirm the level holds after 10:00 ET."
+                     % (live, gap_pct, base)),
+        })
+        r["setup"] = setup
+        r["premarket_rebased"] = True
+        changed += 1
+
+    if changed:
+        print(f"  ↻ Re-based {changed} gap setups on premarket price", file=sys.stderr)
+    return changed
 
 
 def conviction_level(score_pct, core_pass, rr):
@@ -3483,7 +3598,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             ' onclick="showDetail(\'%(t)s\')">'
             '<td style="padding:8px 12px;font-weight:600;color:#e2e8f0">%(t)s%(new_badge)s%(sdot)s</td>'
             '<td style="padding:8px 12px;color:#94a3b8;font-size:12px">%(sec)s</td>'
-            '<td style="padding:8px 12px;color:#e2e8f0">$%(p)s</td>'
+            '<td style="padding:8px 12px;color:#e2e8f0">%(pcell)s</td>'
             '<td style="padding:8px 12px;color:%(cc)s">%(cpct)s</td>'
             '%(pre)s%(post)s%(earn)s'
             '<td style="padding:8px 12px;color:#94a3b8">$%(ent)s</td>'
@@ -3506,6 +3621,15 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             "t": ticker, "bg": row_bg,
             "new_badge": ('<span style="background:#dc2626;color:#fff;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700;margin-left:4px;vertical-align:middle;letter-spacing:.5px">NEW</span>' if ticker in new_tickers else ""),
             "p": price_val, "e": entry_val, "s": stop_val, "t1": t1_val,
+            # When a gap setup was re-based, the RTH close is stale — lead with the
+            # live premarket print and keep yesterday's close as small context.
+            "pcell": (
+                ('<span style="color:#fbbf24;font-weight:600">$%s</span>'
+                 '<span style="color:#64748b;font-size:10px;margin-left:4px">PM %+.1f%%</span>'
+                 '<br><span style="color:#475569;font-size:10px">cl $%s</span>'
+                 % (r.get("pre_live_price"), r.get("gap_pct") or 0.0, price_val))
+                if r.get("premarket_rebased") else ("$%s" % price_val)
+            ),
             "strat": r.get("strategy", strategy), "sec": sector_val, "chg_raw": chg_pct,
             "cc": chg_col, "cpct": ("%+.1f%%" % chg_pct),
             "pre": pp_cell(pre_chg, "Pre"),
@@ -5326,6 +5450,7 @@ def main():
         _ytk = [r["ticker"] for r in all_results[:300]]
         print(f"🌙 Pre/post + earnings for {len(_ytk)} tickers...", file=sys.stderr)
         _yahoo = fetch_yahoo_data(_ytk)
+        apply_premarket_setup(all_results, _yahoo)
         print("🌐 Fetching Market Pulse data...", file=sys.stderr)
         _mpulse = fetch_market_pulse_data()
         print("📊 Fetching daily breadth data...", file=sys.stderr)
@@ -5355,6 +5480,7 @@ def main():
         print(f"🌙 Fetching pre/post market + earnings for top {len(yahoo_tickers)} tickers...", file=sys.stderr)
         yahoo = fetch_yahoo_data(yahoo_tickers)
         print(f"  → {len(yahoo)} tickers enriched from Yahoo", file=sys.stderr)
+        apply_premarket_setup(results, yahoo)
         print("🌐 Fetching Market Pulse data...", file=sys.stderr)
         market_pulse = fetch_market_pulse_data()
         print("📊 Fetching daily breadth data...", file=sys.stderr)

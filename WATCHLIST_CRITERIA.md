@@ -64,3 +64,25 @@ The dashboard Finviz scanner approximates premarket conditions using intraday da
 - "Above yesterday's high" is implied by a 3%+ or 8%+ gap move
 
 For exact premarket matching, review these tickers against live premarket data before the open.
+
+### Premarket re-basing
+
+Finviz and TradingView only carry the regular-session close, so a stock that
+reported overnight would otherwise print an entry derived from yesterday's price.
+After the Yahoo pre/post fetch, `apply_premarket_setup()` re-computes entry, stop
+and targets from the live premarket print for Day Trade and Swing Gap:
+
+- Triggers only when the move exceeds 1% versus the close, so normal drift leaves
+  the chart-derived levels alone
+- The price column then leads with the premarket price, shows `PM %`, and keeps
+  yesterday's close underneath as `cl $...`
+- The setup note records what it was re-based from and flags chase risk
+
+Day Trade R/R is measured against T2, because the plan scales 1/3 out at +1R —
+judging it on T1 alone would score every valid setup below 2:1.
+
+### Known limitation
+
+Both strategies still use `score_reversion()` for the criteria scorecard, which
+grades oversold conditions. That is the wrong lens for a momentum gap and affects
+the score column and sort order, not the entry/stop/target numbers.
