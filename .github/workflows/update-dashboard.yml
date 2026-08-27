@@ -21,7 +21,11 @@ permissions:
 
 concurrency:
   group: dashboard-build
-  cancel-in-progress: false
+  # Must be true: with `false`, a single run stuck in `queued` (as happened during
+  # the 2026-08-26 Actions incident) blocks every later run behind it indefinitely.
+  # The dashboard is a full rebuild each time, so superseding an older run is safe —
+  # we only ever care about the most recent snapshot.
+  cancel-in-progress: true
 
 jobs:
   build:
