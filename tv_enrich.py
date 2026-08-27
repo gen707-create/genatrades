@@ -2136,6 +2136,19 @@ def apply_premarket_setup(results, yahoo, strategies=("day_trading", "swing_gap"
     if not yahoo:
         return 0
 
+    # Only re-base while the regular session is CLOSED. During RTH the premarket
+    # print is stale (VEEV opened ~268 and traded to 285 by midday), and Finviz
+    # already carries the live price — re-basing then drags the entry backwards.
+    # US RTH is 13:30-20:00 UTC; allow a small tail so the 20:00 close settles.
+    from datetime import datetime as _dtn, timezone as _tzn
+    _now_utc = _dtn.now(_tzn.utc)
+    _mins = _now_utc.hour * 60 + _now_utc.minute
+    _is_rth = (_now_utc.weekday() < 5) and (13 * 60 + 30) <= _mins < (20 * 60)
+    if _is_rth:
+        print("  ↷ Skipping premarket re-basing — regular session is open",
+              file=sys.stderr)
+        return 0
+
     changed = 0
     for r in results:
         if r.get("strategy") not in strategies:
@@ -2178,8 +2191,11 @@ def apply_premarket_setup(results, yahoo, strategies=("day_trading", "swing_gap"
             risk = entry - stop
             t1, t2 = round(entry + risk, 2), round(entry + risk * 2.0, 2)
         else:                                       # swing_gap
-            stop = round(entry - 1.5 * atr, 2)
-            risk = entry - stop
+            # Clamp to the same 3-10% band calculate_trade_setup enforces —
+            # a gap inflates ATR, which would otherwise push the stop to -18%.
+            _raw  = entry - 1.5 * atr
+            stop  = round(max(entry * 0.90, min(_raw, entry * 0.97)), 2)
+            risk  = entry - stop
             t1, t2 = round(entry + risk * 2.0, 2), round(entry + risk * 3.5, 2)
 
         if risk <= 0:
