@@ -3435,6 +3435,10 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
     # ── Table rows and detail cards ───────────────────────────────────────────
     rows_html  = ""
     cards_html = ""
+    # A ticker can now appear as a row under several strategies, but the detail
+    # card is addressed by id ('detail-<ticker>') and getElementById only ever
+    # returns the first match — so emit exactly one card per ticker.
+    _card_seen = set()
 
     _strat_labels = {
         "minervini":      "Minervini SEPA",
@@ -4098,6 +4102,10 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             t=ticker, p=price_val, e=entry_val, s=stop_val, t1=t1_val,
             strat=r.get("strategy", strategy), sec=r.get('sector','').replace("'",'')
         )
+
+        if ticker in _card_seen:
+            continue          # row already rendered above; card exists once per ticker
+        _card_seen.add(ticker)
 
         cards_html += (
             '<div id="detail-%s" class="detail-card" style="display:none">'
@@ -5427,23 +5435,23 @@ def main():
             print(f"📊 Enriching {len(_tickers)} [{_strat}]...", file=sys.stderr)
             _enriched = enrich_tickers(_tickers, _strat, args.global_markets, fv_meta=_ticker_meta)
             all_results.extend(_enriched)
-        # Deduplicate by ticker — keep highest-scoring entry per ticker
-        _seen_ar = {}; _deduped = []
-        for _r in all_results:
-            _tk = _r.get("ticker", "")
-            _sc = _r.get("score", {}).get("score_pct", 0) or 0
-            if _tk not in _seen_ar or _sc > _seen_ar[_tk]:
-                _seen_ar[_tk] = _sc
+        # A ticker may legitimately qualify under several strategies, and each one
+        # computes its own entry/stop/targets. Collapsing to a single row used to
+        # hand every duplicate to whichever scan was listed first (Reversion),
+        # so a +17% gapper was priced with a mean-reversion model. Keep one row
+        # per (ticker, strategy) instead — each tab shows its own correct setup.
+        _seen_pairs = set()
         _deduped = []
-        _used = set()
         for _r in all_results:
-            _tk = _r.get("ticker", "")
-            if _tk in _used:
+            _key = (_r.get("ticker", ""), _r.get("strategy", ""))
+            if _key in _seen_pairs:
                 continue
-            _used.add(_tk)
+            _seen_pairs.add(_key)
             _deduped.append(_r)
+        _multi = len(_deduped) - len({_k[0] for _k in _seen_pairs})
         if len(_deduped) < len(all_results):
-            print(f"  Deduped {len(all_results)} -> {len(_deduped)} results", file=sys.stderr)
+            print(f"  Deduped {len(all_results)} -> {len(_deduped)} rows "
+                  f"({_multi} appear in more than one strategy)", file=sys.stderr)
         all_results = _deduped
         print("📊 Fetching market context...", file=sys.stderr)
         _mctx = fetch_market_context()
