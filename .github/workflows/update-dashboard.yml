@@ -10,7 +10,10 @@ on:
       - ".github/scripts/prefetch_heatmap.py"
       - ".github/workflows/update-dashboard.yml"
   schedule:
-    - cron: "*/10 9-22 * * 1-5"
+    # GitHub heavily throttles frequent cron on public free repos — "*/10" was
+    # nominally 78 runs/day but delivered only a handful, with 12h+ gaps.
+    # Sparser schedules are honoured far more reliably.
+    - cron: "*/30 9-22 * * 1-5"
   workflow_dispatch:
 
 permissions:
