@@ -3519,6 +3519,30 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
 
     # ── Table rows and detail cards ───────────────────────────────────────────
     rows_html  = ""
+    def _to_entry_cell(price_v, entry_v):
+        """Distance from the live price to the trigger, as a compact signed %.
+
+        Makes 'not yet triggered' visible at a glance: a base_breakout entry sits
+        at the pattern buy point, so a stock still inside its base shows a clearly
+        positive number (ESS: +5.4%) rather than looking like a live setup.
+        """
+        empty = '<td style="padding:8px 12px;color:#475569">&#8212;</td>'
+        try:
+            p, e = float(price_v), float(entry_v)
+        except (TypeError, ValueError):
+            return empty
+        if p <= 0 or e <= 0:
+            return empty
+        d = (e - p) / p * 100.0
+        if d < -0.05:
+            col, tip = "#f59e0b", "price is above the trigger — chasing"
+        elif d <= 3.0:
+            col, tip = "#10b981", "within reach of the trigger"
+        else:
+            col, tip = "#64748b", "far from the trigger — watch only"
+        return ('<td style="padding:8px 12px;color:%s;white-space:nowrap"'
+                ' title="%s">%+.1f%%</td>' % (col, tip, d))
+
     cards_html = ""
     # A ticker can now appear as a row under several strategies, but the detail
     # card is addressed by id ('detail-<ticker>') and getElementById only ever
@@ -3691,6 +3715,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             '<td style="padding:8px 12px;color:%(cc)s">%(cpct)s</td>'
             '%(pre)s%(post)s%(earn)s'
             '<td style="padding:8px 12px;color:#94a3b8">$%(ent)s</td>'
+            '%(toent)s'
             '<td style="padding:8px 12px;color:#ef4444">$%(stp)s</td>'
             '<td style="padding:8px 12px;color:#10b981">$%(t1d)s</td>'
             '<td style="padding:8px 12px;color:%(rrc)s">%(rr)s:1</td>'
@@ -3725,6 +3750,10 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             "post": pp_cell(post_chg, "Post"),
             "earn": earn_cell,
             "ent": setup.get("entry", "N/A"),
+            # Distance from current price to the trigger. Positive = still below
+            # entry (a watch item, e.g. a base that has not broken out yet);
+            # negative = price already ran past it, so entering now is chasing.
+            "toent": _to_entry_cell(price_val, setup.get("entry")),
             "stp": setup.get("stop", "N/A"),
             "t1d": setup.get("t1", "N/A"),
             "rrc": rr_col, "rr": setup.get("rr", "—"),
@@ -5368,8 +5397,13 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         '<th onclick="sortTable(\'chg\',\'num\')">Day% <span class="sh"></span></th>\n'
         '<th style="color:#a78bfa">Pre</th><th style="color:#818cf8">Post</th>\n'
         '<th style="color:#fb923c">Earnings</th>\n'
-        '<th>Entry</th><th>Stop</th><th>T1</th>'
-        '<th onclick="sortTable(10,\'num\')">R/R <span class="sh"></span></th>'
+        '<th>Entry</th>'
+        '<th onclick="sortTable(8,\'num\')"'
+        ' title="Distance from current price to entry. Positive = still below the'
+        ' trigger (watch); negative = price already past it (late)."'
+        ' style="color:#94a3b8;white-space:nowrap">To Entry <span class="sh"></span></th>'
+        '<th>Stop</th><th>T1</th>'
+        '<th onclick="sortTable(11,\'num\')">R/R <span class="sh"></span></th>'
         '<th>Conv.</th><th>&#10003;</th>\n'
         '<th title="Chart pattern (VCP/Cup/Flat)" style="color:#34d399">Pattern</th>\n'
         '<th title="Insider activity (30d)" style="color:#a78bfa">Insider</th>\n'
