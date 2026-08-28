@@ -2223,6 +2223,75 @@ def apply_premarket_setup(results, yahoo, strategies=("day_trading", "swing_gap"
     return changed
 
 
+def apply_base_breakout_buypoint(results, yahoo):
+    """Re-base base_breakout setups onto the detected pattern's buy point.
+
+    base_breakout had no branch in calculate_trade_setup, so it fell through to
+    the reversion formula and priced the entry at close*1.005 — for ESS that
+    printed 285.43 while the flat base's actual buy point sat at 299.38, i.e.
+    the base had not been broken at all. The pattern detector already computes
+    that level inside fetch_yahoo_data; this wires it into the setup.
+
+    Mutates `results` in place. Returns the number of setups re-based.
+    """
+    if not yahoo:
+        return 0
+
+    changed = 0
+    for r in results:
+        if r.get("strategy") != "base_breakout":
+            continue
+        setup = r.get("setup") or {}
+        if not setup.get("entry"):
+            continue
+
+        pat = (yahoo.get(r.get("ticker")) or {}).get("chart_pattern") or {}
+        try:
+            bpt = float(pat.get("buy_point") or 0)
+        except (TypeError, ValueError):
+            bpt = 0.0
+        if bpt <= 0:
+            continue
+
+        price = float(setup.get("base_price") or r.get("price") or 0)
+        if price <= 0:
+            continue
+
+        # Entry is the breakout level itself. Below it the stock is still inside
+        # the base — a watch item, not a live entry.
+        entry = round(bpt, 2)
+        atr   = setup.get("atr") or (entry * 0.015)
+        raw   = entry - 2.0 * atr
+        stop  = round(max(entry * 0.92, min(raw, entry * 0.97)), 2)   # -3%..-8%
+        risk  = entry - stop
+        if risk <= 0:
+            continue
+        t1, t2 = round(entry + risk * 2.5, 2), round(entry + risk * 4.0, 2)
+        rr = round((t1 - entry) / risk, 1)
+
+        dist = (entry - price) / price * 100.0
+        r["bpt_distance_pct"] = round(dist, 2)
+        setup.update({
+            "entry": entry, "stop": stop, "t1": t1, "t2": t2,
+            "risk_pct":   round(risk / entry * 100, 1),
+            "reward_pct": round((t1 - entry) / entry * 100, 1),
+            "rr": rr, "rr_ok": rr >= 2.0,
+            "note": (("⚠ Entry is the %s buy point. Price %.2f is %+.1f%% away — "
+                      "still inside the base, wait for the breakout on volume."
+                      % (pat.get("pattern", "base"), price, dist))
+                     if dist > 0.2 else
+                     ("⚠ Buy point %.2f already cleared (price %.2f). Late entry — "
+                      "confirm it holds above the level." % (entry, price))),
+        })
+        r["setup"] = setup
+        changed += 1
+
+    if changed:
+        print(f"  ↻ Re-based {changed} base_breakout setups on pattern buy point",
+              file=sys.stderr)
+    return changed
+
+
 def conviction_level(score_pct, core_pass, rr):
     if not core_pass or rr < 2.0:
         return "Low"
@@ -5475,6 +5544,7 @@ def main():
         print(f"🌙 Pre/post + earnings for {len(_ytk)} tickers...", file=sys.stderr)
         _yahoo = fetch_yahoo_data(_ytk)
         apply_premarket_setup(all_results, _yahoo)
+        apply_base_breakout_buypoint(all_results, _yahoo)
         print("🌐 Fetching Market Pulse data...", file=sys.stderr)
         _mpulse = fetch_market_pulse_data()
         print("📊 Fetching daily breadth data...", file=sys.stderr)
@@ -5505,6 +5575,7 @@ def main():
         yahoo = fetch_yahoo_data(yahoo_tickers)
         print(f"  → {len(yahoo)} tickers enriched from Yahoo", file=sys.stderr)
         apply_premarket_setup(results, yahoo)
+        apply_base_breakout_buypoint(results, yahoo)
         print("🌐 Fetching Market Pulse data...", file=sys.stderr)
         market_pulse = fetch_market_pulse_data()
         print("📊 Fetching daily breadth data...", file=sys.stderr)
