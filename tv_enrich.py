@@ -2273,7 +2273,12 @@ def apply_premarket_setup(results, yahoo, strategies=("day_trading", "swing_gap"
             continue
 
         y = yahoo.get(r.get("ticker")) or {}
-        live = y.get("pre_price") or y.get("post_price")
+        # Label which session the quote came from — "PM" on a postmarket price
+        # is misleading, and the two sessions sit on opposite sides of the close.
+        live = y.get("pre_price")
+        session = "PM"
+        if not live:
+            live, session = y.get("post_price"), "AH"
         try:
             live = float(live) if live else 0.0
         except (TypeError, ValueError):
@@ -2292,6 +2297,7 @@ def apply_premarket_setup(results, yahoo, strategies=("day_trading", "swing_gap"
         gap_pct = (live - base) / base * 100.0
         r["pre_live_price"] = round(live, 2)
         r["gap_pct"] = round(gap_pct, 2)
+        r["live_session"] = session
 
         # Only re-base on a move that actually invalidates the printed levels.
         # Small drifts leave the original chart-derived numbers alone.
@@ -2325,16 +2331,16 @@ def apply_premarket_setup(results, yahoo, strategies=("day_trading", "swing_gap"
             "reward_pct": round(_reward / entry * 100, 1),
             "rr": rr, "rr_ok": rr >= 2.0,
             "rebased_from": round(base, 2),
-            "note": ("⚠ Re-based on premarket %.2f (%+.1f%% vs close %.2f). "
+            "note": ("⚠ Re-based on %s quote %.2f (%+.1f%% vs close %.2f). "
                      "Chase risk — confirm the level holds after 10:00 ET."
-                     % (live, gap_pct, base)),
+                     % (session, live, gap_pct, base)),
         })
         r["setup"] = setup
         r["premarket_rebased"] = True
         changed += 1
 
     if changed:
-        print(f"  ↻ Re-based {changed} gap setups on premarket price", file=sys.stderr)
+        print(f"  ↻ Re-based {changed} gap setups on extended-hours price", file=sys.stderr)
     return changed
 
 
@@ -3857,9 +3863,10 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             # live premarket print and keep yesterday's close as small context.
             "pcell": (
                 ('<span style="color:#fbbf24;font-weight:600">$%s</span>'
-                 '<span style="color:#64748b;font-size:10px;margin-left:4px">PM %+.1f%%</span>'
+                 '<span style="color:#64748b;font-size:10px;margin-left:4px">%s %+.1f%%</span>'
                  '<br><span style="color:#475569;font-size:10px">cl $%s</span>'
-                 % (r.get("pre_live_price"), r.get("gap_pct") or 0.0, price_val))
+                 % (r.get("pre_live_price"), r.get("live_session") or "PM",
+                    r.get("gap_pct") or 0.0, price_val))
                 if r.get("premarket_rebased") else ("$%s" % price_val)
             ),
             "strat": r.get("strategy", strategy), "sec": sector_val, "chg_raw": chg_pct,
@@ -3871,7 +3878,11 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             # Distance from current price to the trigger. Positive = still below
             # entry (a watch item, e.g. a base that has not broken out yet);
             # negative = price already ran past it, so entering now is chasing.
-            "toent": _to_entry_cell(price_val, setup.get("entry")),
+            # Measure from the same price the setup was built on. When the entry
+            # was re-based onto a pre/postmarket quote, comparing it against the
+            # RTH close reports a distance the trader can no longer act on.
+            "toent": _to_entry_cell(r.get("pre_live_price") or price_val,
+                                    setup.get("entry")),
             "stp": setup.get("stop", "N/A"),
             "t1d": setup.get("t1", "N/A"),
             "rrc": rr_col, "rr": setup.get("rr", "—"),
