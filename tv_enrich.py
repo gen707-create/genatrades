@@ -2005,6 +2005,109 @@ def score_reversion(row):
     }
 
 
+def score_momentum_gap(row, strategy="day_trading"):
+    """Score a gap-and-go setup against WATCHLIST_CRITERIA.
+
+    day_trading and swing_gap used to be graded by score_reversion(), which
+    rewards oversold RSI and a deep pullback — the opposite of what these
+    strategies look for. A stock gapping +17% on earnings failed almost every
+    reversion criterion, so every gapper came out Low conviction and the tab
+    sorted *inversely* to setup quality: the weaker the move, the higher it
+    ranked. This grades what the spec actually asks for.
+
+    Thresholds differ per strategy (gap >3% / >=8%, mcap >$1B / >=$800M);
+    everything else is shared.
+    """
+    fv       = row.get("fv_meta") or {}
+    price    = safe(row.get("close"), 0)
+    day_high = safe(row.get("high"), 0)
+    day_low  = safe(row.get("low"), 0)
+    high52   = safe(row.get("High.All"), 0)
+    rel_vol  = safe(row.get("relative_volume_10d_calc"), 0)
+    mcap     = safe(row.get("market_cap_basic"), 0)
+
+    is_swing  = strategy == "swing_gap"
+    gap_min   = 8.0 if is_swing else 3.0
+    mcap_min  = 8e8 if is_swing else 1e9
+
+    # Real gap (open vs prior close) comes from Finviz view 171 via fv_meta.
+    # Fall back to intraday change only if the merge did not supply it.
+    def _pct(v):
+        try:
+            return float(str(v).replace("%", "").replace("+", "").strip())
+        except (TypeError, ValueError):
+            return None
+    gap = _pct(fv.get("gap")) if fv.get("gap") else safe(row.get("change"), None)
+    if rel_vol <= 0:
+        rel_vol = _pct(fv.get("rel_volume")) or 0
+    if mcap <= 0:
+        # Finviz exports market cap in raw millions (10385.81 = $10.39B)
+        raw = _pct(fv.get("market_cap")) or 0
+        mcap = raw * 1e6 if 0 < raw < 1e7 else raw
+
+    # Where the stock closed inside its own range: holding near the high means
+    # buyers kept the move, closing near the low means the gap was sold into.
+    rng_pos = None
+    if day_high and day_low and day_high > day_low and price:
+        rng_pos = (price - day_low) / (day_high - day_low) * 100
+    pct_from_high = ((high52 - price) / high52 * 100) if (high52 and price) else None
+
+    criteria = {}
+    criteria["Gap Size"] = {
+        "value":    ("%.1f%%" % gap) if gap is not None else "N/A",
+        "required": "> %.0f%% vs prior close" % gap_min,
+        "pass":     gap is not None and gap > gap_min,
+        "warn":     gap is not None and gap_min * 0.7 < gap <= gap_min,
+    }
+    criteria["Relative Volume"] = {
+        "value":    ("%.1fx" % rel_vol) if rel_vol else "N/A",
+        "required": "> 1.5x (conviction behind the move)",
+        "pass":     rel_vol >= 1.5,
+        "warn":     1.0 <= rel_vol < 1.5,
+    }
+    criteria["Market Cap"] = {
+        "value":    ("$%.2fB" % (mcap / 1e9)) if mcap else "N/A",
+        "required": "> $%.1fB (avoid illiquid small caps)" % (mcap_min / 1e9),
+        "pass":     mcap >= mcap_min,
+        "warn":     mcap_min * 0.6 <= mcap < mcap_min,
+    }
+    criteria["Price Floor"] = {
+        "value":    ("$%.2f" % price) if price else "N/A",
+        "required": "> $3",
+        "pass":     price > 3.0,
+    }
+    criteria["Held the Move"] = {
+        "value":    ("closed %.0f%% up the day's range" % rng_pos) if rng_pos is not None else "N/A",
+        "required": "> 50% of range (gap not sold into)",
+        "pass":     rng_pos is not None and rng_pos > 50,
+        "warn":     rng_pos is not None and 35 <= rng_pos <= 50,
+    }
+    criteria["Near 52W High"] = {
+        "value":    ("%.1f%% below high" % pct_from_high) if pct_from_high is not None else "N/A",
+        "required": "within 25% (strength, not a dead-cat bounce)",
+        "pass":     pct_from_high is not None and pct_from_high <= 25,
+        "warn":     pct_from_high is not None and 25 < pct_from_high <= 40,
+    }
+
+    passed = sum(1 for v in criteria.values() if v.get("pass"))
+    total  = len(criteria)
+    # Core = the three numeric gates from the spec. "Held the Move" and the 52W
+    # position shape the ranking but should not invalidate an otherwise clean setup.
+    core_pass = all([
+        criteria["Gap Size"]["pass"],
+        criteria["Relative Volume"]["pass"],
+        criteria["Market Cap"]["pass"],
+    ])
+
+    return {
+        "criteria":  criteria,
+        "passed":    passed,
+        "total":     total,
+        "core_pass": core_pass,
+        "score_pct": round(passed / total * 100),
+    }
+
+
 def calculate_trade_setup(row, strategy):
     """Calculate entry, stop, T1, T2, and R/R for the trade.
 
@@ -2038,6 +2141,18 @@ def calculate_trade_setup(row, strategy):
     # Minimum fallback: 1.5% of price (avoids near-zero ATR on illiquid days)
     daily_range = (day_high - day_low) if (day_high and day_low and day_high > day_low) else 0
     atr = max(daily_range * 1.5, price * 0.015)
+
+    # Finviz view 171 ships a real 14-day ATR (merged in via fv_meta for the gap
+    # strategies). Prefer it over the single-session proxy above: on a gap day the
+    # proxy inflates with the gap itself and pushes stops far too wide.
+    _fv_atr = (row.get("fv_meta") or {}).get("atr")
+    if _fv_atr:
+        try:
+            _a = float(str(_fv_atr).strip())
+            if _a > 0:
+                atr = _a
+        except (TypeError, ValueError):
+            pass
 
     def clamp_stop(raw_stop, entry, min_pct, max_pct):
         """Keep stop within [entry*(1-max_pct), entry*(1-min_pct)]."""
@@ -2333,6 +2448,9 @@ def enrich_tickers(tickers, strategy, global_markets=False, fv_meta=None):
             # but does NOT hard-filter on core_pass — early-stage stocks
             # may not yet have SMA150 aligned, that is acceptable.
             score = score_minervini(row)
+        elif strategy in ("day_trading", "swing_gap"):
+            # Gap setups are graded on momentum, not oversold conditions
+            score = score_momentum_gap(row, strategy)
         else:
             score = score_reversion(row)
 

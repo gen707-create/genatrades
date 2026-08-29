@@ -58,12 +58,33 @@ Swing entry and exit management is still being built. Swing entries are starter 
 
 ## Scanner Notes
 
-The dashboard Finviz scanner approximates premarket conditions using intraday data:
-- Gap % is approximated by day % change (works well for gap-and-go stocks during RTH)
-- RVOL is regular session relative volume (not premarket-specific)
-- "Above yesterday's high" is implied by a 3%+ or 8%+ gap move
+The scanner now measures the real gap. Finviz view 171 carries a `Gap` column
+(open vs prior close) and a true 14-day ATR; view 152 carries market cap, relative
+volume and sector. Both return the identical universe for a filter, so the scanner
+requests them together and merges by ticker.
 
-For exact premarket matching, review these tickers against live premarket data before the open.
+- Gap % is the actual gap, enforced by Finviz (`ta_gap_u3` / `ta_gap_u8`), not the
+  day's change. These differ more than you'd expect — a stock can gap +24% and close
+  +19% after giving part of it back, or drift up 8% intraday without gapping at all.
+- ATR comes from Finviz rather than being estimated from the session range. On a gap
+  day the old proxy roughly doubled (9.75 vs a real 5.14) because the gap itself
+  inflated the range, which pushed stops far too wide.
+- RVOL is still regular-session relative volume. Finviz's export has no premarket
+  volume column, so premarket RVOL remains the one criterion we approximate.
+- "Above yesterday's high" is implied by the gap itself.
+
+Still worth eyeballing live premarket data before the open, but the selection now
+matches the spec rather than a proxy for it.
+
+### Scorecard
+
+Gap setups are graded by `score_momentum_gap()`, not the mean-reversion scorecard.
+The old one rewarded oversold RSI and a deep pullback, so a stock gapping +17% on
+earnings failed nearly every criterion — every gapper came out Low conviction and
+the tab sorted inversely to setup quality. Criteria now: gap size, relative volume,
+market cap, price floor, where the stock closed inside its daily range (did buyers
+hold the move or was the gap sold into), and distance from the 52-week high. The
+first three are the pass/fail gates; the last two shape ranking only.
 
 ### Premarket re-basing
 

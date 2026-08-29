@@ -95,21 +95,25 @@ FILTERS = {
 
     # ── Day Trading — "Trend Join Long" ──────────────────────────────────────
     # Premarket criteria: gap > 3%, price > $3, mcap > $1B, RVOL > 1.5.
-    # Finviz filters are broad (confirmed-valid codes only); Python post-filter
-    # enforces exact thresholds: change > 3%, price > $3, mcap > $1B.
+    # Gap and RVOL are enforced by Finviz; price and mcap by the Python post-filter.
+    # Both gap strategies filter on ta_gap_u* — the REAL gap (open vs previous
+    # close), which is what WATCHLIST_CRITERIA specifies. They previously used
+    # ta_perf_d_o2 (day change), which also matched stocks that drifted up all
+    # session without gapping at all. Verified working: counts fall monotonically
+    # 1891 -> 242 -> 45 -> 17 as the threshold rises, so Finviz honours the code.
     "day_trading": (
-        "ta_perf_d_o2,"        # Day change > 2% (broad net; post-filter tightens to 3%)
-        "sh_relvol_o1p5,"      # Relative volume > 1.5x (confirmed working)
+        "ta_gap_u3,"           # Gap up > 3% (real gap, not day change)
+        "sh_relvol_o1p5,"      # Relative volume > 1.5x
         "cap_smallover,"       # Market cap > $300M (post-filtered to $1B in Python)
         "sh_avgvol_o300"       # Avg volume > 300K — intraday liquidity floor
     ),
 
     # ── Swing Gap ────────────────────────────────────────────────────────────
     # Premarket criteria: gap >= 8%, price > $3, open > 200 SMA, mcap >= $800M.
-    # Python post-filter enforces exact thresholds: change >= 8%, price > $3, mcap >= $800M.
+    # Gap and SMA200 are enforced by Finviz; price and mcap by the Python post-filter.
     "swing_gap": (
-        "ta_perf_d_o2,"        # Day change > 2% (broad net; post-filter tightens to 8%)
-        "ta_sma200_pa,"        # Price > 200-day SMA (confirmed working)
+        "ta_gap_u8,"           # Gap up >= 8% (real gap)
+        "ta_sma200_pa,"        # Price > 200-day SMA
         "cap_smallover"        # Market cap > $300M (post-filtered to $800M in Python)
     ),
 }
@@ -138,41 +142,68 @@ def parse_csv(text: str) -> list:
     return rows
 
 
-def run_screen(session: requests.Session, filter_str: str, max_results: int = 200,
-               sort: str = "-relativevolume") -> list:
-    """Fetch screener results. export.ashx returns all matches in one CSV — no pagination needed.
-
-    `sort` controls the Finviz ordering, which matters because results are trimmed to
-    max_results BEFORE the Python post-filter runs. Strategies whose defining criterion is
-    the size of the daily move must sort by '-change', or high-gap names outside the top
-    RVOL slice get discarded before they are ever evaluated.
-    """
-    params = {
-        "f": filter_str,
-        "o": sort,
-        "v": "152",              # Financial view — includes EPS Q/Q, Sales Q/Q, ROE, etc.
-    }
+def _fetch_view(session: requests.Session, filter_str: str, sort: str, view: str) -> list:
+    """Single export.ashx request for one Finviz view. Returns parsed rows."""
+    params = {"f": filter_str, "o": sort, "v": view}
     try:
         resp = session.get(BASE_URL, params=params, timeout=30)
     except requests.RequestException as e:
-        print(f"Request failed: {e}", file=sys.stderr)
+        print(f"Request failed (v={view}): {e}", file=sys.stderr)
         return []
 
     if resp.status_code == 401:
         print("AUTH ERROR: token invalid or expired.", file=sys.stderr)
         return []
-
     if resp.status_code != 200:
-        print(f"HTTP {resp.status_code}: {resp.text[:200]}", file=sys.stderr)
+        print(f"HTTP {resp.status_code} (v={view}): {resp.text[:200]}", file=sys.stderr)
         return []
 
     text = resp.text.strip()
     if not text or "\n" not in text:
-        print("  Empty response from Finviz", file=sys.stderr)
+        print(f"  Empty response from Finviz (v={view})", file=sys.stderr)
         return []
 
-    rows = parse_csv(text)
+    return parse_csv(text)
+
+
+def run_screen(session: requests.Session, filter_str: str, max_results: int = 200,
+               sort: str = "-relativevolume", with_technicals: bool = False) -> list:
+    """Fetch screener results. export.ashx returns all matches in one CSV — no pagination.
+
+    `sort` controls the Finviz ordering, which matters because results are trimmed to
+    max_results BEFORE the Python post-filter runs. Strategies whose defining criterion is
+    the size of the daily move must sort by '-change', or high-gap names outside the top
+    RVOL slice get discarded before they are ever evaluated.
+
+    `with_technicals` additionally pulls view 171 and merges it in by ticker. View 152
+    carries Market Cap / Relative Volume / Sector but has no Gap column; view 171 has the
+    real Gap (open vs previous close — what WATCHLIST_CRITERIA actually specifies) plus a
+    proper Average True Range. Both views return the identical universe for a given filter,
+    so the join is lossless.
+    """
+    rows = _fetch_view(session, filter_str, sort, "152")
+    if not rows:
+        return []
     print(f"  Finviz returned {len(rows)} total matches", file=sys.stderr)
+
+    if with_technicals:
+        tech = _fetch_view(session, filter_str, sort, "171")
+        by_ticker = {r.get("Ticker", "").strip(): r for r in tech if r.get("Ticker")}
+        merged = 0
+        for r in rows:
+            t = by_ticker.get(r.get("Ticker", "").strip())
+            if not t:
+                continue
+            # Only lift the fields view 152 lacks; never overwrite what it already has.
+            for src, dst in (("Gap", "Gap"),
+                             ("Average True Range", "ATR"),
+                             ("52-Week High", "52W High"),
+                             ("50-Day Simple Moving Average", "SMA50"),
+                             ("200-Day Simple Moving Average", "SMA200")):
+                if t.get(src) not in (None, ""):
+                    r[dst] = t[src]
+            merged += 1
+        print(f"  Merged technicals (Gap/ATR) for {merged}/{len(rows)} rows", file=sys.stderr)
 
     # Truncate to max_results (Finviz already returned them in `sort` order)
     if len(rows) > max_results:
@@ -224,6 +255,9 @@ def format_output(raw: list, strategy: str) -> dict:
             "change": row.get("Change", "").strip(),
             "sma50": row.get("SMA50", "").strip(),
             "sma200": row.get("SMA200", "").strip(),
+            # Merged in from view 171 when with_technicals=True (gap strategies).
+            "gap": row.get("Gap", "").strip(),
+            "atr": row.get("ATR", "").strip(),
         })
 
     return {
@@ -281,27 +315,33 @@ def _parse_price(s: str) -> float:
         return 0.0
 
 
+def _gap_of(r: dict) -> float:
+    """Real gap (open vs prev close) from view 171, falling back to day change."""
+    g = r.get("gap", "")
+    return _parse_pct(g) if g else _parse_pct(r.get("change", ""))
+
+
 def apply_day_trading_postfilter(rows: list) -> list:
-    """Post-filter: day change > 3%, price > $3, market cap > $1B."""
+    """Post-filter: gap > 3%, price > $3, market cap > $1B (WATCHLIST_CRITERIA)."""
     kept = []
     for r in rows:
-        if (_parse_pct(r.get("change", "")) > 3.0
+        if (_gap_of(r) > 3.0
                 and _parse_price(r.get("price", "")) > 3.0
                 and _parse_mcap(r.get("market_cap", "")) >= 1e9):
             kept.append(r)
-    print(f"  [day_trading] Post-filter (chg>3%, px>$3, mcap>$1B): {len(rows)} -> {len(kept)}", file=sys.stderr)
+    print(f"  [day_trading] Post-filter (gap>3%, px>$3, mcap>$1B): {len(rows)} -> {len(kept)}", file=sys.stderr)
     return kept
 
 
 def apply_swing_gap_postfilter(rows: list) -> list:
-    """Post-filter: day change >= 8%, price > $3, market cap >= $800M."""
+    """Post-filter: gap >= 8%, price > $3, market cap >= $800M (WATCHLIST_CRITERIA)."""
     kept = []
     for r in rows:
-        if (_parse_pct(r.get("change", "")) >= 8.0
+        if (_gap_of(r) >= 8.0
                 and _parse_price(r.get("price", "")) > 3.0
                 and _parse_mcap(r.get("market_cap", "")) >= 8e8):
             kept.append(r)
-    print(f"  [swing_gap] Post-filter (chg>=8%, px>$3, mcap>=$800M): {len(rows)} -> {len(kept)}", file=sys.stderr)
+    print(f"  [swing_gap] Post-filter (gap>=8%, px>$3, mcap>=$800M): {len(rows)} -> {len(kept)}", file=sys.stderr)
     return kept
 
 
@@ -375,9 +415,12 @@ def main():
         filter_str = args.filters if args.strategy == "custom" else FILTERS[args.strategy]
         # Gap-driven strategies must rank by size of the daily move, not RVOL —
         # the trim to max_results happens before the Python post-filter.
-        sort_by = "-change" if args.strategy in ("day_trading", "swing_gap") else "-relativevolume"
+        _is_gap = args.strategy in ("day_trading", "swing_gap")
+        # Gap strategies rank by gap size and need view 171 merged in for Gap/ATR.
+        sort_by = "-gap" if _is_gap else "-relativevolume"
         print(f"Running {args.strategy.upper()} screen (sort={sort_by})...", file=sys.stderr)
-        raw = run_screen(session, filter_str, max_results=args.max, sort=sort_by)
+        raw = run_screen(session, filter_str, max_results=args.max, sort=sort_by,
+                         with_technicals=_is_gap)
 
     output = format_output(raw, args.strategy)
 
@@ -391,8 +434,10 @@ def main():
             s0 = output["tickers"][0]
             print(
                 f"  [{args.strategy}] Pre-filter count={len(output['tickers'])}  "
-                f"sample: change={s0.get('change')!r} "
+                f"sample: gap={s0.get('gap')!r} "
+                f"change={s0.get('change')!r} "
                 f"price={s0.get('price')!r} "
+                f"atr={s0.get('atr')!r} "
                 f"market_cap={s0.get('market_cap')!r}",
                 file=sys.stderr,
             )
