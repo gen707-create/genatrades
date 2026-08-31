@@ -2725,7 +2725,7 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
 
     def _fmt(v):
         if v is None:
-            return '<span style="color:#475569">&#8212;</span>'
+            return '<span style="color:#8595ad">&#8212;</span>'
         c = "#10b981" if v >= 0 else "#ef4444"
         s = "+" if v >= 0 else ""
         return '<span style="color:%s;font-weight:600">%s%.2f%%</span>' % (c, s, v)
@@ -2750,7 +2750,7 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
                 + " onmouseover=\"this.style.background=%s#1e293b%s\"" % (SQ, SQ)
                 + " onmouseout=\"this.style.background=%stransparent%s\">" % (SQ, SQ)
                 + "<td style=\"padding:5px 10px;font-weight:700;color:#94a3b8;font-size:12px;white-space:nowrap\">%s</td>" % sym
-                + "<td style=\"padding:5px 10px;color:#64748b;font-size:12px;white-space:nowrap\">%s</td>" % lbl
+                + "<td style=\"padding:5px 10px;color:#a3b2c7;font-size:12px;white-space:nowrap\">%s</td>" % lbl
                 + "<td style=\"padding:5px 10px;text-align:right;color:#94a3b8;font-size:12px\">$%.2f</td>" % p
                 + "<td style=\"padding:5px 10px;text-align:right;font-size:12px\">%s</td>" % _fmt(d.get("chg_open"))
                 + "<td style=\"padding:5px 10px;text-align:right;background:%s;font-size:12px\">%s</td>" % (bg, _fmt(today_v))
@@ -2764,7 +2764,7 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
         return html
 
     def _th(label, pane_id, col_i, active=False):
-        clr = "color:#f59e0b;" if active else "color:#64748b;"
+        clr = "color:#f59e0b;" if active else "color:#a3b2c7;"
         return (
             "<th style=\"padding:6px 10px;text-align:right;%sfont-size:11px;"
             "cursor:pointer;user-select:none;white-space:nowrap\""
@@ -2777,10 +2777,10 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
         thead = (
             "<thead style=\"position:sticky;top:0;background:#151e2d;z-index:2\">"
             "<tr style=\"border-bottom:2px solid #334155\">"
-            "<th style=\"padding:6px 10px;text-align:left;color:#64748b;font-size:11px;"
+            "<th style=\"padding:6px 10px;text-align:left;color:#a3b2c7;font-size:11px;"
             "cursor:pointer;user-select:none\" onclick=\"mpSort(%s'%s',0)\">Ticker</th>" % (SQ, pane_id)
-            + "<th style=\"padding:6px 10px;text-align:left;color:#64748b;font-size:11px\">Group</th>"
-            + "<th style=\"padding:6px 10px;text-align:right;color:#64748b;font-size:11px\">Price</th>"
+            + "<th style=\"padding:6px 10px;text-align:left;color:#a3b2c7;font-size:11px\">Group</th>"
+            + "<th style=\"padding:6px 10px;text-align:right;color:#a3b2c7;font-size:11px\">Price</th>"
             + _th("Today &#9660;", pane_id, 3, active=True)
             + _th("1W", pane_id, 4) + _th("1M", pane_id, 5)
             + _th("3M", pane_id, 6) + _th("6M", pane_id, 7) + _th("YTD", pane_id, 8)
@@ -2826,7 +2826,7 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
         else:
             return (
                 "<div id=\"mpp-highs\" class=\"mpp-pane\" style=\"display:none;padding:20px;"
-                "color:#64748b;text-align:center\">&#9888; No data available</div>"
+                "color:#a3b2c7;text-align:center\">&#9888; No data available</div>"
             )
         total  = total_hi + total_lo or 1
         hi_pct = round(total_hi / total * 100)
@@ -2889,7 +2889,7 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
                 "<div style=\"width:%d%%;height:100%%;background:%s;border-radius:3px\"></div>"
                 "</div></td>"
                 "<td style=\"padding:4px 8px;color:%s;font-size:12px;font-weight:700;width:40px\">%d%%</td>"
-                "<td style=\"padding:4px 8px;color:#64748b;font-size:11px\">%d/%d</td>"
+                "<td style=\"padding:4px 8px;color:#a3b2c7;font-size:11px\">%d/%d</td>"
                 "</tr>"
             ) % (lbl, pct, bc, bc, pct, pos, tot)
 
@@ -2918,7 +2918,7 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
             return (
                 "<div style=\"background:#0f172a;border:1px solid #1e293b;border-radius:8px;"
                 "padding:10px 14px;min-width:120px\">"
-                "<div style=\"color:#64748b;font-size:10px;text-transform:uppercase;"
+                "<div style=\"color:#a3b2c7;font-size:10px;text-transform:uppercase;"
                 "letter-spacing:.5px;margin-bottom:4px\">%s</div>"
                 "<div style=\"color:#e2e8f0;font-size:17px;font-weight:700\">%.2f</div>"
                 "<div style=\"color:%s;font-size:11px;margin-top:2px\">%s%.2f%%</div>"
@@ -2974,23 +2974,23 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
                 "<tr id='hold-" + sym + "' style='display:none;background:#0a1628'>"
                 "<td colspan='10' style='padding:0'>"
                 "<div style='padding:10px 14px 14px'>"
-                "<div style='font-size:10px;color:#475569;font-weight:700;"
+                "<div style='font-size:10px;color:#8595ad;font-weight:700;"
                 "text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px'>Top Holdings"
                 + (" <span style='font-weight:400;color:#374151;font-size:9px'>(static)</span>"
                    if any(h.get("cached") for h in hlist) else " <span style='font-weight:400;color:#22c55e;font-size:9px'>(live)</span>")
                 + "</div>"
                 "<table style='width:100%;border-collapse:collapse'>"
                 "<thead><tr style='border-bottom:1px solid #1e293b'>"
-                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:left'>Ticker</th>"
-                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:left'>Company</th>"
-                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>Price</th>"
-                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>Chg/Open</th>"
-                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>Day</th>"
-                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>1W</th>"
-                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>1M</th>"
-                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>3M</th>"
-                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>6M</th>"
-                "<th style='padding:3px 8px;color:#475569;font-size:10px;text-align:right'>YTD</th>"
+                "<th style='padding:3px 8px;color:#8595ad;font-size:10px;text-align:left'>Ticker</th>"
+                "<th style='padding:3px 8px;color:#8595ad;font-size:10px;text-align:left'>Company</th>"
+                "<th style='padding:3px 8px;color:#8595ad;font-size:10px;text-align:right'>Price</th>"
+                "<th style='padding:3px 8px;color:#8595ad;font-size:10px;text-align:right'>Chg/Open</th>"
+                "<th style='padding:3px 8px;color:#8595ad;font-size:10px;text-align:right'>Day</th>"
+                "<th style='padding:3px 8px;color:#8595ad;font-size:10px;text-align:right'>1W</th>"
+                "<th style='padding:3px 8px;color:#8595ad;font-size:10px;text-align:right'>1M</th>"
+                "<th style='padding:3px 8px;color:#8595ad;font-size:10px;text-align:right'>3M</th>"
+                "<th style='padding:3px 8px;color:#8595ad;font-size:10px;text-align:right'>6M</th>"
+                "<th style='padding:3px 8px;color:#8595ad;font-size:10px;text-align:right'>YTD</th>"
                 "</tr></thead><tbody>"
             )
             def _hfmt(v):
@@ -3051,7 +3051,7 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
                 arrow_td = (
                     '<td style="padding:5px 10px;font-weight:700;color:#94a3b8;font-size:12px;white-space:nowrap">'
                     "<span id='arr-%s' style='display:inline-block;margin-right:5px;"
-                    "transition:transform .2s;color:#64748b'>&#9658;</span>%s</td>"
+                    "transition:transform .2s;color:#a3b2c7'>&#9658;</span>%s</td>"
                 ) % (sym, sym)
                 orig_td = (
                     '<td style="padding:5px 10px;font-weight:700;color:#94a3b8;font-size:12px;white-space:nowrap">%s</td>'
@@ -3065,9 +3065,9 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
         thead = (
             "<thead style='position:sticky;top:0;background:#151e2d;z-index:2'>"
             "<tr style='border-bottom:2px solid #334155'>"
-            "<th style='padding:6px 10px;text-align:left;color:#64748b;font-size:11px'>Ticker</th>"
-            "<th style='padding:6px 10px;text-align:left;color:#64748b;font-size:11px'>" + group_label + "</th>"
-            "<th style='padding:6px 10px;text-align:right;color:#64748b;font-size:11px'>Price</th>"
+            "<th style='padding:6px 10px;text-align:left;color:#a3b2c7;font-size:11px'>Ticker</th>"
+            "<th style='padding:6px 10px;text-align:left;color:#a3b2c7;font-size:11px'>" + group_label + "</th>"
+            "<th style='padding:6px 10px;text-align:right;color:#a3b2c7;font-size:11px'>Price</th>"
             + _th("Chg/Open", pane_id, 3)
             + _th("Day &#9660;", pane_id, 4, active=True)
             + _th("1W", pane_id, 5) + _th("1M", pane_id, 6)
@@ -3162,13 +3162,13 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
 
         def _ratio_cell(v):
             if v is None or v == 0:
-                return "<td style='padding:5px 8px;text-align:center;color:#64748b;font-size:12px'>—</td>"
+                return "<td style='padding:5px 8px;text-align:center;color:#a3b2c7;font-size:12px'>—</td>"
             c = "#10b981" if v >= 1.0 else "#ef4444"
             return "<td style='padding:5px 8px;text-align:center;font-weight:700;font-size:12px;color:%s'>%.2f</td>" % (c, v)
 
         def _int_cell(v, hi_thr=None, lo_thr=None, invert=False):
             if v is None:
-                return "<td style='padding:5px 8px;text-align:center;color:#64748b;font-size:12px'>—</td>"
+                return "<td style='padding:5px 8px;text-align:center;color:#a3b2c7;font-size:12px'>—</td>"
             c = "#e2e8f0"
             if hi_thr is not None and v >= hi_thr:
                 c = "#ef4444" if invert else "#10b981"
@@ -3178,12 +3178,12 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
 
         def _pct_cell(v):
             if v is None:
-                return "<td style='padding:5px 8px;text-align:center;color:#64748b;font-size:12px'>—</td>"
+                return "<td style='padding:5px 8px;text-align:center;color:#a3b2c7;font-size:12px'>—</td>"
             c = "#10b981" if v >= 60 else "#f59e0b" if v >= 40 else "#ef4444"
             return "<td style='padding:5px 8px;text-align:center;font-weight:700;font-size:12px;color:%s'>%.1f%%</td>" % (c, v)
 
         def _date_cell(d):
-            return "<td style='padding:5px 8px;color:#64748b;font-size:11px;white-space:nowrap'>%s</td>" % d
+            return "<td style='padding:5px 8px;color:#a3b2c7;font-size:11px;white-space:nowrap'>%s</td>" % d
 
         rows_html = ""
         for d in hist_list[:30]:
@@ -3207,7 +3207,7 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
 
         if not rows_html:
             rows_html = ("<tr><td colspan='13' style='padding:20px;text-align:center;"
-                         "color:#475569;font-size:12px'>No breadth history yet — "
+                         "color:#8595ad;font-size:12px'>No breadth history yet — "
                          "data will accumulate with each dashboard build</td></tr>")
 
         thead = (
@@ -3225,7 +3225,7 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
             "<th style='padding:6px 6px;color:#10b981;font-size:10px;text-align:center' title='Stocks up 50%+ this month'>Up 50%+<br>Mo</th>"
             "<th style='padding:6px 6px;color:#ef4444;font-size:10px;text-align:center' title='Stocks down 50%+ this month'>Dn 50%+<br>Mo</th>"
             "<th style='padding:6px 6px;color:#f59e0b;font-size:10px;text-align:center' title='% of stocks above 50-day MA'>&gt;50dma<br>%</th>"
-            "<th style='padding:6px 6px;color:#64748b;font-size:10px;text-align:center'>Universe</th>"
+            "<th style='padding:6px 6px;color:#a3b2c7;font-size:10px;text-align:center'>Universe</th>"
             "</tr></thead>"
         )
 
@@ -3247,7 +3247,7 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
         "  <div onclick=\"mppToggle()\" style=\"display:flex;align-items:center;justify-content:space-between;"
         "padding:10px 16px;cursor:pointer;user-select:none;border-bottom:1px solid #334155\">\n"
         "    <span style=\"font-size:13px;font-weight:700;color:#e2e8f0\">&#128202; Market Pulse</span>\n"
-        "    <span id=\"mpp-toggle-icon\" style=\"color:#64748b;font-size:11px\">&#9660; expand</span>\n"
+        "    <span id=\"mpp-toggle-icon\" style=\"color:#a3b2c7;font-size:11px\">&#9660; expand</span>\n"
         "  </div>\n"
         "  <div id=\"mpp-body-panel\" style=\"display:none\">\n"
         "    <div style=\"display:flex;border-bottom:1px solid #334155;padding:0 8px;overflow-x:auto\">\n"
@@ -3275,18 +3275,23 @@ def _make_first_seen_cell(ticker, first_seen_dict):
     from datetime import date as _dt_
     ds = first_seen_dict.get(ticker, "")
     if not ds:
-        return '<td style="padding:6px 10px;color:#334155;font-size:11px;text-align:center">&#8212;</td>'
+        # data-sort keeps undated rows at the bottom whichever way the column sorts
+        return ('<td data-sort="0000-00-00" style="padding:6px 10px;color:#a3b2c7;'
+                'font-size:11px;text-align:center">&#8212;</td>')
     try:
         d   = _dt_.fromisoformat(ds)
         age = (_dt_.today() - d).days
         lbl = "Today" if age == 0 else ("%s %d" % (d.strftime("%b"), d.day))
-        clr = "#10b981" if age == 0 else "#f59e0b" if age <= 3 else "#94a3b8" if age <= 7 else "#475569"
+        clr = "#10b981" if age == 0 else "#fbbf24" if age <= 3 else "#cbd5e1" if age <= 7 else "#94a3b8"
+        # The visible label ("Jul 8" / "Today") sorts alphabetically, which is
+        # meaningless — carry the ISO date so sortTable can order by actual age.
         return (
-            '<td style="padding:6px 10px;color:%s;font-size:11px;'
+            '<td data-sort="%s" style="padding:6px 10px;color:%s;font-size:11px;'
             'white-space:nowrap;text-align:center" title="First seen %s">%s</td>'
-        ) % (clr, ds, lbl)
+        ) % (ds, clr, ds, lbl)
     except Exception:
-        return '<td style="padding:6px 10px;color:#475569;font-size:11px;text-align:center">%s</td>' % ds[5:]
+        return ('<td data-sort="%s" style="padding:6px 10px;color:#94a3b8;font-size:11px;'
+                'text-align:center">%s</td>') % (ds, ds[5:])
 
 
 def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mode=False, new_tickers=None, market_pulse=None, **kwargs):
@@ -3349,7 +3354,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             '<div style="display:flex;flex-direction:column;align-items:center;min-width:80px">'
             '<span style="font-weight:700;color:#f1f5f9">%s</span>'
             '<span style="font-size:12px;color:%s">%s%.2f%%</span>'
-            '<span style="font-size:11px;color:#64748b">%s</span>'
+            '<span style="font-size:11px;color:#a3b2c7">%s</span>'
             '</div>' % (sym, chg_color(chg), chg_arrow(chg), abs(chg), price_str)
         )
 
@@ -3395,7 +3400,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
                 '<div style="display:flex;flex-direction:column;align-items:center;min-width:72px">'
                 '<span style="font-size:11px;color:#94a3b8">%s%s</span>'
                 '<span style="font-size:11px;color:%s">%s%.2f%%</span>'
-                '<span style="font-size:10px;color:#64748b">%s</span>'
+                '<span style="font-size:10px;color:#a3b2c7">%s</span>'
                 '</div>' % (_icon, _clabel, chg_color(_cc2), chg_arrow(_cc2), abs(_cc2), _ps)
             )
     _comm_block = (
@@ -3439,7 +3444,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             'text-align:center;min-width:90px;flex:1" id="sec-tile-%s">'
             '<div style="font-size:11px;font-weight:700;color:%s">%s%.2f%%</div>'
             '<div style="font-size:10px;color:#94a3b8;margin-top:2px">%s</div>'
-            '<div style="font-size:10px;color:#64748b">%s</div>'
+            '<div style="font-size:10px;color:#a3b2c7">%s</div>'
             '</div>' % (_hclk, _hcur, bg, etf, tc, chg_arrow(chg), abs(chg), name, etf)
         )
 
@@ -3472,7 +3477,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         "<script>var _sdi=" + _djson + ";"
         "var _sdActive=null;"
         "function _pct(v){"
-        "if(v===null||v===undefined)return '<span style=\"color:#64748b\">n/a</span>';"
+        "if(v===null||v===undefined)return '<span style=\"color:#a3b2c7\">n/a</span>';"
         "var c=v>=0?'#10b981':'#ef4444';"
         "var s=v>=0?'▲':'▼';"
         "return '<span style=\"color:'+c+';font-weight:600\">'+s+Math.abs(v).toFixed(2)+'%</span>';}"
@@ -3486,17 +3491,17 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         "var rows=_sdi[etf]||[];"
         "var h='<table style=\"width:100%;border-collapse:collapse\">';"
         "h+='<tr style=\"border-bottom:1px solid #1e293b\">"
-        "<th style=\"text-align:left;padding:4px 8px;font-size:10px;color:#475569\">Industry</th>"
-        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#475569\">ETF</th>"
-        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#475569\">Day</th>"
-        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#475569\">1W</th>"
-        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#475569\">1M</th>"
-        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#475569\">3M</th>"
+        "<th style=\"text-align:left;padding:4px 8px;font-size:10px;color:#8595ad\">Industry</th>"
+        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#8595ad\">ETF</th>"
+        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#8595ad\">Day</th>"
+        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#8595ad\">1W</th>"
+        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#8595ad\">1M</th>"
+        "<th style=\"text-align:right;padding:4px 8px;font-size:10px;color:#8595ad\">3M</th>"
         "</tr>';"
         "rows.forEach(function(r){"
         "h+='<tr style=\"border-bottom:1px solid #0f172a\">"
         "<td style=\"padding:5px 8px;font-size:11px;color:#cbd5e1\">'+r.lbl+'</td>"
-        "<td style=\"padding:5px 8px;font-size:11px;color:#64748b;text-align:right\">'+r.sym+'</td>"
+        "<td style=\"padding:5px 8px;font-size:11px;color:#a3b2c7;text-align:right\">'+r.sym+'</td>"
         "<td style=\"padding:5px 8px;font-size:11px;text-align:right\">'+_pct(r.day)+'</td>"
         "<td style=\"padding:5px 8px;font-size:11px;text-align:right\">'+_pct(r.w1)+'</td>"
         "<td style=\"padding:5px 8px;font-size:11px;text-align:right\">'+_pct(r.m1)+'</td>"
@@ -3510,7 +3515,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
     _etf_strip = (
         '<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;'
         'padding:10px 14px;margin-bottom:10px">'
-        '<div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;'
+        '<div style="font-size:10px;color:#a3b2c7;font-weight:600;text-transform:uppercase;'
         'letter-spacing:.5px;margin-bottom:8px">Sector ETFs &#8212; 1D</div>'
         '<div style="display:flex;gap:5px;flex-wrap:wrap">'
         + "".join(sector_cells)
@@ -3544,10 +3549,10 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         '</style>'
         # ── Toolbar ──────────────────────────────────────────────────────────
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">'
-        '<span style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;'
+        '<span style="font-size:10px;color:#a3b2c7;font-weight:700;text-transform:uppercase;'
         'letter-spacing:.6px">Perf</span>'
         '<div style="display:flex;gap:3px">' + _hm_period_btns + '</div>'
-        '<span style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;'
+        '<span style="font-size:10px;color:#a3b2c7;font-weight:700;text-transform:uppercase;'
         'letter-spacing:.6px;margin-left:6px">Extra</span>'
         '<div style="display:flex;gap:3px">' + _hm_extra_btns + '</div>'
         '</div>'
@@ -3578,7 +3583,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         # Colour scale bar — direct child of hm-wrap; JS keeps it at bottom-right of visible area
         '<div id="hm-scale-bar" style="position:fixed;z-index:1000;'
         'background:rgba(9,14,27,.92);border:1px solid #1e293b;border-radius:7px;padding:7px 10px 5px;">'
-        '<div style="font-size:9px;color:#64748b;font-weight:700;letter-spacing:.5px;'
+        '<div style="font-size:9px;color:#a3b2c7;font-weight:700;letter-spacing:.5px;'
         'text-transform:uppercase;margin-bottom:4px;text-align:center">Filter by change</div>'
         '<div style="display:flex;gap:2px;align-items:flex-end;margin-bottom:4px">'
         '<div class="hm-seg" onclick="hmFilterRange(-999,-3,this)" title="Below −3%"'
@@ -3650,7 +3655,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         at the pattern buy point, so a stock still inside its base shows a clearly
         positive number (ESS: +5.4%) rather than looking like a live setup.
         """
-        empty = '<td style="padding:8px 12px;color:#475569">&#8212;</td>'
+        empty = '<td style="padding:8px 12px;color:#8595ad">&#8212;</td>'
         try:
             p, e = float(price_v), float(entry_v)
         except (TypeError, ValueError):
@@ -3698,7 +3703,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
 
         def pp_cell(chg, _label):
             if chg is None:
-                return '<td style="padding:8px 10px;color:#475569;font-size:11px">—</td>'
+                return '<td style="padding:8px 10px;color:#8595ad;font-size:11px">—</td>'
             color = "#10b981" if chg >= 0 else "#ef4444"
             arrow = "&#9650;" if chg >= 0 else "&#9660;"
             return ('<td style="padding:8px 10px;font-size:11px;color:%s">%s%.2f%%</td>'
@@ -3716,10 +3721,10 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
                 earn_cell = ('<td style="padding:8px 10px;font-size:11px;color:#f59e0b">'
                              '&#128197; %s</td>' % earn_date)
             else:
-                earn_cell = ('<td style="padding:8px 10px;font-size:11px;color:#64748b">'
+                earn_cell = ('<td style="padding:8px 10px;font-size:11px;color:#a3b2c7">'
                              '%s</td>' % earn_date)
         else:
-            earn_cell = '<td style="padding:8px 10px;color:#334155;font-size:11px">—</td>'
+            earn_cell = '<td style="padding:8px 10px;color:#a3b2c7;font-size:11px">—</td>'
 
         chg_pct  = r.get("change_pct", 0) or 0
         chg_col  = "#10b981" if chg_pct >= 0 else "#ef4444"
@@ -3753,16 +3758,16 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             _pc = {"VCP": "#34d399", "CUP+HANDLE": "#60a5fa", "FLAT BASE": "#fbbf24"}.get(_pat_name, "#94a3b8")
             # Score bar width (0-100%)
             _bar = '<div style="height:3px;background:%s;width:%d%%;border-radius:2px;margin-top:2px"></div>' % (_pc, _pat_sc)
-            _vd_icon = '<span style="color:#64748b;font-size:9px"> Vol&#8595;</span>' if _pat_vd else ''
+            _vd_icon = '<span style="color:#a3b2c7;font-size:9px"> Vol&#8595;</span>' if _pat_vd else ''
             pat_cell = (
                 '<td style="padding:5px 8px;white-space:nowrap">'
                 '<span style="color:%s;font-weight:700;font-size:10px">%s</span>'
-                '<span style="color:#64748b;font-size:9px"> %d</span>'
+                '<span style="color:#a3b2c7;font-size:9px"> %d</span>'
                 '%s%s'
                 '</td>' % (_pc, _pat_name, _pat_sc, _vd_icon, _bar)
             )
         else:
-            pat_cell = '<td style="padding:5px 8px;color:#334155;font-size:11px">—</td>'
+            pat_cell = '<td style="padding:5px 8px;color:#a3b2c7;font-size:11px">—</td>'
 
         if _row_ibuys or _row_isells:
             _ins_parts = []
@@ -3771,19 +3776,19 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
                 _ib_s  = ("%.0fK" % (_ib_sh/1000)) if _ib_sh >= 1000 else str(_ib_sh)
                 _ins_parts.append(
                     '<span style="color:#10b981;font-weight:600">&#9650;%d</span>'
-                    '<span style="color:#475569;font-size:10px"> %s</span>' % (len(_row_ibuys), _ib_s)
+                    '<span style="color:#8595ad;font-size:10px"> %s</span>' % (len(_row_ibuys), _ib_s)
                 )
             if _row_isells:
                 _is_sh = sum(x["shares"] for x in _row_isells)
                 _is_s  = ("%.0fK" % (_is_sh/1000)) if _is_sh >= 1000 else str(_is_sh)
                 _ins_parts.append(
                     '<span style="color:#ef4444;font-weight:600">&#9660;%d</span>'
-                    '<span style="color:#475569;font-size:10px"> %s</span>' % (len(_row_isells), _is_s)
+                    '<span style="color:#8595ad;font-size:10px"> %s</span>' % (len(_row_isells), _is_s)
                 )
             ins_cell = ('<td style="padding:6px 8px;white-space:nowrap;font-size:11px">'
                         + ' '.join(_ins_parts) + '</td>')
         else:
-            ins_cell = '<td style="padding:6px 8px;color:#334155;font-size:11px">—</td>'
+            ins_cell = '<td style="padding:6px 8px;color:#a3b2c7;font-size:11px">—</td>'
 
         # ── Top institutional holder cell ─────────────────────────────────────
         if _row_insts:
@@ -3812,7 +3817,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
                 + '</td>'
             )
         else:
-            inst_cell = '<td style="padding:6px 8px;color:#334155;font-size:11px">—</td>'
+            inst_cell = '<td style="padding:6px 8px;color:#a3b2c7;font-size:11px">—</td>'
 
         # News sentiment dot for ticker cell
         _news_items_row = ydata.get('news', [])
@@ -3823,7 +3828,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         elif _ns_total < 0:
             _news_sdot = '<span style="color:#ef4444;font-size:8px;vertical-align:super">&#9679;</span>'
         elif _ns_scores:
-            _news_sdot = '<span style="color:#475569;font-size:8px;vertical-align:super">&#9675;</span>'
+            _news_sdot = '<span style="color:#8595ad;font-size:8px;vertical-align:super">&#9675;</span>'
         else:
             _news_sdot = ''
 
@@ -3851,7 +3856,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             '<td style="padding:4px 8px;position:sticky;right:0;background:#253347;z-index:1" onclick="event.stopPropagation()">'
             '<button id="wbtn-%(t)s" onclick="toggleWatch(\'%(t)s\',%(p)s,%(e)s,%(s)s,%(t1)s,\'%(strat)s\',\'%(sec)s\')"'
             ' style="background:none;border:1px solid #475569;border-radius:5px;'
-            'color:#64748b;cursor:pointer;font-size:14px;padding:2px 7px;transition:all .2s"'
+            'color:#a3b2c7;cursor:pointer;font-size:14px;padding:2px 7px;transition:all .2s"'
             ' title="Add to watchlist">&#9734;</button>'
             '</td>'
             '</tr>'
@@ -3863,8 +3868,8 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             # live premarket print and keep yesterday's close as small context.
             "pcell": (
                 ('<span style="color:#fbbf24;font-weight:600">$%s</span>'
-                 '<span style="color:#64748b;font-size:10px;margin-left:4px">%s %+.1f%%</span>'
-                 '<br><span style="color:#475569;font-size:10px">cl $%s</span>'
+                 '<span style="color:#a3b2c7;font-size:10px;margin-left:4px">%s %+.1f%%</span>'
+                 '<br><span style="color:#8595ad;font-size:10px">cl $%s</span>'
                  % (r.get("pre_live_price"), r.get("live_session") or "PM",
                     r.get("gap_pct") or 0.0, price_val))
                 if r.get("premarket_rebased") else ("$%s" % price_val)
@@ -3905,7 +3910,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
                 '<tr>'
                 '<td style="padding:6px 10px;color:#94a3b8;font-size:13px">%s</td>'
                 '<td style="padding:6px 10px;color:#e2e8f0;font-size:13px">%s</td>'
-                '<td style="padding:6px 10px;color:#64748b;font-size:12px">%s</td>'
+                '<td style="padding:6px 10px;color:#a3b2c7;font-size:12px">%s</td>'
                 '<td style="padding:6px 10px;text-align:center">%s</td>'
                 '</tr>'
             ) % (crit_name, c_val, c_req, pass_badge(c_pass, c_warn))
@@ -4011,7 +4016,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
                 + _rsign + ("%.0f" % abs(_rpct)) + '% vs SPY</div>'
             )
         else:
-            _rs_svg = '<span style="color:#475569;font-size:11px">No data</span>'
+            _rs_svg = '<span style="color:#8595ad;font-size:11px">No data</span>'
 
         # Analyst ratings
         _rec_map = {
@@ -4026,10 +4031,10 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
         # Performance from TradingView data
         _pw = r.get("perf_1w"); _pm = r.get("perf_1m"); _pq = r.get("perf_3m")
         def _pc(v, lbl):
-            if v is None: return '<div style="text-align:center"><div style="color:#64748b;font-size:9px;text-transform:uppercase;margin-bottom:3px">' + lbl + '</div><div style="color:#475569;font-size:12px">—</div></div>'
+            if v is None: return '<div style="text-align:center"><div style="color:#a3b2c7;font-size:9px;text-transform:uppercase;margin-bottom:3px">' + lbl + '</div><div style="color:#8595ad;font-size:12px">—</div></div>'
             col = "#10b981" if v > 0 else "#ef4444" if v < 0 else "#94a3b8"
             sign = "+" if v > 0 else ""
-            return ('<div style="text-align:center"><div style="color:#64748b;font-size:9px;text-transform:uppercase;margin-bottom:3px">' + lbl
+            return ('<div style="text-align:center"><div style="color:#a3b2c7;font-size:9px;text-transform:uppercase;margin-bottom:3px">' + lbl
                     + '</div><div style="color:' + col + ';font-size:13px;font-weight:600">' + sign + ("%.1f%%" % v) + '</div></div>')
         _perf_row = (
             '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:10px;'
@@ -4049,17 +4054,17 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
                            + ("+" if _up > 0 else "") + ("%.0f" % _up) + '%)</span>')
             _n_str = ("%d analysts" % a_n) if a_n else ""
             _analyst_html = (
-                '<div style="font-size:11px;color:#64748b;margin-bottom:6px">ANALYST CONSENSUS</div>'
+                '<div style="font-size:11px;color:#a3b2c7;margin-bottom:6px">ANALYST CONSENSUS</div>'
                 '<span style="background:' + _rc2 + '33;color:' + _rc2 + ';padding:3px 10px;'
                 'border-radius:5px;font-size:12px;font-weight:600">' + _rl + '</span>'
                 '<div style="margin-top:8px;color:#e2e8f0;font-size:13px">Target: ' + _tgt + _up_str + '</div>'
-                '<div style="color:#64748b;font-size:10px;margin-top:2px">' + _n_str + '</div>'
+                '<div style="color:#a3b2c7;font-size:10px;margin-top:2px">' + _n_str + '</div>'
                 + _perf_row
             )
         else:
             _analyst_html = (
-                '<div style="font-size:11px;color:#64748b;margin-bottom:6px">ANALYST CONSENSUS</div>'
-                '<span style="color:#475569;font-size:11px">No data</span>'
+                '<div style="font-size:11px;color:#a3b2c7;margin-bottom:6px">ANALYST CONSENSUS</div>'
+                '<span style="color:#8595ad;font-size:11px">No data</span>'
                 + _perf_row
             )
 
@@ -4075,7 +4080,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
                 _sent_agg = ('<span style="color:#ef4444;font-size:10px;margin-left:6px">'
                              '&#9679; негатив</span>')
             else:
-                _sent_agg = ('<span style="color:#64748b;font-size:10px;margin-left:6px">'
+                _sent_agg = ('<span style="color:#a3b2c7;font-size:10px;margin-left:6px">'
                              '&#9679; нейтрал</span>')
             for _ni in news_list[:3]:
                 _nt = (_ni.get("t") or "")[:80]
@@ -4089,18 +4094,18 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
                     '<div>'
                     '<a href="%s" target="_blank" rel="noopener" '
                     'style="color:#93c5fd;font-size:11px;text-decoration:none;line-height:1.4">%s</a>'
-                    '<div style="color:#475569;font-size:10px;margin-top:1px">%s</div>'
+                    '<div style="color:#8595ad;font-size:10px;margin-top:1px">%s</div>'
                     '</div>'
                     '</div>'
                 ) % (_sdot[1], _sdot[0], _nu, _nt, _nd)
             _news_html = (
-                '<div style="font-size:11px;color:#64748b;margin-bottom:8px">'
+                '<div style="font-size:11px;color:#a3b2c7;margin-bottom:8px">'
                 'LATEST NEWS' + _sent_agg + '</div>'
                 + _news_rows
             )
         else:
-            _news_html = ('<div style="font-size:11px;color:#64748b;margin-bottom:8px">LATEST NEWS</div>'
-                          '<span style="color:#475569;font-size:11px">No news</span>')
+            _news_html = ('<div style="font-size:11px;color:#a3b2c7;margin-bottom:8px">LATEST NEWS</div>'
+                          '<span style="color:#8595ad;font-size:11px">No news</span>')
 
         # ── Insider transactions HTML ─────────────────────────────────────────
         _ib_cnt  = len(ins_buys)
@@ -4146,14 +4151,14 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
                 '&#9660; ' + str(_is_cnt) + ' Sell' + (' ' + _fmt_sh(_is_sh) if _is_sh else '') + '</span>'
             ) if _is_cnt else ""
             _insider_html = (
-                '<div style="font-size:11px;color:#64748b;margin-bottom:6px">INSIDER (30D)</div>'
+                '<div style="font-size:11px;color:#a3b2c7;margin-bottom:6px">INSIDER (30D)</div>'
                 '<div style="margin-bottom:8px">' + _buy_badge + _sell_badge + '</div>'
                 + _ins_rows
             )
         else:
             _insider_html = (
-                '<div style="font-size:11px;color:#64748b;margin-bottom:6px">INSIDER (30D)</div>'
-                '<span style="color:#475569;font-size:11px">No activity</span>'
+                '<div style="font-size:11px;color:#a3b2c7;margin-bottom:6px">INSIDER (30D)</div>'
+                '<span style="color:#8595ad;font-size:11px">No activity</span>'
             )
 
         # ── Institutional holders HTML ────────────────────────────────────────
@@ -4170,7 +4175,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
                     _chg_badge = ('<span style="color:#ef4444;font-size:10px;'
                                   'white-space:nowrap;margin-left:8px">&#9660; %.1f%%</span>' % _chg)
                 else:
-                    _chg_badge = '<span style="color:#475569;font-size:10px;margin-left:8px">—</span>'
+                    _chg_badge = '<span style="color:#8595ad;font-size:10px;margin-left:8px">—</span>'
                 _date_str = _ih.get("date", "")
                 _inst_rows += (
                     '<div style="margin-bottom:7px">'
@@ -4179,7 +4184,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
                     '<span style="color:#94a3b8;font-size:10px;flex:1;min-width:0;'
                     'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
                     + _ih["name"] + '</span>'
-                    '<span style="color:#475569;font-size:9px;white-space:nowrap;margin-left:6px">'
+                    '<span style="color:#8595ad;font-size:9px;white-space:nowrap;margin-left:6px">'
                     + _date_str + '</span>'
                     '</div>'
                     # %held + change line
@@ -4191,16 +4196,16 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
                     '</div>'
                 )
             _inst_html = (
-                '<div style="font-size:11px;color:#64748b;margin-bottom:8px">'
+                '<div style="font-size:11px;color:#a3b2c7;margin-bottom:8px">'
                 'INSTITUTIONAL HOLDERS'
-                '<span style="font-size:9px;color:#475569;margin-left:6px">%held · Δ position</span>'
+                '<span style="font-size:9px;color:#8595ad;margin-left:6px">%held · Δ position</span>'
                 '</div>'
                 + _inst_rows
             )
         else:
             _inst_html = (
-                '<div style="font-size:11px;color:#64748b;margin-bottom:6px">INSTITUTIONAL HOLDERS</div>'
-                '<span style="color:#475569;font-size:11px">No data</span>'
+                '<div style="font-size:11px;color:#a3b2c7;margin-bottom:6px">INSTITUTIONAL HOLDERS</div>'
+                '<span style="color:#8595ad;font-size:11px">No data</span>'
             )
 
         # ── Chart Pattern Panel ───────────────────────────────────────────────
@@ -4258,14 +4263,14 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             )
 
             _pat_panel = (
-                '<div style="font-size:11px;color:#64748b;margin-bottom:8px">CHART PATTERN</div>'
+                '<div style="font-size:11px;color:#a3b2c7;margin-bottom:8px">CHART PATTERN</div>'
                 '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
                 '<span style="color:%s;font-size:16px;font-weight:700">%s</span>'
                 '<span style="color:#94a3b8;font-size:11px">score %d/100</span>'
                 '</div>'
                 % (_cp_col, _cp_name, _cp_sc)
                 + _sc_bar
-                + '<div style="color:#64748b;font-size:10px;margin-bottom:8px">%s</div>' % _cp_det
+                + '<div style="color:#a3b2c7;font-size:10px;margin-bottom:8px">%s</div>' % _cp_det
                 + _chk_html
                 + (('<div style="margin-top:8px;padding:6px 10px;background:#0d2b1f;'
                     'border:1px solid #34d399;border-radius:6px;color:#34d399;font-size:11px">'
@@ -4273,8 +4278,8 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             )
         else:
             _pat_panel = (
-                '<div style="font-size:11px;color:#64748b;margin-bottom:8px">CHART PATTERN</div>'
-                '<span style="color:#475569;font-size:11px">No pattern detected</span>'
+                '<div style="font-size:11px;color:#a3b2c7;margin-bottom:8px">CHART PATTERN</div>'
+                '<span style="color:#8595ad;font-size:11px">No pattern detected</span>'
             )
 
         # ATR block for RS panel
@@ -4284,19 +4289,19 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             _atr15 = round(_atr_val * 1.5, 2)
             _atr_block = (
                 '<div style="margin-top:10px;border-top:1px solid #1e293b;padding-top:8px">'
-                '<div style="font-size:10px;color:#64748b;margin-bottom:4px">'
+                '<div style="font-size:10px;color:#a3b2c7;margin-bottom:4px">'
                 'ATR (14-week) '
                 + ('<span style="color:#94a3b8">%.2f%%</span>' % _atr_pct) +
                 '</div>'
                 '<div style="display:flex;gap:10px">'
                 '<div style="background:#132032;border:1px solid #1e3a5f;border-radius:5px;'
                 'padding:4px 8px;text-align:center">'
-                '<div style="color:#64748b;font-size:9px">1 ATR</div>'
+                '<div style="color:#a3b2c7;font-size:9px">1 ATR</div>'
                 + ('<div style="color:#60a5fa;font-size:13px;font-weight:700">$%.2f</div>' % _atr1) +
                 '</div>'
                 '<div style="background:#1a1032;border:1px solid #4c1d95;border-radius:5px;'
                 'padding:4px 8px;text-align:center">'
-                '<div style="color:#64748b;font-size:9px">1.5 ATR</div>'
+                '<div style="color:#a3b2c7;font-size:9px">1.5 ATR</div>'
                 + ('<div style="color:#a78bfa;font-size:13px;font-weight:700">$%.2f</div>' % _atr15) +
                 '</div>'
                 '</div>'
@@ -4309,7 +4314,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             # Row 1: RS Line / Analyst / News
             '<div style="display:grid;grid-template-columns:200px 1fr 1fr;gap:10px;margin-bottom:10px">'
             '<div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px">'
-            '<div style="font-size:11px;color:#64748b;margin-bottom:6px">RS LINE vs SPY (3M)</div>'
+            '<div style="font-size:11px;color:#a3b2c7;margin-bottom:6px">RS LINE vs SPY (3M)</div>'
             + _rs_svg
             + (_atr_block if _atr_val else '')
             + '</div>'
@@ -4339,7 +4344,7 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             '<button id="wbtn-detail-{t}"'
             ' onclick="toggleWatch(\'{t}\',{p},{e},{s},{t1},\'{strat}\',\'{sec}\')"'
             ' style="background:none;border:1px solid #475569;border-radius:6px;'
-            'color:#64748b;cursor:pointer;font-size:18px;padding:2px 8px;'
+            'color:#a3b2c7;cursor:pointer;font-size:18px;padding:2px 8px;'
             'transition:all .2s;line-height:1" title="Add to watchlist">&#9734;</button>'
         ).format(
             t=ticker, p=price_val, e=entry_val, s=stop_val, t1=t1_val,
@@ -4363,23 +4368,23 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
 
             '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">'
             '<div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;text-align:center">'
-            '<div style="color:#64748b;font-size:11px;margin-bottom:4px">ENTRY</div>'
+            '<div style="color:#a3b2c7;font-size:11px;margin-bottom:4px">ENTRY</div>'
             '<div style="color:#e2e8f0;font-size:18px;font-weight:600">$%s</div>'
             '</div>'
             '<div style="background:#0f172a;border:1px solid #ef4444;border-radius:8px;padding:12px;text-align:center">'
             '<div style="color:#ef4444;font-size:11px;margin-bottom:4px">STOP LOSS</div>'
             '<div style="color:#ef4444;font-size:18px;font-weight:600">$%s</div>'
-            '<div style="color:#64748b;font-size:11px">-%.1f%%</div>'
+            '<div style="color:#a3b2c7;font-size:11px">-%.1f%%</div>'
             '</div>'
             '<div style="background:#0f172a;border:1px solid #10b981;border-radius:8px;padding:12px;text-align:center">'
             '<div style="color:#10b981;font-size:11px;margin-bottom:4px">TARGET T1</div>'
             '<div style="color:#10b981;font-size:18px;font-weight:600">$%s</div>'
-            '<div style="color:#64748b;font-size:11px">+%.1f%%</div>'
+            '<div style="color:#a3b2c7;font-size:11px">+%.1f%%</div>'
             '</div>'
             '<div style="background:#0f172a;border:1px solid %s;border-radius:8px;padding:12px;text-align:center">'
             '<div style="color:#94a3b8;font-size:11px;margin-bottom:4px">R/R RATIO</div>'
             '<div style="color:%s;font-size:18px;font-weight:600">%s : 1</div>'
-            '<div style="color:#64748b;font-size:11px">%s</div>'
+            '<div style="color:#a3b2c7;font-size:11px">%s</div>'
             '</div>'
             '</div>'
 
@@ -4392,17 +4397,17 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             '</summary>'
             '<table style="width:100%%;border-collapse:collapse;font-size:13px">'
             '<thead><tr style="border-bottom:1px solid #334155">'
-            '<th style="padding:6px 10px;text-align:left;color:#64748b">Criterion</th>'
-            '<th style="padding:6px 10px;text-align:left;color:#64748b">Value</th>'
-            '<th style="padding:6px 10px;text-align:left;color:#64748b">Required</th>'
-            '<th style="padding:6px 10px;text-align:center;color:#64748b">Status</th>'
+            '<th style="padding:6px 10px;text-align:left;color:#a3b2c7">Criterion</th>'
+            '<th style="padding:6px 10px;text-align:left;color:#a3b2c7">Value</th>'
+            '<th style="padding:6px 10px;text-align:left;color:#a3b2c7">Required</th>'
+            '<th style="padding:6px 10px;text-align:center;color:#a3b2c7">Status</th>'
             '</tr></thead>'
             '<tbody>%s</tbody>'
             '</table>'
             '</details>'
 
             '<div style="margin-bottom:16px">'
-            '<div style="color:#64748b;font-size:11px;margin-bottom:6px">TRADE JOURNAL ENTRY</div>'
+            '<div style="color:#a3b2c7;font-size:11px;margin-bottom:6px">TRADE JOURNAL ENTRY</div>'
             '<textarea id="journal-%s" style="width:100%%;background:#0f172a;border:1px solid #334155;'
             'border-radius:6px;color:#94a3b8;font-family:monospace;font-size:12px;padding:10px;'
             'line-height:1.6;resize:vertical" rows="7">%s</textarea>'
@@ -4447,8 +4452,14 @@ function sortTable(col,type){
     }else{
       var ac=a.cells[col],bc=b.cells[col];
       if(!ac||!bc)return 0;
-      av=ac.textContent.trim().replace(/[$%+,]/g,'');
-      bv=bc.textContent.trim().replace(/[$%+,]/g,'');
+      // A cell may carry data-sort when its visible label is not sortable —
+      // e.g. Seen shows "Jul 8"/"Today" but sorts on the underlying ISO date.
+      var ad=ac.getAttribute('data-sort'),bd=bc.getAttribute('data-sort');
+      if(ad!==null&&bd!==null){av=ad;bv=bd;}
+      else{
+        av=ac.textContent.trim().replace(/[$%+,]/g,'');
+        bv=bc.textContent.trim().replace(/[$%+,]/g,'');
+      }
       if(type==='num'){av=parseFloat(av)||0;bv=parseFloat(bv)||0;}
     }
     if(av<bv)return _sortAsc?-1:1;
@@ -4637,7 +4648,7 @@ function distBar(item){
     +'<div style="position:absolute;top:-3px;left:'+ep.toFixed(1)+'%;width:2px;height:12px;background:#94a3b8;border-radius:1px"></div>'
     +'<div style="position:absolute;top:-1px;left:'+pp.toFixed(1)+'%;width:8px;height:8px;background:'+col+';border-radius:50%;transform:translateX(-4px)"></div>'
     +'</div>'
-    +'<div style="display:flex;justify-content:space-between;font-size:9px;color:#475569">'
+    +'<div style="display:flex;justify-content:space-between;font-size:9px;color:#8595ad">'
     +'<span>STP $'+s+'</span><span>ENT $'+e+'</span><span>T1 $'+t+'</span></div>';
 }
 function removeWatch(btn){
@@ -4671,7 +4682,7 @@ function renderWatchlist(){
     var st=alertStatus(item),bar=distBar(item);
     var _cR=document.querySelector('[data-ticker="'+item.ticker+'"]');
     var _hmE=window.HM_DATA?HM_DATA.find(function(x){return x.t===item.ticker;}):null;
-    var _fpc=function(v){if(v===null||v===undefined||v==='')return '<td style="padding:5px 8px;text-align:right;color:#475569;font-size:11px">\u2014</td>';var n=parseFloat(v);var c=n>=0?'#10b981':'#ef4444';return '<td style="padding:5px 8px;text-align:right;font-size:12px;font-weight:600;color:'+c+'">'+(n>=0?'\u25b2':'\u25bc')+Math.abs(n).toFixed(1)+'%</td>';};
+    var _fpc=function(v){if(v===null||v===undefined||v==='')return '<td style="padding:5px 8px;text-align:right;color:#8595ad;font-size:11px">\u2014</td>';var n=parseFloat(v);var c=n>=0?'#10b981':'#ef4444';return '<td style="padding:5px 8px;text-align:right;font-size:12px;font-weight:600;color:'+c+'">'+(n>=0?'\u25b2':'\u25bc')+Math.abs(n).toFixed(1)+'%</td>';};
     var _sa='';
     if(item.price_at_add&&item.price_at_add>0&&item.price){_sa=((parseFloat(item.price)-item.price_at_add)/item.price_at_add*100).toFixed(1);}
     return '<tr style="background:'+st.bg+';cursor:pointer" onclick="showDetail(this.cells[0].textContent.trim())">'
@@ -4682,7 +4693,7 @@ function renderWatchlist(){
       +_fpc(_cR?_cR.getAttribute('data-chg'):(_hmE?String(_hmE.c):''))+_fpc(_cR?_cR.getAttribute('data-perf1w'):(_hmE?String(_hmE.w):''))+_fpc(_cR?_cR.getAttribute('data-perf1m'):(_hmE?String(_hmE.m):''))+_fpc(_sa)
       +'<td style="padding:8px 12px;min-width:180px">'+bar+'</td>'
       +'<td style="padding:8px 12px;font-size:12px;font-weight:600;color:'+st.color+'">'+st.label+'</td>'
-      +'<td style="padding:8px 12px;color:#64748b;font-size:11px">'+(item.added||'')+'</td>'
+      +'<td style="padding:8px 12px;color:#a3b2c7;font-size:11px">'+(item.added||'')+'</td>'
       +'<td style="padding:4px 8px"><button data-ticker="'+item.ticker+'" onclick="removeWatch(this)" '
       +'style="background:#7f1d1d;color:#fca5a5;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">Remove</button></td>'
       +'</tr>';
@@ -4696,17 +4707,17 @@ function renderWatchlist(){
     +'</div></div>'
     +'<table style="width:100%;border-collapse:collapse">'
     +'<thead><tr style="border-bottom:1px solid #334155">'
-    +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">Ticker</th>'
-    +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">Sector</th>'
-    +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">Strategy</th>'
-    +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">Price</th>'
+    +'<th style="padding:6px 12px;text-align:left;color:#a3b2c7;font-size:11px">Ticker</th>'
+    +'<th style="padding:6px 12px;text-align:left;color:#a3b2c7;font-size:11px">Sector</th>'
+    +'<th style="padding:6px 12px;text-align:left;color:#a3b2c7;font-size:11px">Strategy</th>'
+    +'<th style="padding:6px 12px;text-align:left;color:#a3b2c7;font-size:11px">Price</th>'
     +'<th style="padding:6px 8px;text-align:right;color:#94a3b8;font-size:11px">Day%</th>'
     +'<th style="padding:6px 8px;text-align:right;color:#94a3b8;font-size:11px">Week%</th>'
     +'<th style="padding:6px 8px;text-align:right;color:#94a3b8;font-size:11px">Month%</th>'
     +'<th style="padding:6px 8px;text-align:right;color:#f59e0b;font-size:11px">Since Added</th>'
-    +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">to Entry</th>'
-    +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">Status</th>'
-    +'<th style="padding:6px 12px;text-align:left;color:#64748b;font-size:11px">Added</th>'
+    +'<th style="padding:6px 12px;text-align:left;color:#a3b2c7;font-size:11px">to Entry</th>'
+    +'<th style="padding:6px 12px;text-align:left;color:#a3b2c7;font-size:11px">Status</th>'
+    +'<th style="padding:6px 12px;text-align:left;color:#a3b2c7;font-size:11px">Added</th>'
     +'<th></th></tr></thead>'
     +'<tbody>'+rows+'</tbody></table></div>';
   document.querySelectorAll('[id^="wbtn-"]').forEach(function(btn){
@@ -4753,13 +4764,13 @@ function showDetail(ticker){
       +'<span style="color:#a78bfa;font-size:11px;background:#1e1b4b;padding:2px 8px;border-radius:4px;text-transform:uppercase">'+(item.strategy||'')+'</span>'
       +'</div>'
       +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">'
-      +'<div style="background:#0f172a;border-radius:8px;padding:10px;text-align:center"><div style="color:#64748b;font-size:10px;margin-bottom:4px">PRICE</div><div style="color:#e2e8f0;font-size:15px;font-weight:700">$'+(item.price||'--')+'</div></div>'
-      +'<div style="background:#0f172a;border-radius:8px;padding:10px;text-align:center"><div style="color:#64748b;font-size:10px;margin-bottom:4px">ENTRY</div><div style="color:#4ade80;font-size:15px;font-weight:700">$'+(item.entry||'--')+'</div></div>'
-      +'<div style="background:#0f172a;border-radius:8px;padding:10px;text-align:center"><div style="color:#64748b;font-size:10px;margin-bottom:4px">STOP</div><div style="color:#f87171;font-size:15px;font-weight:700">$'+(item.stop||'--')+'</div></div>'
-      +'<div style="background:#0f172a;border-radius:8px;padding:10px;text-align:center"><div style="color:#64748b;font-size:10px;margin-bottom:4px">TARGET</div><div style="color:#38bdf8;font-size:15px;font-weight:700">$'+(item.t1||'--')+'</div></div>'
+      +'<div style="background:#0f172a;border-radius:8px;padding:10px;text-align:center"><div style="color:#a3b2c7;font-size:10px;margin-bottom:4px">PRICE</div><div style="color:#e2e8f0;font-size:15px;font-weight:700">$'+(item.price||'--')+'</div></div>'
+      +'<div style="background:#0f172a;border-radius:8px;padding:10px;text-align:center"><div style="color:#a3b2c7;font-size:10px;margin-bottom:4px">ENTRY</div><div style="color:#4ade80;font-size:15px;font-weight:700">$'+(item.entry||'--')+'</div></div>'
+      +'<div style="background:#0f172a;border-radius:8px;padding:10px;text-align:center"><div style="color:#a3b2c7;font-size:10px;margin-bottom:4px">STOP</div><div style="color:#f87171;font-size:15px;font-weight:700">$'+(item.stop||'--')+'</div></div>'
+      +'<div style="background:#0f172a;border-radius:8px;padding:10px;text-align:center"><div style="color:#a3b2c7;font-size:10px;margin-bottom:4px">TARGET</div><div style="color:#38bdf8;font-size:15px;font-weight:700">$'+(item.t1||'--')+'</div></div>'
       +'</div>'
       +'<div style="color:#94a3b8;font-size:12px">R/R: <b>'+rr+'</b> &nbsp;|&nbsp; Added: '+(item.added||'--')+'</div>'
-      +'<div style="margin-top:8px;color:#475569;font-size:11px">&#9432; Not in current scan - showing saved data</div>'
+      +'<div style="margin-top:8px;color:#8595ad;font-size:11px">&#9432; Not in current scan - showing saved data</div>'
       +'</div>';
     panel.scrollIntoView({behavior:'smooth'});
     updateWatchBtn(ticker);
@@ -4803,7 +4814,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
     if len(_sec_sorted) > 1:
         _sectors_html = ('<div style="display:flex;gap:6px;margin-bottom:14px;'
                          'flex-wrap:wrap;align-items:center">'
-                         '<span style="color:#64748b;font-size:12px;margin-right:4px">'
+                         '<span style="color:#a3b2c7;font-size:12px;margin-right:4px">'
                          'Sector:</span>'
                          '<button class="sec-btn act" data-sec="all"'
                          ' onclick="filterSector(this.getAttribute(\'data-sec\'))">All</button>')
@@ -4835,7 +4846,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
     # ── Pre / Post Market page builder ──────────────────────────────────────
     def _news_cell(news_items):
         """Tooltip news cell: latest headline, truncated, with full title on hover."""
-        empty = '<td style="padding:8px 12px;color:#475569;font-size:11px">&#8212;</td>'
+        empty = '<td style="padding:8px 12px;color:#8595ad;font-size:11px">&#8212;</td>'
         if not news_items:
             return empty
         item  = news_items[0]
@@ -4846,7 +4857,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
             return empty
         short = title[:58] + ("&#8230;" if len(title) > 58 else "")
         safe  = title.replace('"', '&quot;').replace("'", "&#39;")
-        dpfx  = ('<span style="color:#475569;font-size:10px">' + date + '&nbsp;</span>') if date else ""
+        dpfx  = ('<span style="color:#8595ad;font-size:10px">' + date + '&nbsp;</span>') if date else ""
         return (
             '<td style="padding:8px 12px;max-width:280px">'
             + dpfx
@@ -4903,9 +4914,9 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
                     "Последнее обновление дашборда могло быть в рабочие часы.")
             return ('<div class="swt-page" id="pg-' + pid
                     + '" style="display:none;padding:40px;text-align:center">'
-                    '<div style="color:#64748b;font-size:14px;margin-bottom:8px">'
+                    '<div style="color:#a3b2c7;font-size:14px;margin-bottom:8px">'
                     + icon + ' ' + label + ' — нет данных</div>'
-                    '<div style="color:#475569;font-size:12px;max-width:480px;margin:0 auto">'
+                    '<div style="color:#8595ad;font-size:12px;max-width:480px;margin:0 auto">'
                     + note + '</div></div>\n')
         rows = ""
         for m in movers:
@@ -4919,7 +4930,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
             sb = ('<span style="background:#0d3d2a;color:#10b981;border:1px solid #065f46;'
                   'font-size:9px;padding:1px 5px;border-radius:4px">IBKR</span>'
                   if m["src"] == "ibkr" else
-                  '<span style="background:#1e293b;color:#64748b;border:1px solid #334155;'
+                  '<span style="background:#1e293b;color:#a3b2c7;border:1px solid #334155;'
                   'font-size:9px;padding:1px 5px;border-radius:4px">Yahoo</span>')
             mc_str = ("%.1fB" % mc_b if mc_b >= 1 else "%.0fM" % (mc/1e6)) if mc else "—"
             rvol_str = ("%.1fx" % rvol_v) if rvol_v else "—"
@@ -4930,7 +4941,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
                      + '" data-chg="' + str(round(m["pm_chg"], 4))
                      + '" style="border-bottom:1px solid #1e293b">'
                      '<td style="padding:8px 12px;font-weight:700;color:#e2e8f0">' + m["ticker"] + '</td>'
-                     '<td style="padding:8px 12px;color:#64748b;font-size:12px">' + m["sector"][:22] + '</td>'
+                     '<td style="padding:8px 12px;color:#a3b2c7;font-size:12px">' + m["sector"][:22] + '</td>'
                      '<td style="padding:8px 12px;color:#94a3b8">' + rgx + '</td>'
                      '<td style="padding:8px 12px;color:#a78bfa;font-weight:600">' + pmx + '</td>'
                      '<td style="padding:8px 12px;font-weight:700;color:' + cc + '">'
@@ -4950,7 +4961,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
             '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">\n'
             '<div>\n'
             '<h2 style="font-size:16px;font-weight:700;color:#e2e8f0">' + icon + ' ' + label + '</h2>\n'
-            + '<div id="cnt-' + pid + '" style="font-size:11px;color:#64748b;margin-top:2px">'
+            + '<div id="cnt-' + pid + '" style="font-size:11px;color:#a3b2c7;margin-top:2px">'
             + str(len(movers)) + ' stocks'
             + ' &nbsp;·&nbsp;<span style="color:#4ade80">&#8679; ' + str(ups) + '</span>'
             + ' &nbsp;<span style="color:#f87171">&#8681; ' + str(dns) + '</span>'
@@ -4961,12 +4972,12 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
             + '<button class="sec-btn" id="dir-dn-' + pid + '" data-dir="down" onclick="setPMDir(\'' + pid + '\',\'down\',this)">&#8681; Down</button>\n'
             + '</div>\n</div>\n'
             + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">\n'
-            + '<label style="color:#64748b;font-size:11px">SVol (10d) ≥</label>'
+            + '<label style="color:#a3b2c7;font-size:11px">SVol (10d) ≥</label>'
             + '<select id="svol-' + pid + '" style="' + sel_s + '" onchange="filterPMAll(\'' + pid + '\')">'
             + '<option value="0">Off</option><option value="1">1x</option>'
             + '<option value="1.5">1.5x</option><option value="2">2x</option>'
             + '<option value="3">3x</option><option value="5">5x</option></select>\n'
-            + '<label style="color:#64748b;font-size:11px">Mkt Cap ≥</label>'
+            + '<label style="color:#a3b2c7;font-size:11px">Mkt Cap ≥</label>'
             + '<select id="mktcap-' + pid + '" style="' + sel_s + '" onchange="filterPMAll(\'' + pid + '\')">'
             + '<option value="0">Off</option><option value="0.3">Micro $300M+</option>'
             + '<option value="2">Small $2B+</option><option value="10">Mid $10B+</option>'
@@ -5008,7 +5019,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         # Header
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">'
         '<div style="font-size:18px;font-weight:700;color:#e2e8f0">&#128200;&nbsp;Market Movers</div>'
-        '<div style="font-size:11px;color:#475569">SP1500 · based on HM_DATA</div>'
+        '<div style="font-size:11px;color:#8595ad">SP1500 · based on HM_DATA</div>'
         '</div>'
         # Period filter buttons
         '<div id="mm-period-bar" style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap">'
@@ -5061,13 +5072,13 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'function _mmRender(id,rows,f){'
         'var t=document.getElementById(id);if(!t)return;'
         'var h=\'<tr style="border-bottom:1px solid #1e293b">\''
-        '+\'<th style="text-align:left;padding:5px 8px;color:#475569;font-weight:600">Ticker</th>\''
-        '+\'<th style="text-align:left;padding:5px 8px;color:#475569;font-weight:600">Name</th>\''
-        '+\'<th style="text-align:left;padding:5px 8px;color:#475569;font-weight:600">Sector</th>\''
-        '+\'<th style="text-align:right;padding:5px 8px;color:#475569;font-weight:600">Price</th>\''
-        '+\'<th style="text-align:right;padding:5px 8px;color:#475569;font-weight:600">Chg%</th>\''
-        '+\'<th style="text-align:right;padding:5px 8px;color:#475569;font-weight:600">MCap</th>\''
-        '+\'<th style="text-align:right;padding:5px 8px;color:#475569;font-weight:600">RVol</th>\''
+        '+\'<th style="text-align:left;padding:5px 8px;color:#8595ad;font-weight:600">Ticker</th>\''
+        '+\'<th style="text-align:left;padding:5px 8px;color:#8595ad;font-weight:600">Name</th>\''
+        '+\'<th style="text-align:left;padding:5px 8px;color:#8595ad;font-weight:600">Sector</th>\''
+        '+\'<th style="text-align:right;padding:5px 8px;color:#8595ad;font-weight:600">Price</th>\''
+        '+\'<th style="text-align:right;padding:5px 8px;color:#8595ad;font-weight:600">Chg%</th>\''
+        '+\'<th style="text-align:right;padding:5px 8px;color:#8595ad;font-weight:600">MCap</th>\''
+        '+\'<th style="text-align:right;padding:5px 8px;color:#8595ad;font-weight:600">RVol</th>\''
         '+\'</tr>\';'
         'rows.forEach(function(x,i){'
         'var chg=x[f]||0;'
@@ -5087,11 +5098,11 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'h+=\'<tr style="border-bottom:1px solid rgba(30,41,59,.5);background:\'+bg+\'">\''
         '+\'<td style="padding:6px 8px;font-weight:700;color:#7dd3fc">\'+eBadge+x.t+\'</td>\''
         '+\'<td style="padding:6px 8px;color:#94a3b8;font-size:11px" title="\'+( x.n||"")+\'">\'+nm+\'</td>\''
-        '+\'<td style="padding:6px 8px;color:#64748b;font-size:11px">\'+( x.s||"")+\'</td>\''
+        '+\'<td style="padding:6px 8px;color:#a3b2c7;font-size:11px">\'+( x.s||"")+\'</td>\''
         '+\'<td style="padding:6px 8px;text-align:right;color:#e2e8f0">\'+pr+\'</td>\''
         '+\'<td style="padding:6px 8px;text-align:right;font-weight:700;color:\'+col+\'">\''
         '+(chg>=0?"+":"")+chg.toFixed(2)+"%" + "</td>"'
-        '+\'<td style="padding:6px 8px;text-align:right;color:#64748b;font-size:11px">\'+mc+\'</td>\''
+        '+\'<td style="padding:6px 8px;text-align:right;color:#a3b2c7;font-size:11px">\'+mc+\'</td>\''
         '+\'<td style="padding:6px 8px;text-align:right;font-size:11px">\'+rvStr+\'</td>\''
         '+\'</tr>\';'
         '});'
@@ -5302,7 +5313,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'h+="<div style=display:flex;align-items:center;gap:5px;padding:1px 3px;border-radius:3px;background:"+bg+">"'
         '+"<span style=color:#e2e8f0;font-weight:"+(isMe?"700":"600")+";min-width:38px;font-size:11px>"'
         '+(isMe?"<b>"+lf.data.t+"</b>":lf.data.t)+"</span>"'
-        '+(pr?"<span style=color:#64748b;font-size:10px;min-width:46px>$"+pr+"</span>":"")'
+        '+(pr?"<span style=color:#a3b2c7;font-size:10px;min-width:46px>$"+pr+"</span>":"")'
         '+"<span style=color:"+vc+";font-weight:700;font-size:10px;flex:1;text-align:right>"+lbl+"</span>"'
         '+"</div>";});'
         'sp.innerHTML=h;sp.style.display="block";'
@@ -5405,7 +5416,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         ' color:#3d5166; text-transform:uppercase; letter-spacing:.5px; }\n'
         'table { width:100%; border-collapse:collapse; }\n'
         'tr:hover { background:#1e293b !important; }\n'
-        'th { color:#64748b; font-size:11px; font-weight:500; text-align:left;'
+        'th { color:#a3b2c7; font-size:11px; font-weight:500; text-align:left;'
         ' padding:8px 12px; border-bottom:1px solid #334155; }\n'
         'th[onclick] { cursor:pointer; user-select:none; }\n'
         'th[onclick]:hover { color:#cbd5e1 !important; }\n'
@@ -5414,12 +5425,12 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'border-radius:8px;padding:5px 16px;cursor:pointer;font-size:13px;'
         'font-weight:500;transition:all .15s;white-space:nowrap}\n'
         '.tab-btn.act{background:#1e3a5f;color:#60a5fa;border-color:#3b82f6}\n'
-        '.tab-btn:hover{border-color:#475569;color:#e2e8f0}\n'
+        '.tab-btn:hover{border-color:#8595ad;color:#e2e8f0}\n'
         '.sec-btn{background:#1e293b;color:#94a3b8;border:1px solid #334155;'
         'border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px;'
         'transition:all .15s;white-space:nowrap}\n'
         '.sec-btn.act{background:#162416;color:#4ade80;border-color:#22c55e}\n'
-        '.sec-btn:hover{border-color:#475569;color:#e2e8f0}\n'
+        '.sec-btn:hover{border-color:#8595ad;color:#e2e8f0}\n'
         'details summary { padding:6px 0; cursor:pointer; }\n'
         '.detail-card { background:#1e293b; border:1px solid #334155;'
         ' border-radius:12px; padding:20px; margin-top:16px; }\n'
@@ -5477,12 +5488,12 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#94a3b8;'
         'font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:8px">'
         '<span>&#9729;&#65039;</span><span>Sync Watchlist</span>'
-        '<span id="gist-sync-status" style="margin-left:auto;font-size:10px;color:#64748b"></span>'
+        '<span id="gist-sync-status" style="margin-left:auto;font-size:10px;color:#a3b2c7"></span>'
         '</button>\n'
         '    <div style="font-size:11px;color:#3d5166">'
         'Valid: <span style="color:#10b981">' + str(valid_count) + '</span>'
         '&nbsp;&nbsp;'
-        'Scanned: <span style="color:#64748b">' + str(len(results)) + '</span>'
+        'Scanned: <span style="color:#a3b2c7">' + str(len(results)) + '</span>'
         '</div>\n'
         '  </div>\n'
         '</nav>\n\n'
@@ -5497,7 +5508,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         '    <div>\n'
         '      <h1 style="font-size:18px;font-weight:600;color:#e2e8f0">'
         '&#9889; Swing Trader Dashboard</h1>\n'
-        '      <div style="color:#64748b;font-size:12px;margin-top:1px">'
+        '      <div style="color:#a3b2c7;font-size:12px;margin-top:1px">'
         + ('All Strategies' if tabs_mode else strategy_label) + '</div>\n'
         '    </div>\n'
         '    <div style="display:flex;gap:10px;align-items:center">\n'
@@ -5515,7 +5526,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         '<input id="ticker-search" type="text" placeholder="Search ticker..." '
         'oninput="_applyFilters()" '
         'style="background:#1e293b;border:1px solid #475569;border-radius:7px;padding:7px 14px;color:#e2e8f0;font-size:13px;width:200px;outline:none">'
-        '<span id="scan-result-count" style="color:#64748b;font-size:12px"></span>'
+        '<span id="scan-result-count" style="color:#a3b2c7;font-size:12px"></span>'
         '</div>\n'
         '<div style="background:#1e293b;border:1px solid #334155;'
         'border-radius:12px;overflow-x:auto;margin-bottom:20px">\n'
@@ -5537,15 +5548,16 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         '<th title="Chart pattern (VCP/Cup/Flat)" style="color:#34d399">Pattern</th>\n'
         '<th title="Insider activity (30d)" style="color:#a78bfa">Insider</th>\n'
         '<th title="Top institutional holder" style="color:#818cf8">Inst. Top</th>\n'
-        '<th title="Date first appeared in scanner"'
-        ' style="color:#64748b;white-space:nowrap">&#128197; Seen</th>\n'
+        '<th onclick="sortTable(17,\'str\')" title="Date first appeared in scanner"'
+        ' style="color:#cbd5e1;white-space:nowrap">&#128197; Seen'
+        ' <span class="sh"></span></th>\n'
         '<th title="Watchlist"'
         ' style="position:sticky;right:0;background:#1e293b;z-index:2">&#9734;</th>\n'
         '</tr>\n</thead>\n<tbody>\n'
         + rows_html
         + '</tbody>\n</table>\n</div>\n\n'
         '<div id="detail-panel">'
-        '<div style="color:#64748b;font-size:13px;text-align:center;padding:20px">'
+        '<div style="color:#a3b2c7;font-size:13px;text-align:center;padding:20px">'
         '&#8593; Click a row to see full trade setup</div></div>\n'
         + cards_html + '\n\n'
         '</div>\n'  # end pg-scanner
@@ -5565,7 +5577,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
            + pulse_page_html + '\n</div>\n'
            if pulse_page_html else
            '<div class="swt-page" id="pg-pulse" style="display:none">'
-           '<p style="color:#64748b;padding:40px;text-align:center">'
+           '<p style="color:#a3b2c7;padding:40px;text-align:center">'
            'Market Pulse data unavailable</p></div>\n')
 
         + _pm_page_html
@@ -5580,9 +5592,9 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'padding:28px 32px;width:440px;max-width:95vw">'
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">'
         '<h3 style="font-size:15px;font-weight:600;color:#e2e8f0">&#9729;&#65039; Watchlist Cloud Sync</h3>'
-        '<button onclick="closeGistSettings()" style="background:none;border:none;color:#64748b;font-size:20px;cursor:pointer;line-height:1">&#10005;</button>'
+        '<button onclick="closeGistSettings()" style="background:none;border:none;color:#a3b2c7;font-size:20px;cursor:pointer;line-height:1">&#10005;</button>'
         '</div>'
-        '<p style="font-size:12px;color:#64748b;margin-bottom:18px;line-height:1.6">'
+        '<p style="font-size:12px;color:#a3b2c7;margin-bottom:18px;line-height:1.6">'
         'Сохраняет watchlist в приватный GitHub Gist. '
         'Один и тот же список на всех устройствах.'
         '</p>'
@@ -5596,7 +5608,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'padding:9px 13px;color:#e2e8f0;font-size:13px;outline:none;margin-bottom:14px;'
         'font-family:monospace;letter-spacing:.5px">'
         '<label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:5px;font-weight:600">'
-        'Gist ID <span style="font-weight:400;color:#475569">(оставь пустым — создастся автоматически)</span>'
+        'Gist ID <span style="font-weight:400;color:#8595ad">(оставь пустым — создастся автоматически)</span>'
         '</label>'
         '<input id="gist-id-input" type="text" placeholder="автоматически" '
         'style="width:100%;background:#0f172a;border:1px solid #475569;border-radius:7px;'
@@ -5614,7 +5626,7 @@ document.addEventListener('DOMContentLoaded',function(){if(_ghTok()){gistLoad().
         'style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 14px;'
         'color:#ef4444;font-size:12px;cursor:pointer">Отключить</button>'
         '</div>'
-        '<p style="font-size:10px;color:#475569;margin-top:14px;line-height:1.5">'
+        '<p style="font-size:10px;color:#8595ad;margin-top:14px;line-height:1.5">'
         'Токен хранится только в браузере этого устройства. '
         '<a href="https://github.com/settings/tokens/new?scopes=gist&amp;'
         'description=SwingTrader+Dashboard" target="_blank" '
