@@ -105,8 +105,12 @@ jobs:
           # Add each file separately: `git add a b c` aborts and stages NOTHING
           # if any single path is missing, and ticker_history.json does not exist
           # until the first run that creates it.
+          # Add each file separately with an explicit `|| true`: `git add a b c`
+          # aborts and stages NOTHING if any single path is missing, and a bare
+          # `[ -f ]` test failing on the last loop iteration would end the step
+          # with a non-zero status under bash -e.
           for f in index.html prev_tickers.json ticker_history.json breadth_history.json; do
-            [ -f "$f" ] && git add "$f"
+            if [ -f "$f" ]; then git add "$f"; else echo "skip (absent): $f"; fi
           done
           git diff --cached --stat
           if git diff --cached --quiet; then
@@ -114,8 +118,20 @@ jobs:
           else
             git commit -m "Dashboard update $(date -u '+%Y-%m-%d %H:%M UTC')"
           fi
+          # Track success explicitly. Without this the loop always ends on
+          # `sleep 10` (exit 0), so three failed pushes still leave the step —
+          # and the whole run — green while nothing reached the repository.
+          pushed=0
           for i in 1 2 3; do
-            git pull --rebase origin main && git push origin main && break
+            if git pull --rebase origin main && git push origin main; then
+              pushed=1
+              echo "Pushed on attempt $i"
+              break
+            fi
             echo "Push attempt $i failed, retrying in 10s..."
             sleep 10
           done
+          if [ "$pushed" != "1" ]; then
+            echo "::error::All 3 push attempts failed — dashboard was built but not published"
+            exit 1
+          fi
