@@ -3270,10 +3270,21 @@ def build_pulse_panel_html(pulse_data, all_results=None, daily_breadth=None):
 
 
 
-def _make_first_seen_cell(ticker, first_seen_dict):
-    """Compact <td> showing when a ticker first appeared in any scanner."""
+def _make_first_seen_cell(ticker, first_seen_dict, strategy=None, strat_hist=None):
+    """Compact <td> showing how long this setup has been in THIS strategy.
+
+    Falls back to the global first-seen date when per-strategy history is not
+    available yet (the file only starts filling from the next scan onwards).
+    A global date is misleading on its own: DELL had been in the scanner since
+    July 8 via Minervini while its Swing Gap setup only appeared yesterday.
+    """
     from datetime import date as _dt_
-    ds = first_seen_dict.get(ticker, "")
+    ds = ""
+    if strategy and strat_hist:
+        rec = (strat_hist.get(ticker) or {}).get(strategy) or {}
+        ds = rec.get("streak") or rec.get("first") or ""
+    if not ds:
+        ds = first_seen_dict.get(ticker, "")
     if not ds:
         # data-sort keeps undated rows at the bottom whichever way the column sorts
         return ('<td data-sort="0000-00-00" style="padding:6px 10px;color:#a3b2c7;'
@@ -3308,6 +3319,17 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             _raw_fs = _json.load(open("prev_tickers.json"))
             if isinstance(_raw_fs, dict) and "tickers" not in _raw_fs:
                 _first_seen = _raw_fs
+        except Exception:
+            pass
+    # Per-strategy history {ticker: {strategy: {first,last,streak}}} — written by
+    # track_new_tickers.py. Lets the Seen column report when THIS setup appeared
+    # rather than when the ticker first entered the scanner under any strategy.
+    _strat_hist = {}
+    if _os.path.exists("ticker_history.json"):
+        try:
+            _rh = _json.load(open("ticker_history.json"))
+            if isinstance(_rh, dict):
+                _strat_hist = _rh
         except Exception:
             pass
     now        = datetime.now().strftime("%B %d, %Y %H:%M")
@@ -3894,7 +3916,8 @@ def build_html_dashboard(results, strategy, market_ctx=None, yahoo=None, tabs_mo
             "conv": conv_badge(r.get("conviction", "Low")),
             "vc": vld_col, "vs": vld_sym,
             "pat": pat_cell, "ins": ins_cell, "inst": inst_cell, "sdot": _news_sdot,
-            "fs_cell": _make_first_seen_cell(ticker, _first_seen),
+            "fs_cell": _make_first_seen_cell(ticker, _first_seen,
+                                             r.get("strategy", strategy), _strat_hist),
             "perf1w": ("%.2f" % r["perf_1w"]) if r.get("perf_1w") is not None else "",
             "perf1m": ("%.2f" % r["perf_1m"]) if r.get("perf_1m") is not None else "",
         }

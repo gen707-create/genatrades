@@ -81,7 +81,8 @@ jobs:
           echo "scan_sg: $(python3 -c 'import json;d=json.load(open("/tmp/scan_sg.json"));print(len(d.get("tickers",[])),"tickers")' 2>/dev/null || echo FAILED)"
 
           echo "=== Step 3f: Track new tickers ==="
-          python track_new_tickers.py /tmp/scan_min.json /tmp/scan_can.json /tmp/scan_rev.json /tmp/scan_bb.json || echo '[]' > /tmp/new_tickers.json
+          python track_new_tickers.py /tmp/scan_min.json /tmp/scan_can.json /tmp/scan_rev.json \
+            /tmp/scan_bb.json /tmp/scan_dt.json /tmp/scan_sg.json || echo '[]' > /tmp/new_tickers.json
           echo "new tickers: $(cat /tmp/new_tickers.json)"
 
           echo "=== Step 4: Build dashboard ==="
@@ -101,7 +102,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add index.html prev_tickers.json breadth_history.json || true
+          git add index.html prev_tickers.json ticker_history.json breadth_history.json || true
           git diff --cached --stat
           if git diff --cached --quiet; then
             echo "No changes to commit"
