@@ -1553,11 +1553,38 @@ def fetch_yahoo_data(tickers):
                 except Exception:
                     pass
 
-            # Use IBKR chg if already computed, else calculate from yfinance prices
+            # Baselines differ by session and must not be swapped:
+            #   premarket  — compare against the LAST close (the session hasn't opened)
+            #   postmarket — compare against TODAY's close (the session just ended)
+            # Using previous_close for the AH number folds the whole regular session
+            # into it: DELL closed +14% on earnings, so its AH row read +14.24% even
+            # though the price had ticked DOWN from that close to 485.50.
+            reg_today = (getattr(info, "last_price", None)
+                         or _full_info.get("regularMarketPrice")
+                         or _full_info.get("currentPrice"))
+
+            # Yahoo keeps serving the LAST extended-hours print even when it is
+            # days old, so a stock that gapped on Monday still reports a stale
+            # AH quote on Wednesday. Drop anything not from the last ~18 hours.
+            for _sess, _tkey in (("pre", "preMarketTime"), ("post", "postMarketTime")):
+                _ts = _full_info.get(_tkey)
+                if not _ts:
+                    continue
+                try:
+                    import time as _time
+                    _age_h = (_time.time() - float(_ts)) / 3600.0
+                except (TypeError, ValueError):
+                    continue
+                if _age_h > 18:
+                    if _sess == "pre":
+                        pre_price, pre_chg = None, None
+                    else:
+                        post_price, post_chg = None, None
+
             if pre_chg is None:
                 pre_chg  = pct(pre_price,  reg_close)
             if post_chg is None:
-                post_chg = pct(post_price, reg_close)
+                post_chg = pct(post_price, reg_today or reg_close)
 
             # Earnings date — calendar can be a dict or DataFrame depending on yfinance version
             earnings_date, days_to_earn = None, 999
